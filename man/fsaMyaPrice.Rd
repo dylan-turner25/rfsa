@@ -28,7 +28,7 @@ A data frame
 data(fsaMyaPrice)
 }
 \description{
-Commodity specific marketing year average prices as published by the USDA Farm Service Agency.
+Marketing year average prices by commodity.
 }
 \details{
 To view code used to generate this data set, see \code{./data-raw/fsaArcPlc/supplementary_files/fsaMyaPrice.R}
