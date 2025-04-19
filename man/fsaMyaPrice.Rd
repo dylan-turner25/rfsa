@@ -3,9 +3,9 @@
 \docType{data}
 \name{fsaMyaPrice}
 \alias{fsaMyaPrice}
-\title{Commodity specific marketing year average prices as published by the USDA Farm Service Agency.}
+\title{Commodity specific marketing year average prices.}
 \format{
-A data frame
+A tibble
 \describe{
 \item{Commodity}{The name of the commodity}
 \item{Marketing Year}{The dates for the commodity specific marketing year }
@@ -28,7 +28,7 @@ A data frame
 data(fsaMyaPrice)
 }
 \description{
-Marketing year average prices by commodity.
+Commodity specific marketing year average prices.
 }
 \details{
 To view code used to generate this data set, see \code{./data-raw/fsaArcPlc/supplementary_files/fsaMyaPrice.R}
