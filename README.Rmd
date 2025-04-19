@@ -77,7 +77,7 @@ library(dplyr)
     name <- gsub("\\.Rd$", "", basename(m))
     
     # Read the .Rd file
-    rd_lines <- readLines("man/fsaMyaPrice.Rd")
+    rd_lines <- readLines(m)
     
     # Extract the line with the \title{} field
     title_line <- grep("^\\\\title\\{", rd_lines, value = TRUE)
@@ -89,7 +89,6 @@ library(dplyr)
     descriptions_list[[name]] <- title_text
   }
 
-  
   # merge the descriptions into the dataframe
   df <- df %>%
     left_join(data.frame(dataset = names(descriptions_list),
