@@ -5,7 +5,6 @@ files <- list.files("./data-raw/fsaArcPlc/input_data/plc_payment_rates",
 # initialize a data frame to store mya prices
 plc_payment_rates <- NULL
 
-
 # load the files and bind them into one data frame
 for(year in 2014:(current_year - 1)){
   # get file path corresponding to year
@@ -50,7 +49,7 @@ for(year in 2014:(current_year - 1)){
 }
 
 # strip any number followed by a "/" from the commodity name
-mya_prices$Commodity <- gsub("[0-9]/","",mya_prices$Commodity)
+plc_payment_rates$Commodity <- gsub("[0-9]/","",plc_payment_rates$Commodity)
 
 # type convert the columns
 plc_payment_rates <- readr::type_convert(plc_payment_rates)

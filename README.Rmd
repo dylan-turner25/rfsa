@@ -106,4 +106,4 @@ library(dplyr)
 # Avaliable Datasets
 ```{r, include = TRUE, echo = FALSE}
  knitr::kable(df)
-```
+``` 

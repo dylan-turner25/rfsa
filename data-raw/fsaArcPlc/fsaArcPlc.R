@@ -10,13 +10,13 @@ years <- 2014:current_year
 
 
 # clean MYA Prices -------------------------------------------------------------
-source("./data-raw/fsaArcPlc/Supplementary Files/fsaMyaPrice.R")
+source("./data-raw/fsaArcPlc/supplementary_files/fsaMyaPrice.R")
 
 # clean PLC payment rates ------------------------------------------------------
-source("./data-raw/fsaArcPlc/Supplementary Files/fsaPlcPaymentRates.R")
+source("./data-raw/fsaArcPlc/supplementary_files/fsaPlcPaymentRates.R")
 
 # clean ARC-IC Prices ----------------------------------------------------------
-source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcIcPrice.R")  # updated 2/03/2025
+source("./data-raw/fsaArcPlc/supplementary_files/fsaArcIcPrice.R")
 
 # clean ARC-CO Prices ----------------------------------------------------------
 source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcCoPrice.R")  # updated 2/03/2025
