@@ -100,7 +100,10 @@ library(dplyr)
 
 
 ```
+# Installation
+`rfsa` can be installed directly from GitHub using `remotes::install_github("dylan-turner25/rfsa", force = TRUE)`.
 
+# Avaliable Datasets
 ```{r, include = TRUE, echo = FALSE}
  knitr::kable(df)
 ```
