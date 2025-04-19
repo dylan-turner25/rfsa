@@ -1,0 +1,10 @@
+What has changed under the 2018 Farm Bill compared to the 2014 Farm Bill?
+
+The effective reference price replaces the reference price for calculating benchmark revenues under ARC and payment rates per unit under PLC.
+ARC-county yields are based on data from the Risk Management Agency rather than data from the National Agricultural Statistics Service.
+ARC-county yields are trend adjusted.
+Yield designation status under ARC county increases the number of counties from an “All” type designation to an irrigated/non-irrigated designation.
+Seed cotton was added as a covered commodity and generic base acres were eliminated beginning with the 2018 crop, the last year of the 2014 Farm Bill. Seed cotton continues to be included as a covered commodity under the 2018 Farm Bill.
+Producers may elect for ARC or PLC by covered commodity or ARC-IC for 2019 and 2020 and re-elect each year thereafter through 2023.
+One-time opportunity to update PLC program payment yields that take effect beginning with the 2020 crop year.
+The effective reference price, ARC-county benchmark yields, and ARC-county benchmark prices calculations are based on a one-year lag (i.e., For program year 2019, crop years 2013-2017 will be used to calculate the effective reference price, ARC-county benchmark yields, and ARC-county benchmark prices, and ARC-individual coverage).
