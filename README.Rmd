@@ -11,45 +11,97 @@ knitr::opts_chunk$set(
   fig.path = "man/figures/README-",
   out.width = "100%"
 )
+
+library(dplyr)
 ```
 
-# rfsa
+```{r data_set_table, include=FALSE}
+  # initialize a dataframe with the columns "dataset","rows","columns","years","description"
+  df <- data.frame(dataset = character(),
+                   rows = integer(),
+                   columns = integer(),
+                   years = character(),
+                   description = character(),
+                   last_updated = character(),
+                   stringsAsFactors = FALSE)
+  
+  # fill in the dataframe with the dataset names, number of rows, number of columns, years, and description using the files in "./data"
+  for(f in list.files("./data", pattern = "\\.rda$")){
+    # load the dataset
+    load(paste0("./data/", f))
+    
+    # get the name of the dataset
+    name <- gsub("\\.rda$", "", f)
+    
+    # get the number of rows and columns
+    rows <- nrow(get(name))
+    columns <- ncol(get(name))
+    
+    # if year is a character, keep the first four characters then convert to numeric
+    if(is.character(get(name)$year)){
+      years <- as.numeric(substr(get(name)$year, 1, 4))
+    }
+    
+    
+    # get the years covered by the dataset
+    years <- paste0(min(years), "-", max(years))
+    
+    # get the dates on the file f
+    file_info <- file.info(paste0("./data/", f))
+    
+    # get the last modified date
+    last_modified <- file_info$mtime
+    
+    # keep only the date part in d/m/y format
+    last_modified <- format(last_modified, "%m/%d/%Y")
+ 
+    
+    # add a row to the dataframe
+    df <- rbind(df, data.frame(dataset = name,
+                                rows = rows,
+                                columns = columns,
+                                years = years,
+                                last_updated = last_modified,
+                                stringsAsFactors = FALSE))
+  }
 
-<!-- badges: start -->
-<!-- badges: end -->
+  # define descriptions of the data set
+  descriptions_list = list()
+  
+  # list each file in ./man
+  man_files <- list.files(path = "./man", pattern = "\\.Rd$", full.names = TRUE)
+  
+  # loop through each file
+  for(m in man_files){
+    # get the name of the dataset
+    name <- gsub("\\.Rd$", "", basename(m))
+    
+    # Read the .Rd file
+    rd_lines <- readLines("man/fsaMyaPrice.Rd")
+    
+    # Extract the line with the \title{} field
+    title_line <- grep("^\\\\title\\{", rd_lines, value = TRUE)
+    
+    # Remove the LaTeX command and extract the content
+    title_text <- sub("^\\\\title\\{(.*)\\}$", "\\1", title_line)
+  
+    # add the description to the list
+    descriptions_list[[name]] <- title_text
+  }
 
-The goal of rfsa is to ...
+  
+  # merge the descriptions into the dataframe
+  df <- df %>%
+    left_join(data.frame(dataset = names(descriptions_list),
+                         description = unlist(descriptions_list)),
+              by = "dataset") %>%
+    mutate(description = ifelse(is.na(description), "No description available", description))
+  
 
-## Installation
 
-You can install the development version of rfsa from [GitHub](https://github.com/) with:
 
-``` r
-# install.packages("pak")
-pak::pak("dylan-turner25/rfsa")
 ```
 
-## Example
-
-This is a basic example which shows you how to solve a common problem:
-
-```{r example}
-#library(rfsa)
-## basic example code
+```{r, include = TRUE, echo = FALSE}
+ knitr::kable(df)
 ```
-
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
-
-```{r cars}
-summary(cars)
-```
-
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
-
-You can also embed plots, for example:
-
-```{r pressure, echo = FALSE}
-plot(pressure)
-```
-
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.

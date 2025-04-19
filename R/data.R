@@ -1,6 +1,6 @@
 #' Commodity specific marketing year average prices as published by the USDA Farm Service Agency.
 #'
-
+#' @description Marketing year average prices by commodity.
 #'
 #' @details
 #' To view code used to generate this data set, see `./data-raw/fsaArcPlc/supplementary_files/fsaMyaPrice.R`
