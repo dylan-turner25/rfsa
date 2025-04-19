@@ -48,3 +48,31 @@
 #' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
 #'
 "fsaPlcPaymentRate"
+
+
+#' Commodity-specific ARC-IC benchmark prices, MYA prices, and statutory reference prices.
+#'
+#' @details
+#' To view code used to generate this data set, see `./data-raw/fsaArcPlc/supplementary_files/fsaArcIcPrice.R`
+#'
+#' @format A tibble
+#' \describe{
+#'   \item{Commodity}{The name of the commodity}
+#'   \item{Marketing Year}{The dates for the commodity-specific marketing year}
+#'   \item{Publishing Dates for the Final T - 0 MYA Price and T - 0 ARC-IC BM Price}{The publication date of the final marketing year average price and ARC-IC benchmark price}
+#'   \item{Unit}{The unit of measurement (e.g., bushel, pound)}
+#'   \item{Statutory Reference Price}{The statutory reference price for the commodity}
+#'   \item{Final T - 5 Annual Benchmark Price}{The ARC-IC benchmark price 5 years prior to the marketing year}
+#'   \item{Final T - 4 Annual Benchmark Price}{The ARC-IC benchmark price 4 years prior to the marketing year}
+#'   \item{Final T - 3 Annual Benchmark Price}{The ARC-IC benchmark price 3 years prior to the marketing year}
+#'   \item{Final T - 2 Annual Benchmark Price}{The ARC-IC benchmark price 2 years prior to the marketing year}
+#'   \item{Final T - 1 Annual Benchmark Price}{The ARC-IC benchmark price 1 year prior to the marketing year}
+#'   \item{Final T - 0 MYA Price}{The final marketing year average price}
+#'   \item{T - 0 National Loan Rate}{The national loan rate for the marketing year}
+#'   \item{Final T - 0 Actual ARC-IC Price}{The actual ARC-IC price for the marketing year}
+#'   \item{year}{The two calendar years the commodity-specific marketing year spans}
+#' }
+#' @usage data(fsaArcIcPrice)
+#' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
+#'
+"fsaArcIcPrice"
