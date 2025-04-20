@@ -9,13 +9,14 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%"
+  out.width = "100%",
+  cache = FALSE
 )
 
 library(dplyr)
 ```
 
-```{r data_set_table, include=FALSE}
+```{r data_set_table, include=FALSE, cache=FALSE}
   # initialize a dataframe with the columns "dataset","rows","columns","years","description"
   df <- data.frame(dataset = character(),
                    rows = integer(),
@@ -40,11 +41,15 @@ library(dplyr)
     # if year is a character, keep the first four characters then convert to numeric
     if(is.character(get(name)$year)){
       years <- as.numeric(substr(get(name)$year, 1, 4))
+    } else {
+      years <- get(name)$year
     }
     
-    
     # get the years covered by the dataset
-    years <- paste0(min(years), "-", max(years))
+    min_year = min(years, na.rm = T)
+    min_year = ifelse(min_year < 2014, 2014, min_year)
+    max_year = max(years, na.rm = T)
+    years <- paste0( min_year, "-", max_year)
     
     # get the dates on the file f
     file_info <- file.info(paste0("./data/", f))
@@ -104,6 +109,6 @@ library(dplyr)
 `rfsa` can be installed directly from GitHub using `remotes::install_github("dylan-turner25/rfsa", force = TRUE)`.
 
 # Avaliable Datasets
-```{r, include = TRUE, echo = FALSE}
+```{r, include = TRUE, echo = FALSE, cache=FALSE}
  knitr::kable(df)
 ``` 
