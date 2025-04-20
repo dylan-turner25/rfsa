@@ -37,8 +37,8 @@ source("./data-raw/fsaArcPlc/Suplementary Files/fsaArcPlcBaseAcres.R") # updated
 # clean arc/plc elections ------------------------------------------
 # source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcPlcElections.R")
 
-# # clean arc benchmarks ---------------------------------------------
-# source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcCoBenchmarks.R")
+# clean arc benchmarks ---------------------------------------------
+source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcCoBenchmarks.R")
 
 # # clean plc benchmarks ---------------------------------------------
 # source("./data-raw/fsaArcPlc/Supplementary Files/fsaPlcGuarantee.R")

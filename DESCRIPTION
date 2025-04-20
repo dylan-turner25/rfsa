@@ -11,3 +11,4 @@ RoxygenNote: 7.3.2
 Depends: 
     R (>= 3.5)
 LazyData: true
+LazyDataCompression: xz

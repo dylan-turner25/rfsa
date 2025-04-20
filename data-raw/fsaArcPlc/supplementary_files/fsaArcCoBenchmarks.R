@@ -1,112 +1,218 @@
+# list all files in the raw data files folder
+files <- list.files("./data-raw/fsaArcPlc/input_data/arc_co_benchmarks",
+                    full.names = T)
 
-# ARCCO Benchmarks -------------------------------------------------------
+# initialize a data frame to store arc-ic prices
+arc_co_benchmarks <- NULL
 
-Counties <- rgdal::readOGR(dsn ="./data-raw/spatialData/Archive/usaPolygons", layer = "USA_Counties")@data
-Counties$ST_CTY <- Counties$GEOID
 
-data <- as.data.frame(
-  readxl::read_excel(
-    "./data-raw/fsaArcPlc/Raw Data Files/arc_plc_Datadump/arcco_benchmarks/arcco_benchmarks_2014-2018.xlsx", 
-    col_names = FALSE, skip = 4))
+# load and clean the combined 2014-2018 file ----------------------------------------
+arc_co_benchmarks <- readxl::read_excel(files[grepl("2014-2018",files)], skip = 3) %>%
+  mutate(across(everything(), as.character)) %>%
+  pivot_longer(-c(1:6), names_to = "variable", values_to = "value") %>%
+  filter(!is.na(value))
 
-varlist <- c("null_x_","yield_benchmark_x_","price_benchmark_x_","revnu_benchmark_x_","guarantee_x_",
-             "guarantee_10_x_","yield_actual_x_","price_actual_x_","revnu_actual_x_","formula_rate_x_",
-             "payment_rate_x_")
+# take first 4 characters of the variable column as year
+arc_co_benchmarks$year <- substr(arc_co_benchmarks$variable, 1, 4)
 
-varlist <- c("ST_Cty","state","county","crop","unit","type",
-             paste0("county_yield_",2009:2017),paste0(varlist,2014),paste0(varlist,2015),
-             paste0(varlist,2016),paste0(varlist,2017),paste0(varlist,2018))
+# remove the first 4 characters from the variable column
+arc_co_benchmarks$variable <- trimws(substr(arc_co_benchmarks$variable, 5, nchar(arc_co_benchmarks$variable)))
 
-names(data) <- varlist
+# pivot wider
+arc_co_benchmarks <- arc_co_benchmarks %>%
+  pivot_wider(names_from = variable, values_from = value)
 
-data <- data[names(data)[! grepl("null_x_",names(data))]]
+# pull out all the columns that have "Bench mark price" in the column title into a single df
+bench_mark_price <- arc_co_benchmarks[,grepl("bench mark price", tolower(colnames(arc_co_benchmarks)))]
 
-data <- data %>%  tidyr::gather(variable, value, 
-                                names(data)[! names(data) %in% c("ST_Cty","state","county","crop","unit","type",
-                                                                 paste0("county_yield_",2009:2017))])
+# remove all columns that have "bench mark price" in the column title
+arc_co_benchmarks <- arc_co_benchmarks[,!grepl("bench mark price", tolower(colnames(arc_co_benchmarks)))]
 
-data <- tidyr::separate(data,"variable",into=c("variable","crop_yr"),sep="_x_")
-data00 <- data %>%  tidyr::spread(variable, value)
+# pull out all the remaining columns that have "bench mark" in the column title into a single df
+bench_mark <- arc_co_benchmarks[,grepl("bench mark", tolower(colnames(arc_co_benchmarks)))]
 
-data <- future_lapply(
-  2019:2022,
-  function(crop_yr){
-    # crop_yr <- 2019
-    print(crop_yr)
-    data <- as.data.frame(
-      readxl::read_excel(
-        paste0("./data-raw/fsaArcPlc/Raw Data Files/arc_plc_Datadump/arcco_benchmarks/arcco_benchmarks_",crop_yr,".xlsx"), 
-        col_names = FALSE, skip = ifelse(crop_yr %in% 2019 ,5,4)))
-    
-    if(crop_yr %in% 2019){
-      varlist <- c("ST_Cty","state","county","crop","unit","type",
-                   paste0("county_yield_",(crop_yr-6):(crop_yr-2)),"null","yield_benchmark",
-                   "price_benchmark","revnu_benchmark","guarantee",
-                   "guarantee_10","yield_actual","price_actual","revnu_actual","formula_rate",
-                   "payment_rate")
-    }else{
-      varlist <- c("ST_Cty","state","county","county_sub","crop","unit","type",
-                   paste0("county_yield_",(crop_yr-6):(crop_yr-2)),"null","yield_benchmark",
-                   "price_benchmark","revnu_benchmark","guarantee",
-                   "guarantee_10","yield_actual","price_actual","revnu_actual","formula_rate",
-                   "payment_rate")
+# remove all columns that have "bench mark" in the column title
+arc_co_benchmarks <- arc_co_benchmarks[,!grepl("bench mark", tolower(colnames(arc_co_benchmarks)))]
+
+# row sum bench_mark_price and replace 0 with NA
+bench_mark_price <- bench_mark_price %>%
+  mutate(across(everything(), as.numeric)) %>%
+  rowSums(na.rm = T)
+bench_mark_price[bench_mark_price == 0] <- NA
+
+# row sum bench_mark
+bench_mark <- bench_mark %>%
+  mutate(across(everything(), as.numeric)) %>%
+  rowSums(na.rm = T)
+bench_mark[bench_mark == 0] <- NA
+
+
+# add the row sums to the arc_co_benchmarks data frame
+arc_co_benchmarks <- arc_co_benchmarks %>%
+  mutate(oa_bench_mark_price = bench_mark_price,
+         oa_bench_mark_yield = bench_mark)
+
+# add column for oa benchmark years
+arc_co_benchmarks$oa_bench_mark_years <- paste0(as.numeric(arc_co_benchmarks$year) - 5, "-", as.numeric(arc_co_benchmarks$year) - 1)
+
+# rename ST_Cty to fips
+colnames(arc_co_benchmarks)[which(colnames(arc_co_benchmarks) == "ST_Cty")] <- "fips"
+
+
+# convert whole data frame to character
+arc_co_benchmarks <- arc_co_benchmarks %>%
+  mutate(across(everything(), as.character))
+
+# clean column names
+arc_co_benchmarks <- janitor::clean_names(arc_co_benchmarks)
+arc_co_benchmarks <- arc_co_benchmarks %>%
+  select(-x8)
+
+# remove any columns that are all NA
+arc_co_benchmarks <- arc_co_benchmarks[, colSums(!is.na(arc_co_benchmarks)) > 0]
+
+# rename county_yield_or_70_percent_of_t to county_yield
+colnames(arc_co_benchmarks)[which(colnames(arc_co_benchmarks) == "county_yield_or_70_percent_of_t")] <- "county_yield"
+
+# create a new column for county_yield_type
+arc_co_benchmarks$county_yield_type <- "county yield or 70% of T-yield"
+
+# loop over remaining years to clean single year files --------------------------
+for(y in 2019:current_year){
+  # get file path corresponding to year
+  file <- files[grepl(y,files)]
+
+  # load the file to a temporary object
+  temp <- readxl::read_excel(file)
+
+  # locate row containing "ST_Cty" which contains column names
+  names_row <- which(temp[,1] == "ST_Cty")
+  for( k in 1:ncol(temp)){
+    if(is.na(temp[names_row + 1,k])){
+      temp[names_row + 1,k] <- temp[ names_row ,k]
     }
-    
-    varlist <- varlist[1:ncol(data)]
-    
-    names(data) <- varlist
-    data <- data[names(data)[! grepl("null",names(data))]]
-    data$crop_yr <- crop_yr
-    return(data)
-  })
+  }
 
-data[[length(data)+1]] <- data00
+  # define column names
+  colnames(temp) <- temp[names_row,]
 
-data <- as.data.frame(data.table::rbindlist(data, fill = TRUE))
+  # remove everything above the commodity_row
+  temp <- temp[-c(1:(names_row + 1)),]
 
-data$ST_CTY <- data$ST_Cty
+  # remove sub county column if it exists
+  if("Sub County" %in% colnames(temp)){
+    temp <- temp %>% select(-c("Sub County"))
+  }
 
-data <- dplyr::full_join(Counties,data,by=c("ST_CTY"))
-data$state_cd <- as.numeric(as.character(data$STATEFP))
-data$county_cd <- as.numeric(as.character(data$COUNTYFP))
+  # clean the raw data
+  temp <- temp %>%
+    pivot_longer(-c(1:6), names_to = "variable", values_to = "value") %>%
+    filter(!is.na(value))
 
-county_yield <- names(data)[grepl("county_yield_",names(data))]
-county_yield <- county_yield[order(as.numeric(gsub("[^0-9]","",county_yield)))]
-data <- data[c("crop_yr","state_cd","county_cd","county_sub","crop","unit","type",county_yield,
-               "yield_benchmark",
-               "price_benchmark","revnu_benchmark","guarantee",
-               "guarantee_10","yield_actual","price_actual","revnu_actual","formula_rate",
-               "payment_rate")]
-data$crop <- toupper(data$crop)
-for(varb in c(county_yield,
-              "yield_benchmark",
-              "price_benchmark","revnu_benchmark","guarantee",
-              "guarantee_10","yield_actual","price_actual","revnu_actual","formula_rate",
-              "payment_rate")){
-  data[,varb] <- as.numeric(as.character(data[,varb]))
+  # take first 4 characters of the variable column as year
+  temp$year <- substr(temp$variable, 1, 4)
+
+  # remove the first 4 characters from the variable column
+  temp$variable <- trimws(substr(temp$variable, 5, nchar(temp$variable)))
+
+  # identify any duplicate rows
+  duplicates <- temp |>
+    dplyr::summarise(n = dplyr::n(), .by = c(ST_Cty, `State Name`, `County Name`, `Crop Name`,
+                                             Unit, `ARC-CO Yield Designation`, year, variable)) |>
+    dplyr::filter(n > 1L)
+
+  if(nrow(duplicates) > 0){
+    # if there are duplicates, remove them
+    temp <- temp %>%
+      group_by(ST_Cty, `State Name`, `County Name`, `Crop Name`, Unit,
+               `ARC-CO Yield Designation`, year, variable) %>%
+      summarise(value = mean(as.numeric(value), na.rm = T), .groups = "drop")
+  }
+
+  # pivot wider
+  temp <- temp %>%
+    pivot_wider(names_from = variable, values_from = value)
+
+  # pull out all the columns that have "Bench mark price" in the column title into a single df
+  bench_mark_price <-   temp[,grepl("bench mark price", tolower(colnames(  temp)))]
+
+  # remove all columns that have "bench mark price" in the column title
+  temp <-   temp[,!grepl("bench mark price", tolower(colnames(  temp)))]
+
+  # pull out all the remaining columns that have "bench mark" in the column title into a single df
+  bench_mark <-   temp[,grepl("bench mark", tolower(colnames(  temp)))]
+
+  # remove all columns that have "bench mark" in the column title
+  temp <-   temp[,!grepl("bench mark", tolower(colnames(  temp)))]
+
+  # row sum bench_mark_price and replace 0 with NA
+  bench_mark_price <- bench_mark_price %>%
+    mutate(across(everything(), as.numeric)) %>%
+    rowSums(na.rm = T)
+  bench_mark_price[bench_mark_price == 0] <- NA
+
+  # row sum bench_mark
+  bench_mark <- bench_mark %>%
+    mutate(across(everything(), as.numeric)) %>%
+    rowSums(na.rm = T)
+  bench_mark[bench_mark == 0] <- NA
+
+
+  # add the row sums to the arc_co_benchmarks data frame
+  temp <-   temp %>%
+    mutate(oa_bench_mark_price = bench_mark_price,
+           oa_bench_mark_yield = bench_mark)
+
+  # add column for oa benchmark years
+  temp$oa_bench_mark_years <- paste0(as.numeric(  temp$year) - 5, "-", as.numeric(  temp$year) - 1)
+
+  # rename ST_Cty to fips
+  colnames(  temp)[which(colnames(  temp) == "ST_Cty")] <- "fips"
+
+
+  # convert whole data frame to character
+  temp <-   temp %>%
+    mutate(across(everything(), as.character))
+
+  # clean column names
+  temp <- janitor::clean_names(  temp)
+
+  # rename  arc_co_yield_designation to yield_type
+  colnames(temp)[which(colnames(temp) == "arc_co_yield_designation")] <- "yield_type"
+
+  # rename trend_adjusted_county_yield_or_80_percent_of_t to county_yield
+  colnames(temp)[which(colnames(temp) == "trend_adjusted_county_yield_or_80_percent_of_t")] <- "county_yield"
+
+  # create a new column for county_yield_type
+  temp$county_yield_type <- "trend adjusted county yield or 80% of T-yield"
+
+
+  # check if the column names in temp are the same as the column names in arc_co_benchmarks
+  if(!all(colnames(arc_co_benchmarks) %in% colnames(temp))){
+    # if not, add the missing columns to temp
+    for(c in colnames(arc_co_benchmarks)){
+      if(!c %in% colnames(temp)){
+        temp[,c] <- NA
+      }
+    }
+  }
+
+  # row bind the temp data frame to the arc_co_benchmarks data frame
+  arc_co_benchmarks <- dplyr::bind_rows(arc_co_benchmarks, temp)
+
 }
 
-data <- data[!data$guarantee %in% c(NA,NaN,Inf,-Inf,0),]
-data$crop_yr <- as.numeric(as.character(data$crop_yr))
-data$farm_guarantee <- data$guarantee*0.85
-
-# drop if county code is not avaliable
-data <- data[-which(is.na(data$county_cd)),]
-
-# add fips variable
-data$fips <- clean_fips(county = data$county_cd, state = data$state_cd)
-
-# add crop year variable
-data$crop_yr_full <- paste0(data$crop_yr,"-",data$crop_yr+1)
+# type convert all columns
+arc_co_benchmarks <- readr::type_convert(arc_co_benchmarks)
+arc_co_benchmarks$year <- as.numeric(arc_co_benchmarks$year)
 
 
-saveRDS(data,file="./data-raw/fsaArcPlc/Output/fsaArcCoBenchmarks.rds")
+# convert  data to a tibble before exporting
+fsaArcCoBenchmarks <- dplyr::as_tibble(arc_co_benchmarks)
 
-fsaArcCoBenchmarks <- tidyr::as_tibble(data)
 
-# add data set to the data set folder
+# use the county level file in the package data folder
 usethis::use_data(fsaArcCoBenchmarks, overwrite = TRUE)
-
 
 
 

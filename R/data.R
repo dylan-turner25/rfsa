@@ -76,3 +76,38 @@
 #' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
 #'
 "fsaArcIcPrice"
+
+
+#' ARC-CO benchmark revenues by county and crop
+#'
+#' This dataset contains county-level benchmark and actual revenue data related to the USDA's Agriculture Risk Coverage – County (ARC-CO) program.
+#' The data spans multiple years and includes information on benchmark yields, benchmark prices, actual yields, and ARC-CO payment rates.
+#'
+#' @format A data frame with 21 variables:
+#' \describe{
+#'   \item{fips}{5-digit FIPS code identifying the county.}
+#'   \item{state_name}{Name of the state.}
+#'   \item{county_name}{Name of the county.}
+#'   \item{crop_name}{Name of the crop (e.g., Barley).}
+#'   \item{unit}{Unit of measurement (e.g., Bushel).}
+#'   \item{yield_type}{Yield type (e.g., All, Irrigated, Non-Irrigated).}
+#'   \item{year}{Year of the observation.}
+#'   \item{county_yield}{County yield for the year (used in construction of the benchmark revenue).}
+#'   \item{benchmark_revenue}{Benchmark revenue for the county and crop.}
+#'   \item{guarantee_revenue}{ARC-CO guaranteed revenue level.}
+#'   \item{maximum_payment_rate}{Maximum possible payment rate under ARC-CO.}
+#'   \item{actual_yield}{Actual yield in the county for the crop and year.}
+#'   \item{national_price}{National average price for the crop.}
+#'   \item{actual_revenue}{Actual revenue in the county. Calculated using actual yield and price.}
+#'   \item{formula_payment_rate}{Formula-based payment rate prior to limits.}
+#'   \item{payment_rate}{Final ARC-CO payment rate.}
+#'   \item{oa_bench_mark_price}{Olympic average benchmark price.}
+#'   \item{oa_bench_mark_yield}{Olympic average benchmark yield.}
+#'   \item{oa_bench_mark_years}{Years used in calculating the Olympic averages.}
+#'   \item{county_yield_type}{Description of the county yield methodology.}
+#'   \item{arc_co_payment_rate}{ARC-CO payment rate field (may be duplicated or alternative version).}
+#' }
+#'
+#' @usage data(fsaArcCoBenchmarks)
+#' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
+"fsaArcCoBenchmarks"
