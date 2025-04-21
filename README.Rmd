@@ -24,6 +24,7 @@ library(dplyr)
                    years = character(),
                    description = character(),
                    last_updated = character(),
+                   data_downlod_date = character(),
                    stringsAsFactors = FALSE)
   
   # fill in the dataframe with the dataset names, number of rows, number of columns, years, and description using the files in "./data"
@@ -59,7 +60,38 @@ library(dplyr)
     
     # keep only the date part in d/m/y format
     last_modified <- format(last_modified, "%m/%d/%Y")
- 
+    
+    # find the folder in "/data-raw/fsaArcPlc/input_data" that matches the dataset name
+    folder <- list.files(path = "./data-raw/fsaArcPlc/input_data", pattern = name, full.names = TRUE)
+  
+    # if the folder exists, locate the file that contains `current_year` in the name
+    if(length(folder) > 0){
+      # find the file corresponding to the most recent year
+      current_year_file = NULL
+      current_year = 2030
+      while(length(current_year_file) == 0 && current_year > 2013){
+        # get the file that contains `current_year` in the name
+        current_year_file <- list.files(path = folder, pattern = paste0(current_year), full.names = TRUE)
+        # decrease the year
+        current_year <- current_year - 1
+      }
+      
+      if(length(current_year_file) == 0){
+        # if the file does not exist, set the date to NA
+        data_downlod_date <- NA
+      } else {
+        # if the file exists, get the last modified date of the file
+        file_info <- file.info(current_year_file)
+        
+        # get the last modified date
+        data_downlod_date <- file_info$mtime
+        
+        # keep only the date part in d/m/y format
+        data_downlod_date <- format(data_downlod_date, "%m/%d/%Y")
+      }
+    }
+      
+  
     
     # add a row to the dataframe
     df <- rbind(df, data.frame(dataset = name,
@@ -67,8 +99,9 @@ library(dplyr)
                                 columns = columns,
                                 years = years,
                                 last_updated = last_modified,
+                                data_downlod_date = data_downlod_date,
                                 stringsAsFactors = FALSE))
-  }
+    }
 
   # define descriptions of the data set
   descriptions_list = list()
@@ -102,6 +135,9 @@ library(dplyr)
     mutate(description = ifelse(is.na(description), "No description available", description))
   
 
+# rename df columns
+colnames(df) <- c("Dataset", "Rows", "Columns", "Years", "Last Updated", "Data Download Date", "Description")
+  
 
 
 ```
@@ -109,6 +145,8 @@ library(dplyr)
 `rfsa` can be installed directly from GitHub using `remotes::install_github("dylan-turner25/rfsa", force = TRUE)`.
 
 # Avaliable Datasets
+The following table reports the currently available data sets in the `rfsa` package. The `Last Updated` column indicates the last time the data set was updated in the package. The `Data Download Date` indicates the date that the raw input data for the current year was downloaded from the FSA website (this is important as these data sets are sometimes revised or contain projected values for in progress marketing years).
+
 ```{r, include = TRUE, echo = FALSE, cache=FALSE}
  knitr::kable(df)
 ``` 
