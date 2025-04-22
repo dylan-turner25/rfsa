@@ -148,5 +148,5 @@ colnames(df) <- c("Dataset", "Rows", "Columns", "Years", "Last Updated", "Data D
 The following table reports the currently available data sets in the `rfsa` package. The `Last Updated` column indicates the last time the data set was updated in the package. The `Data Download Date` indicates the date that the raw input data for the current year was downloaded from the FSA website (this is important as these data sets are sometimes revised or contain projected values for in progress marketing years).
 
 ```{r, include = TRUE, echo = FALSE, cache=FALSE}
- knitr::kable(df)
+ knitr::kable(df) 
 ``` 

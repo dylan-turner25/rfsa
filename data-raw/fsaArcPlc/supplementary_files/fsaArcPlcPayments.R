@@ -1,6 +1,6 @@
 
 # list all files in the raw data files folder
-files <- list.files("./data-raw/fsaArcPlc/Raw Data Files/arc_plc_payments",
+files <- list.files("./data-raw/fsaArcPlc/input_data/fsaArcPlcPayments",
                     full.names = T, pattern = ".xlsx")
 
 # initialize a data frame to store arc-ic prices
@@ -14,16 +14,16 @@ for(year in 2014:2018){
 
   # load the file to a temporary object
   temp <- readxl::read_xlsx(file)
-  
+
   if(grepl("ST_CTY",temp[1,1]) ){
     colnames(temp) <- temp[1,]
     temp <- temp[-1,]
     temp$`Amount Paid` <- as.numeric(temp$`Amount Paid`)
   }
-    
+
   # add year
   temp$year <- year
-  
+
   # group
   temp <- temp %>% group_by(Program,Crop,year) %>%
     summarize(`Amount Paid` = sum(`Amount Paid`, na.rm =T)) %>%
@@ -35,7 +35,7 @@ for(year in 2014:2018){
   } else {
     arc_plc_payments <- dplyr::bind_rows(arc_plc_payments, temp)
   }
-  
+
 }
 
 # rename and reconcile different crop naming coventions
@@ -58,45 +58,43 @@ arc_plc_payments <- replace(arc_plc_payments, is.na(arc_plc_payments), 0)
 for(prog in c("ARCCO","ARCIC","PLC")){
   # get file path corresponding to year
   file <- files[grepl(prog,files)]
-  
+
   # loop over each year, corresponding to a sheet in loaded excel file
   for(year in 2019:2023){
     # load the file to a temporary object
     temp <- readxl::read_xlsx(file, sheet = paste(year, prog), skip = 2)
-    
+
     # remove grand total "state"
     temp <- temp[-which(temp$`STATE NAME` %in% c("GRAND TOTAL")),]
-    
+
     # remove state and total columns
     temp <- temp[,-which(colnames(temp) %in% c("STATE NAME","TOTAL"))]
-    
+
     # transpose aggregate to national level
     temp <- data.frame(t(temp))
     temp$`Amount Paid` <- rowSums(temp)
     temp$Crop <- rownames(temp)
     temp <- temp[,c("Crop","Amount Paid")]
-    
+
     # add program and year
     temp$Program <- gsub("ARC","ARC-",prog)
     temp$year <- year
-    
+
     # clean crop names
     temp$Crop <- gsub("Beans-","",temp$Crop)
     temp$Crop <- str_to_sentence(temp$Crop)
-    
+
     # add to arc_plc_payments data frame
     arc_plc_payments <- dplyr::bind_rows(arc_plc_payments, temp)
   }
 
 }
 
+# type convert columns
+arc_plc_payments <- readr::type_convert(arc_plc_payments)
 
+# save county-commodity-year payments
+fsaArcPlcPayments <- arc_plc_payments
 
-
-
-# save county-commodity-year payments 
-fsaArcPlcPaymentsByCommodity2 <- arc_plc_payments 
-saveRDS(fsaArcPlcPaymentsByCommodity2,"./data-raw/fsaArcPlc/Output/fsaArcPlcPaymentsByCommodity2.rds")
-
-usethis::use_data(fsaArcPlcPaymentsByCommodity2, overwrite = TRUE)
+usethis::use_data(fsaArcPlcPayments, overwrite = TRUE)
 
