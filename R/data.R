@@ -157,3 +157,37 @@
 #' @usage data(fsaArcCoPrice)
 #' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
 "fsaArcPlcPayments"
+
+
+#' Effective Reference Prices for ARC/PLC Commodities
+#'
+#' A dataset containing statutory and effective reference price calculations for commodities eligible
+#' for the Price Loss Coverage (PLC) and Agricultural Risk Coverage (ARC) programs. This includes
+#' historical Marketing Year Average (MYA) prices, statutory reference prices, calculated Olympic averages,
+#' and the final effective reference price used to determine program payments.
+#'
+#' @format A data frame with 15 variables:
+#' \describe{
+#'   \item{Commodity}{Name of the commodity (e.g., Corn, Wheat, Peanuts)}
+#'   \item{Marketing Year}{The official marketing year calendar for the commodity (e.g., "Sep. 1–Aug. 31")}
+#'   \item{Unit}{Unit of measurement (e.g., Bushel, Pound)}
+#'   \item{T-0 Reference Price}{The statutory reference price for the current marketing year}
+#'   \item{115% of T-0 Reference Price}{115% of the statutory reference price, used as a ceiling for the effective reference price}
+#'   \item{T-5  MYA Price}{Marketing Year Average (MYA) price from five years prior}
+#'   \item{T-4  MYA Price}{MYA price from four years prior}
+#'   \item{T-3 MYA Price}{MYA price from three years prior}
+#'   \item{T-2 MYA Price}{MYA price from two years prior}
+#'   \item{T-1 MYA Price}{MYA price from one year prior}
+#'   \item{85% of 5-year avg, dropping high and low prices}{Calculated 85% of the Olympic average of the five MYA prices}
+#'   \item{T-0 Effective Reference Price}{Final effective reference price for the marketing year}
+#'   \item{MAX}{Maximum value among the five MYA prices}
+#'   \item{MIN}{Minimum value among the five MYA prices}
+#'   \item{year}{Program year (e.g., "2021-2022")}
+#' }
+#'
+#' @usage data(fsaEffectiveRefPrices)
+#' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
+"fsaEffectiveRefPrices"
+
+
+
