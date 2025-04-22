@@ -20,6 +20,7 @@ revised or contain projected values for in progress marketing years).
 | fsaArcCoBenchmarks | 879236 | 21 | 2014-2025 | 04/20/2025 | 04/19/2025 | ARC-CO benchmark revenues by county and crop |
 | fsaArcCoPrice | 249 | 15 | 2014-2024 | 04/21/2025 | 04/10/2025 | ARC-CO benchmark prices. |
 | fsaArcIcPrice | 227 | 14 | 2015-2024 | 04/19/2025 | 04/10/2025 | Commodity-specific ARC-IC benchmark prices, MYA prices, and statutory reference prices. |
+| fsaArcPlcBaseAcres | 225 | 14 | 2015-2024 | 04/22/2025 | 04/10/2025 | ARC/PLC enrolled base acres by commodity |
 | fsaArcPlcPayments | 481 | 4 | 2014-2023 | 04/22/2025 | 04/10/2025 | ARC/PLC Program Payments by Crop and Year |
 | fsaEffectiveRefPrices | 158 | 15 | 2019-2025 | 04/22/2025 | 04/10/2025 | Effective Reference Prices for ARC/PLC Commodities |
 | fsaMyaPrice | 246 | 12 | 2014-2024 | 04/19/2025 | 04/10/2025 | Commodity specific marketing year average prices. |
