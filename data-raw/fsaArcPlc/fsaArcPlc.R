@@ -25,7 +25,7 @@ source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcCoPrice.R")
 # https://farmdocdaily.illinois.edu/2021/09/2021-commodity-program-enrollment-dashboard.html
 
 # clean arc-plc payments
-source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcPlcPayments_V02.R")   # updated 2/03/2025
+source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcPlcPayments.R")
 
 # clean effective reference prices
 source("./data-raw/fsaArcPlc/Suplementary Files/fsaEffectiveRefPrices.R")
