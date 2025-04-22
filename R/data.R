@@ -138,3 +138,22 @@
 #' @usage data(fsaArcCoPrice)
 #' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
 "fsaArcCoPrice"
+
+#' ARC/PLC Program Payments by Crop and Year
+#'
+#' This dataset provides annual payments made through the ARC-CO, ARC-IC, and PLC programs
+#' administered by the Farm Service Agency (FSA). It includes crop-level payment data across
+#' multiple program years and crops, expressed in nominal dollars.
+#'
+#' @format A data frame with 481 rows and 4 variables:
+#' \describe{
+#'   \item{Program}{Character. Type of commodity program: \code{"ARC-CO"}, \code{"ARC-IC"}, or \code{"PLC"}.}
+#'   \item{Crop}{Character. Name of the crop associated with the payment (e.g., \code{"Corn"}, \code{"Soybeans"}, \code{"Wheat"}).}
+#'   \item{year}{Integer. Marketing year associated with the payment (e.g., \code{2014}, \code{2015}).}
+#'   \item{Amount Paid}{Numeric. Total amount paid for the given crop, year, and program (in nominal dollars).}
+#' }
+#'
+#'
+#' @usage data(fsaArcCoPrice)
+#' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
+"fsaArcPlcPayments"
