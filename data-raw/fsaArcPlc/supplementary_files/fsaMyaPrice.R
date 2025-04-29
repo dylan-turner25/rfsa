@@ -1,5 +1,5 @@
 # list all files in the raw data files folder
-files <- list.files("./data-raw/fsaArcPlc/input_data/mya_prices",
+files <- list.files("./data-raw/fsaArcPlc/input_data/fsaMyaPrice",
                     full.names = T)
 
 # initialize a data frame to store mya prices
@@ -52,13 +52,56 @@ for(year in 2014:(current_year - 1)){
   }
 }
 
-# final cleaning opperations
+# final cleaning operations
 
 # strip any number followed by a "/" from the commodity name
 mya_prices$Commodity <- gsub("[0-9]/","",mya_prices$Commodity)
 
 # type convert the columns
 mya_prices <- readr::type_convert(mya_prices)
+
+# rename columns
+names(mya_prices) <- c("crop","marketing_year_dates","marketing_year",
+                       "publishing_dates_for_final_mya_price",
+                       "unit",
+                       "final_mya_price_lag5",
+                       "final_mya_price_lag4",
+                       "final_mya_price_lag3",
+                       "final_mya_price_lag2",
+                       "final_mya_price_lag1",
+                       "current_mya_price",
+                       "final_mya_price_lag6")
+
+# extract crop type
+mya_prices$crop_type <- unlist(lapply(mya_prices$crop, extract_crop_type))
+
+# add rma crop codes where applicable
+mya_prices$rma_type_code <- unlist(lapply(mya_prices$crop, extract_crop_type, rma_code = TRUE))
+
+# clean crop names
+mya_prices$crop <- unlist(lapply(mya_prices$crop, clean_crop_names))
+
+# add rma crop codes
+mya_prices$rma_crop_code <- unlist(lapply(mya_prices$crop, assign_rma_cc))
+
+# reorder columns so lags are in  order
+mya_prices <- mya_prices[,c("crop",
+                             "marketing_year",
+                             "marketing_year_dates",
+                             "publishing_dates_for_final_mya_price",
+                             "unit",
+                             "current_mya_price",
+                             "final_mya_price_lag1",
+                             "final_mya_price_lag2",
+                             "final_mya_price_lag3",
+                             "final_mya_price_lag4",
+                             "final_mya_price_lag5",
+                             "final_mya_price_lag6",
+                             "rma_crop_code",
+                             "crop_type",
+                             "rma_type_code")]
+
+
 
 # convert the data to a tibble before exporting
 fsaMyaPrice <- dplyr::as_tibble(mya_prices)
