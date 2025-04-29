@@ -1,27 +1,30 @@
-#' Commodity specific marketing year average prices.
+#' FSA Marketing Year Average Prices
 #'
-#' @details
-#' To view code used to generate this data set, see `./data-raw/fsaArcPlc/supplementary_files/fsaMyaPrice.R`
+#' A dataset containing USDA FSA marketing-year average (MYA) prices for a range of commodities,
+#' including the current MYA price and the six most recent lagged MYA prices, as well as RMA
+#' crop codes and type classifications.
 #'
-#'
-#' @format  A tibble
+#' @format A tibble with 245 rows and 15 columns:
 #' \describe{
-#'   \item{Commodity}{The name of the commodity}
-#'   \item{Marketing Year}{The dates for the commodity specific marketing year }
-#'   \item{year}{The two calendar years that the commodity specific marketing year spans}
-#'   \item{Publishing Dates for the  Final T - 0 MYA Price}{The date the final T-0 MYA price was published}
-#'   \item{Unit}{The unit of measurement for the price}
-#'   \item{Final T - 6 MYA Price}{The marketing year average price for the marketing year 6 years prior to the marketing year defined by `year`}
-#'   \item{Final T - 5 MYA Price}{The marketing year average price for the marketing year 5 years prior to the marketing year defined by `year`}
-#'   \item{Final T - 4 MYA Price}{The marketing year average price for the marketing year 4 years prior to the marketing year defined by `year`}
-#'   \item{Final T - 3 MYA Price}{The marketing year average price for the marketing year 3 years prior to the marketing year defined by `year`}
-#'   \item{Final T - 2 MYA Price}{The marketing year average price for the marketing year 2 years prior to the marketing year defined by `year`}
-#'   \item{Final T - 1 MYA Price}{The marketing year average price for the marketing year 1 year prior to the marketing year defined by `year`}
-#'   \item{Final T - 0 MYA Price}{The marketing year average price for the marketing year defined by `year`}
-#'   }
-#' @usage data(fsaMyaPrice)
-#' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
+#'   \item{crop}{\code{character}. Commodity name (e.g., “wheat”, “corn”).}
+#'   \item{marketing_year}{\code{character}. Marketing year label spanning two calendar years (e.g., “2014-2015”).}
+#'   \item{marketing_year_dates}{\code{character}. Date range of the marketing year (e.g., “Jun. 1–May 31”).}
+#'   \item{publishing_dates_for_final_mya_price}{\code{character}. Date the final T-0 MYA price was published (e.g., “Jun. 29, 2015”).}
+#'   \item{unit}{\code{character}. Unit of measurement for the price (e.g., “Bushel”, “Pound”).}
+#'   \item{current_mya_price}{\code{numeric}. Final T-0 MYA price for the marketing year defined by \code{marketing_year}.}
+#'   \item{final_mya_price_lag1}{\code{numeric}. Final T-1 MYA price (one year prior).}
+#'   \item{final_mya_price_lag2}{\code{numeric}. Final T-2 MYA price (two years prior).}
+#'   \item{final_mya_price_lag3}{\code{numeric}. Final T-3 MYA price (three years prior).}
+#'   \item{final_mya_price_lag4}{\code{numeric}. Final T-4 MYA price (four years prior).}
+#'   \item{final_mya_price_lag5}{\code{numeric}. Final T-5 MYA price (five years prior).}
+#'   \item{final_mya_price_lag6}{\code{numeric}. Final T-6 MYA price (six years prior).}
+#'   \item{rma_crop_code}{\code{integer}. RMA commodity code identifying the insured crop (e.g., 41 = corn).}
+#'   \item{crop_type}{\code{character}. Crop type classification (e.g., “long grain”, “seed”, “large”, “small”).}
+#'   \item{rma_type_code}{\code{character}. Sub-type code used by RMA (e.g., “453” for long-grain rice).}
+#' }
 #'
+#' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
+#' @usage data(fsaMyaPrice)
 "fsaMyaPrice"
 
 #' Commodity specific PLC payment rates including statutory and effective reference prices.
