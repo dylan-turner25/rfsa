@@ -14,7 +14,7 @@ A data frame with 249 rows and 17 variables:
 \item{publishing_dates_for_final_mya_price}{Date when the final MYA price was released}
 \item{statutory_reference_price}{Reference price defined in statute}
 \item{effective_reference_price}{Calculated reference price including escalator provisions (if applicable)}
-\item{combined_reference_price}{The relevant reference price (i.e. statuatory reference price until effective reference prices were introduced.)}
+\item{combined_reference_price}{The relevant reference price (i.e. statutory reference price until effective reference prices were introduced.)}
 \item{unit}{Measurement unit (e.g., "Bushel", "Pound")}
 \item{current_mya_price}{Final marketing year average price received by farmers}
 \item{current_national_loan_rate}{National loan rate for the commodity}

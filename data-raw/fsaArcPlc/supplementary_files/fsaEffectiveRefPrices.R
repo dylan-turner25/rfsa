@@ -65,7 +65,7 @@ erp_prices <- erp_prices %>% dplyr::select(-MAX,-MIN)
 
 # rename the columns
 colnames(erp_prices) <- c("crop","marketing_year_dates",
-                          "unit","statuatory_reference_price","115_statuatory_reference_price",
+                          "unit","statutory_reference_price","115_statutory_reference_price",
                           "mya_price_lag5", "mya_price_lag4",
                           "mya_price_lag3", "mya_price_lag2",
                           "mya_price_lag1","85_olympic_average_mya",
@@ -77,8 +77,8 @@ erp_prices$program_year <- substr(erp_prices$marketing_year,1,4)
 # reorder columns
 erp_prices <- erp_prices[,c("crop","marketing_year_dates",
                             "marketing_year","program_year",
-                              "unit","statuatory_reference_price",
-                              "115_statuatory_reference_price",
+                              "unit","statutory_reference_price",
+                              "115_statutory_reference_price",
                               "mya_price_lag5", "mya_price_lag4",
                               "mya_price_lag3", "mya_price_lag2",
                               "mya_price_lag1","85_olympic_average_mya",

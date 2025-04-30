@@ -161,7 +161,7 @@ library(rfsa)
 
 # load marketing year average prices
 data("fsaMyaPrice")
-
+ 
 head(fsaMyaPrice)
 
 ```

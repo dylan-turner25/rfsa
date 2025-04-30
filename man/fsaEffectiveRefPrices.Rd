@@ -12,8 +12,8 @@ A data frame with 17 variables:
 \item{marketing_year}{Label for the marketing year period (e.g., "2019-2020")}
 \item{program_year}{The crop year used for program payment eligibility (e.g., 2019). FSA typically defines the program year as the calendar year in which the commodity is harvested.}
 \item{unit}{Unit of measurement (e.g., Bushel, Pound)}
-\item{statuatory_reference_price}{The statutory reference price for the crop}
-\item{115_statuatory_reference_price}{The statutory reference price multiplied by 115\%, used as a cap for the effective reference price}
+\item{statutory_reference_price}{The statutory reference price for the crop}
+\item{115_statutory_reference_price}{The statutory reference price multiplied by 115\%, used as a cap for the effective reference price}
 \item{mya_price_lag5}{Marketing Year Average (MYA) price from five years prior}
 \item{mya_price_lag4}{MYA price from four years prior}
 \item{mya_price_lag3}{MYA price from three years prior}
