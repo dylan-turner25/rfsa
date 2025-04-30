@@ -221,7 +221,10 @@ arc_co_benchmarks$crop <- unlist(lapply(arc_co_benchmarks$crop, clean_crop_names
 # add rma crop codes
 arc_co_benchmarks$rma_crop_code <- unlist(lapply(arc_co_benchmarks$crop, assign_rma_cc))
 
-
+# drop if actual yield is na
+arc_co_benchmarks <- distinct(arc_co_benchmarks %>%
+  filter(!is.na(actual_yield)) %>%
+  select(-county_yield, -county_yield))
 
 
 # convert  data to a tibble before exporting

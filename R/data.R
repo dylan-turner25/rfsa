@@ -14,7 +14,7 @@
 #'   \item{publishing_dates_for_final_mya_price}{Date when the final MYA price was released}
 #'   \item{statutory_reference_price}{Reference price defined in statute}
 #'   \item{effective_reference_price}{Calculated reference price including escalator provisions (if applicable)}
-#'   \item{combined_reference_price}{The relevant reference price (i.e. statuatory reference price until effective reference prices were introduced.)}
+#'   \item{combined_reference_price}{The relevant reference price (i.e. statutory reference price until effective reference prices were introduced.)}
 #'   \item{unit}{Measurement unit (e.g., "Bushel", "Pound")}
 #'   \item{current_mya_price}{Final marketing year average price received by farmers}
 #'   \item{current_national_loan_rate}{National loan rate for the commodity}
@@ -102,8 +102,6 @@
 #'   \item{arc_co_payment_rate}{Final ARC-CO payment rate per unit}
 #'   \item{benchmark_revenue}{Benchmark revenue calculated using Olympic average yields and prices}
 #'   \item{county_name}{Name of the county}
-#'   \item{county_yield}{County yield used in benchmark calculations}
-#'   \item{county_yield_type}{Type of yield used (e.g., "NASS", "RMA")}
 #'   \item{crop}{Name of the commodity}
 #'   \item{crop_type}{Crop subtype if applicable (e.g., "long grain")}
 #'   \item{fips}{5-digit FIPS code for county identification}
@@ -190,8 +188,8 @@
 #'   \item{marketing_year}{Label for the marketing year period (e.g., "2019-2020")}
 #'   \item{program_year}{The crop year used for program payment eligibility (e.g., 2019). FSA typically defines the program year as the calendar year in which the commodity is harvested.}
 #'   \item{unit}{Unit of measurement (e.g., Bushel, Pound)}
-#'   \item{statuatory_reference_price}{The statutory reference price for the crop}
-#'   \item{115_statuatory_reference_price}{The statutory reference price multiplied by 115%, used as a cap for the effective reference price}
+#'   \item{statutory_reference_price}{The statutory reference price for the crop}
+#'   \item{115_statutory_reference_price}{The statutory reference price multiplied by 115%, used as a cap for the effective reference price}
 #'   \item{mya_price_lag5}{Marketing Year Average (MYA) price from five years prior}
 #'   \item{mya_price_lag4}{MYA price from four years prior}
 #'   \item{mya_price_lag3}{MYA price from three years prior}
