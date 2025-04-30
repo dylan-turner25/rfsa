@@ -1,5 +1,5 @@
 # list all files in the raw data files folder
-files <- list.files("./data-raw/fsaArcPlc/input_data/arc_co_benchmarks",
+files <- list.files("./data-raw/fsaArcPlc/input_data/fsaArcCoBenchmarks",
                     full.names = T)
 
 # initialize a data frame to store arc-ic prices
@@ -13,7 +13,7 @@ arc_co_benchmarks <- readxl::read_excel(files[grepl("2014-2018",files)], skip = 
   filter(!is.na(value))
 
 # take first 4 characters of the variable column as year
-arc_co_benchmarks$year <- substr(arc_co_benchmarks$variable, 1, 4)
+arc_co_benchmarks$program_year <- substr(arc_co_benchmarks$variable, 1, 4)
 
 # remove the first 4 characters from the variable column
 arc_co_benchmarks$variable <- trimws(substr(arc_co_benchmarks$variable, 5, nchar(arc_co_benchmarks$variable)))
@@ -110,7 +110,7 @@ for(y in 2019:current_year){
     filter(!is.na(value))
 
   # take first 4 characters of the variable column as year
-  temp$year <- substr(temp$variable, 1, 4)
+  temp$program_year <- substr(temp$variable, 1, 4)
 
   # remove the first 4 characters from the variable column
   temp$variable <- trimws(substr(temp$variable, 5, nchar(temp$variable)))
@@ -118,14 +118,14 @@ for(y in 2019:current_year){
   # identify any duplicate rows
   duplicates <- temp |>
     dplyr::summarise(n = dplyr::n(), .by = c(ST_Cty, `State Name`, `County Name`, `Crop Name`,
-                                             Unit, `ARC-CO Yield Designation`, year, variable)) |>
+                                             Unit, `ARC-CO Yield Designation`, program_year, variable)) |>
     dplyr::filter(n > 1L)
 
   if(nrow(duplicates) > 0){
     # if there are duplicates, remove them
     temp <- temp %>%
       group_by(ST_Cty, `State Name`, `County Name`, `Crop Name`, Unit,
-               `ARC-CO Yield Designation`, year, variable) %>%
+               `ARC-CO Yield Designation`, program_year, variable) %>%
       summarise(value = mean(as.numeric(value), na.rm = T), .groups = "drop")
   }
 
@@ -164,7 +164,7 @@ for(y in 2019:current_year){
            oa_bench_mark_yield = bench_mark)
 
   # add column for oa benchmark years
-  temp$oa_bench_mark_years <- paste0(as.numeric(  temp$year) - 5, "-", as.numeric(  temp$year) - 1)
+  temp$oa_bench_mark_years <- paste0(as.numeric(  temp$program_year) - 5, "-", as.numeric(  temp$program_year) - 1)
 
   # rename ST_Cty to fips
   colnames(  temp)[which(colnames(  temp) == "ST_Cty")] <- "fips"
@@ -204,7 +204,24 @@ for(y in 2019:current_year){
 
 # type convert all columns
 arc_co_benchmarks <- readr::type_convert(arc_co_benchmarks)
-arc_co_benchmarks$year <- as.numeric(arc_co_benchmarks$year)
+arc_co_benchmarks$program_year <- as.numeric(arc_co_benchmarks$program_year)
+
+# rename crop_name to crop
+colnames(arc_co_benchmarks)[which(colnames(arc_co_benchmarks) == "crop_name")] <- "crop"
+
+# extract crop type
+arc_co_benchmarks$crop_type <- unlist(lapply(arc_co_benchmarks$crop, extract_crop_type))
+
+# add rma crop codes where applicable
+arc_co_benchmarks$rma_type_code <- unlist(lapply(arc_co_benchmarks$crop, extract_crop_type, rma_code = TRUE))
+
+# clean crop names
+arc_co_benchmarks$crop <- unlist(lapply(arc_co_benchmarks$crop, clean_crop_names))
+
+# add rma crop codes
+arc_co_benchmarks$rma_crop_code <- unlist(lapply(arc_co_benchmarks$crop, assign_rma_cc))
+
+
 
 
 # convert  data to a tibble before exporting

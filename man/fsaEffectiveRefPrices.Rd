@@ -5,23 +5,25 @@
 \alias{fsaEffectiveRefPrices}
 \title{Effective Reference Prices for ARC/PLC Commodities}
 \format{
-A data frame with 15 variables:
+A data frame with 17 variables:
 \describe{
-\item{Commodity}{Name of the commodity (e.g., Corn, Wheat, Peanuts)}
-\item{Marketing Year}{The official marketing year calendar for the commodity (e.g., "Sep. 1–Aug. 31")}
-\item{Unit}{Unit of measurement (e.g., Bushel, Pound)}
-\item{T-0 Reference Price}{The statutory reference price for the current marketing year}
-\item{115\% of T-0 Reference Price}{115\% of the statutory reference price, used as a ceiling for the effective reference price}
-\item{T-5  MYA Price}{Marketing Year Average (MYA) price from five years prior}
-\item{T-4  MYA Price}{MYA price from four years prior}
-\item{T-3 MYA Price}{MYA price from three years prior}
-\item{T-2 MYA Price}{MYA price from two years prior}
-\item{T-1 MYA Price}{MYA price from one year prior}
-\item{85\% of 5-year avg, dropping high and low prices}{Calculated 85\% of the Olympic average of the five MYA prices}
-\item{T-0 Effective Reference Price}{Final effective reference price for the marketing year}
-\item{MAX}{Maximum value among the five MYA prices}
-\item{MIN}{Minimum value among the five MYA prices}
-\item{year}{Program year (e.g., "2021-2022")}
+\item{crop}{Name of the commodity (e.g., Corn, Wheat, Peanuts)}
+\item{marketing_year_dates}{The official marketing year for the commodity (e.g., "Sep. 1–Aug. 31")}
+\item{marketing_year}{Label for the marketing year period (e.g., "2019-2020")}
+\item{program_year}{The crop year used for program payment eligibility (e.g., 2019). FSA typically defines the program year as the calendar year in which the commodity is harvested.}
+\item{unit}{Unit of measurement (e.g., Bushel, Pound)}
+\item{statuatory_reference_price}{The statutory reference price for the crop}
+\item{115_statuatory_reference_price}{The statutory reference price multiplied by 115\%, used as a cap for the effective reference price}
+\item{mya_price_lag5}{Marketing Year Average (MYA) price from five years prior}
+\item{mya_price_lag4}{MYA price from four years prior}
+\item{mya_price_lag3}{MYA price from three years prior}
+\item{mya_price_lag2}{MYA price from two years prior}
+\item{mya_price_lag1}{MYA price from one year prior}
+\item{85_olympic_average_mya}{85\% of the Olympic average of the five MYA prices, dropping the high and low}
+\item{effective_reference_price}{Final effective reference price used for the program year}
+\item{crop_type}{Subtype of the crop, if applicable (e.g., "long grain", "large")}
+\item{rma_type_code}{RMA classification code for crop type, if available}
+\item{rma_crop_code}{RMA crop code used for cross-agency alignment}
 }
 }
 \source{
@@ -33,7 +35,8 @@ data(fsaEffectiveRefPrices)
 \description{
 A dataset containing statutory and effective reference price calculations for commodities eligible
 for the Price Loss Coverage (PLC) and Agricultural Risk Coverage (ARC) programs. This includes
-historical Marketing Year Average (MYA) prices, statutory reference prices, calculated Olympic averages,
-and the final effective reference price used to determine program payments.
+statutory reference prices, 115\% caps, lagged Marketing Year Average (MYA) prices, Olympic averages,
+and the final effective reference price used to determine program payments. The dataset also includes
+metadata on crop classification and program year alignment.
 }
 \keyword{datasets}

@@ -118,6 +118,10 @@ for(year in 2015:(current_year - 1) ){
 
 arc_plc_base_acres <- arc_plc_base_acres[grepl("total",
                                                tolower(arc_plc_base_acres$`covered commodity`)) == F,]
+
+# clean names
+arc_plc_base_acres <- janitor::clean_names(arc_plc_base_acres)
+
 # type convert columns
 arc_plc_base_acres <- readr::type_convert(arc_plc_base_acres)
 

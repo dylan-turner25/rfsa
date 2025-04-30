@@ -3,33 +3,39 @@
 \docType{data}
 \name{fsaPlcPaymentRate}
 \alias{fsaPlcPaymentRate}
-\title{Commodity specific PLC payment rates including statutory and effective reference prices.}
+\title{Price Loss Coverage (PLC) Payment Rates by Crop and Program Year}
 \format{
-A tibble
+A data frame with 249 rows and 17 variables:
 \describe{
-\item{Commodity}{The name of the commodity}
-\item{Marketing Year}{The dates for the commodity specific marketing year }
-\item{year}{The two calendar years that the commodity specific marketing year spans}
-\item{Publishing Dates for the  Final T - 0 PLC Effective Price}{The date the final T-0 PLC effective price was published}
-\item{Unit}{The unit of measurement for the price}
-\item{Statutory Reference Price}{The statutory reference price for the commodity}
-\item{Final T-0 Effective Price}{The effective reference price for the commodity in the marketing year defined by \code{year}}
-\item{Final T-0 MYA Price}{The marketing year average price for the marketing year defined by \code{year}}
-\item{T-0 National Loan Rate}{The national loan rate for the commodity in the marketing year defined by \code{year}}
-\item{Final T-0 PLC Payment Rate}{The PLC payment rate for the commodity in the marketing year defined by \code{year}}
-\item{Maximum PLC Payment Rate}{The maximum PLC payment rate for the commodity in the marketing year defined by \code{year}}
+\item{crop}{Name of the commodity (e.g., wheat, corn, soybeans)}
+\item{marketing_year_dates}{Date range defining the marketing year (e.g., "Sep. 1–Aug. 31")}
+\item{marketing_year}{Formatted marketing year (e.g., "2014–2015")}
+\item{program_year}{FSA program year, typically defined as the year in which the crop is harvested.}
+\item{publishing_dates_for_final_mya_price}{Date when the final MYA price was released}
+\item{statutory_reference_price}{Reference price defined in statute}
+\item{effective_reference_price}{Calculated reference price including escalator provisions (if applicable)}
+\item{combined_reference_price}{The relevant reference price (i.e. statuatory reference price until effective reference prices were introduced.)}
+\item{unit}{Measurement unit (e.g., "Bushel", "Pound")}
+\item{current_mya_price}{Final marketing year average price received by farmers}
+\item{current_national_loan_rate}{National loan rate for the commodity}
+\item{plc_price}{Price used in PLC payment calculations (typically the MYA)}
+\item{plc_payment_rate}{Final PLC payment rate per unit, equal to max(0, reference price - MYA)}
+\item{max_plc_payment_rate}{Maximum payment rate possible under PLC, defined as reference price - loan rate}
+\item{crop_type}{Subtype of crop where applicable (e.g., "large", "small", or grain class)}
+\item{rma_type_code}{Optional RMA crop insurance type code (if available)}
+\item{rma_crop_code}{Optional RMA crop insurance commodity code (if available)}
 }
 }
 \source{
-\url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
+\url{https://www.fsa.usda.gov/programs-and-services/arcplc_program/index}
 }
 \usage{
 data(fsaPlcPaymentRate)
 }
 \description{
-Commodity specific PLC payment rates including statutory and effective reference prices.
-}
-\details{
-To view code used to generate this data set, see \code{./data-raw/fsaArcPlc/supplementary_files/fsaPlcPaymentRates.R}
+A dataset containing annual payment rate information for the Price Loss Coverage (PLC) program
+administered by the USDA. This data includes statutory and effective reference prices,
+marketing year average (MYA) prices, loan rates, and computed PLC payment rates by commodity
+and program year.
 }
 \keyword{datasets}

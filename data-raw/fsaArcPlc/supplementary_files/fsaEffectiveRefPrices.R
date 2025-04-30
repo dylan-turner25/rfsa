@@ -60,6 +60,43 @@ for(year in 2019:(current_year )){
 
 }
 
+# drop max and min columns
+erp_prices <- erp_prices %>% dplyr::select(-MAX,-MIN)
+
+# rename the columns
+colnames(erp_prices) <- c("crop","marketing_year_dates",
+                          "unit","statuatory_reference_price","115_statuatory_reference_price",
+                          "mya_price_lag5", "mya_price_lag4",
+                          "mya_price_lag3", "mya_price_lag2",
+                          "mya_price_lag1","85_olympic_average_mya",
+                          "effective_reference_price","marketing_year")
+
+# add a program year column
+erp_prices$program_year <- substr(erp_prices$marketing_year,1,4)
+
+# reorder columns
+erp_prices <- erp_prices[,c("crop","marketing_year_dates",
+                            "marketing_year","program_year",
+                              "unit","statuatory_reference_price",
+                              "115_statuatory_reference_price",
+                              "mya_price_lag5", "mya_price_lag4",
+                              "mya_price_lag3", "mya_price_lag2",
+                              "mya_price_lag1","85_olympic_average_mya",
+                              "effective_reference_price")]
+
+# extract crop type
+erp_prices$crop_type <- unlist(lapply(erp_prices$crop, extract_crop_type))
+
+# add rma crop codes where applicable
+erp_prices$rma_type_code <- unlist(lapply(erp_prices$crop, extract_crop_type, rma_code = TRUE))
+
+# clean crop names
+erp_prices$crop <- unlist(lapply(erp_prices$crop, clean_crop_names))
+
+# add rma crop codes
+erp_prices$rma_crop_code <- unlist(lapply(erp_prices$crop, assign_rma_cc))
+
+
 # type convert columns
 erp_prices <- readr::type_convert(erp_prices)
 

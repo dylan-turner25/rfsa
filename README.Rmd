@@ -5,7 +5,7 @@ output: github_document
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
+knitr::opts_chunk$set( 
   collapse = TRUE, 
   comment = "#>",
   fig.path = "man/figures/README-",
@@ -39,12 +39,18 @@ library(dplyr)
     rows <- nrow(get(name))
     columns <- ncol(get(name))
     
-    # if year is a character, keep the first four characters then convert to numeric
-    if(is.character(get(name)$year)){
-      years <- as.numeric(substr(get(name)$year, 1, 4))
+    if("program_year" %in% colnames(get(name))){
+      years = get(name)$program_year
+    } else if ("marketing_year" %in% colnames(get(name))){ 
+      years = as.numeric(substr(get(name)$marketing_year, 1, 4))
     } else {
-      years <- get(name)$year
+      years = get(name)$year
+      if(is.character(years)){
+        years = as.numeric(substr(years, 1, 4))
+      }
     }
+    
+
     
     # get the years covered by the dataset
     min_year = min(years, na.rm = T)
