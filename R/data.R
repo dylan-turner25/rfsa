@@ -1,3 +1,37 @@
+#' Price Loss Coverage (PLC) Payment Rates by Crop and Program Year
+#'
+#' A dataset containing annual payment rate information for the Price Loss Coverage (PLC) program
+#' administered by the USDA. This data includes statutory and effective reference prices,
+#' marketing year average (MYA) prices, loan rates, and computed PLC payment rates by commodity
+#' and program year.
+#'
+#' @format A data frame with 249 rows and 17 variables:
+#' \describe{
+#'   \item{crop}{Name of the commodity (e.g., wheat, corn, soybeans)}
+#'   \item{marketing_year_dates}{Date range defining the marketing year (e.g., "Sep. 1–Aug. 31")}
+#'   \item{marketing_year}{Formatted marketing year (e.g., "2014–2015")}
+#'   \item{program_year}{FSA program year, typically defined as the year in which the crop is harvested.}
+#'   \item{publishing_dates_for_final_mya_price}{Date when the final MYA price was released}
+#'   \item{statutory_reference_price}{Reference price defined in statute}
+#'   \item{effective_reference_price}{Calculated reference price including escalator provisions (if applicable)}
+#'   \item{combined_reference_price}{The relevant reference price (i.e. statuatory reference price until effective reference prices were introduced.)}
+#'   \item{unit}{Measurement unit (e.g., "Bushel", "Pound")}
+#'   \item{current_mya_price}{Final marketing year average price received by farmers}
+#'   \item{current_national_loan_rate}{National loan rate for the commodity}
+#'   \item{plc_price}{Price used in PLC payment calculations (typically the MYA)}
+#'   \item{plc_payment_rate}{Final PLC payment rate per unit, equal to max(0, reference price - MYA)}
+#'   \item{max_plc_payment_rate}{Maximum payment rate possible under PLC, defined as reference price - loan rate}
+#'   \item{crop_type}{Subtype of crop where applicable (e.g., "large", "small", or grain class)}
+#'   \item{rma_type_code}{Optional RMA crop insurance type code (if available)}
+#'   \item{rma_crop_code}{Optional RMA crop insurance commodity code (if available)}
+#' }
+#'
+#' @source \url{https://www.fsa.usda.gov/programs-and-services/arcplc_program/index}
+#' @usage data(fsaPlcPaymentRate)
+"fsaPlcPaymentRate"
+
+
+
 #' FSA Marketing Year Average Prices
 #'
 #' A dataset containing USDA FSA marketing-year average (MYA) prices for a range of commodities,
@@ -26,31 +60,6 @@
 #' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
 #' @usage data(fsaMyaPrice)
 "fsaMyaPrice"
-
-#' Commodity specific PLC payment rates including statutory and effective reference prices.
-#'
-#' @details
-#' To view code used to generate this data set, see `./data-raw/fsaArcPlc/supplementary_files/fsaPlcPaymentRates.R`
-#'
-#'
-#' @format  A tibble
-#' \describe{
-#'   \item{Commodity}{The name of the commodity}
-#'   \item{Marketing Year}{The dates for the commodity specific marketing year }
-#'   \item{year}{The two calendar years that the commodity specific marketing year spans}
-#'   \item{Publishing Dates for the  Final T - 0 PLC Effective Price}{The date the final T-0 PLC effective price was published}
-#'   \item{Unit}{The unit of measurement for the price}
-#'   \item{Statutory Reference Price}{The statutory reference price for the commodity}
-#'   \item{Final T-0 Effective Price}{The effective reference price for the commodity in the marketing year defined by `year`}
-#'   \item{Final T-0 MYA Price}{The marketing year average price for the marketing year defined by `year`}
-#'   \item{T-0 National Loan Rate}{The national loan rate for the commodity in the marketing year defined by `year`}
-#'   \item{Final T-0 PLC Payment Rate}{The PLC payment rate for the commodity in the marketing year defined by `year`}
-#'   \item{Maximum PLC Payment Rate}{The maximum PLC payment rate for the commodity in the marketing year defined by `year`}
-#'   }
-#' @usage data(fsaPlcPaymentRate)
-#' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
-#'
-"fsaPlcPaymentRate"
 
 
 #' Commodity-specific ARC-IC benchmark prices, MYA prices, and statutory reference prices.
@@ -81,39 +90,43 @@
 "fsaArcIcPrice"
 
 
-#' ARC-CO benchmark revenues by county and crop
+#' ARC-CO Benchmark Data
 #'
-#' This dataset contains county-level benchmark and actual revenue data related to the USDA's Agriculture Risk Coverage – County (ARC-CO) program.
-#' The data spans multiple years and includes information on benchmark yields, benchmark prices, actual yields, and ARC-CO payment rates.
+#' A dataset containing ARC-CO benchmark and payment rate components, including yields, prices,
+#' payment formulas, and benchmark calculations by commodity and county.
 #'
-#' @format A data frame with 21 variables:
+#' @format A data frame with the following variables:
 #' \describe{
-#'   \item{fips}{5-digit FIPS code identifying the county.}
-#'   \item{state_name}{Name of the state.}
-#'   \item{county_name}{Name of the county.}
-#'   \item{crop_name}{Name of the crop (e.g., Barley).}
-#'   \item{unit}{Unit of measurement (e.g., Bushel).}
-#'   \item{yield_type}{Yield type (e.g., All, Irrigated, Non-Irrigated).}
-#'   \item{year}{Year of the observation.}
-#'   \item{county_yield}{County yield for the year (used in construction of the benchmark revenue).}
-#'   \item{benchmark_revenue}{Benchmark revenue for the county and crop.}
-#'   \item{guarantee_revenue}{ARC-CO guaranteed revenue level.}
-#'   \item{maximum_payment_rate}{Maximum possible payment rate under ARC-CO.}
-#'   \item{actual_yield}{Actual yield in the county for the crop and year.}
-#'   \item{national_price}{National average price for the crop.}
-#'   \item{actual_revenue}{Actual revenue in the county. Calculated using actual yield and price.}
-#'   \item{formula_payment_rate}{Formula-based payment rate prior to limits.}
-#'   \item{payment_rate}{Final ARC-CO payment rate.}
-#'   \item{oa_bench_mark_price}{Olympic average benchmark price.}
-#'   \item{oa_bench_mark_yield}{Olympic average benchmark yield.}
-#'   \item{oa_bench_mark_years}{Years used in calculating the Olympic averages.}
-#'   \item{county_yield_type}{Description of the county yield methodology.}
-#'   \item{arc_co_payment_rate}{ARC-CO payment rate field (may be duplicated or alternative version).}
+#'   \item{actual_revenue}{Actual county-level revenue for the program year}
+#'   \item{actual_yield}{County yield for the program year}
+#'   \item{arc_co_payment_rate}{Final ARC-CO payment rate per unit}
+#'   \item{benchmark_revenue}{Benchmark revenue calculated using Olympic average yields and prices}
+#'   \item{county_name}{Name of the county}
+#'   \item{county_yield}{County yield used in benchmark calculations}
+#'   \item{county_yield_type}{Type of yield used (e.g., "NASS", "RMA")}
+#'   \item{crop}{Name of the commodity}
+#'   \item{crop_type}{Crop subtype if applicable (e.g., "long grain")}
+#'   \item{fips}{5-digit FIPS code for county identification}
+#'   \item{formula_payment_rate}{The formula-derived payment rate prior to maximum cap}
+#'   \item{guarantee_revenue}{88% of the benchmark revenue}
+#'   \item{maximum_payment_rate}{Maximum allowable payment rate (10% of benchmark revenue)}
+#'   \item{national_price}{Final national price used in revenue calculations}
+#'   \item{oa_bench_mark_price}{Olympic average benchmark price}
+#'   \item{oa_bench_mark_years}{Marketing years used for the Olympic average}
+#'   \item{oa_bench_mark_yield}{Olympic average county yield}
+#'   \item{payment_rate}{The final payment rate after applying caps}
+#'   \item{program_year}{Crop year corresponding to payment eligibility}
+#'   \item{rma_crop_code}{RMA commodity code}
+#'   \item{rma_type_code}{RMA type classification code}
+#'   \item{state_name}{Name of the state}
+#'   \item{unit}{Unit of measurement (e.g., bushel, pound)}
+#'   \item{yield_type}{Type of yield used in benchmark (e.g., NASS or RMA)}
 #' }
 #'
 #' @usage data(fsaArcCoBenchmarks)
-#' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
+#' @source \url{https://www.fsa.usda.gov/programs-and-services/arcplc_program}
 "fsaArcCoBenchmarks"
+
 
 #' ARC-CO benchmark prices.
 #'
@@ -166,32 +179,34 @@
 #'
 #' A dataset containing statutory and effective reference price calculations for commodities eligible
 #' for the Price Loss Coverage (PLC) and Agricultural Risk Coverage (ARC) programs. This includes
-#' historical Marketing Year Average (MYA) prices, statutory reference prices, calculated Olympic averages,
-#' and the final effective reference price used to determine program payments.
+#' statutory reference prices, 115% caps, lagged Marketing Year Average (MYA) prices, Olympic averages,
+#' and the final effective reference price used to determine program payments. The dataset also includes
+#' metadata on crop classification and program year alignment.
 #'
-#' @format A data frame with 15 variables:
+#' @format A data frame with 17 variables:
 #' \describe{
-#'   \item{Commodity}{Name of the commodity (e.g., Corn, Wheat, Peanuts)}
-#'   \item{Marketing Year}{The official marketing year calendar for the commodity (e.g., "Sep. 1–Aug. 31")}
-#'   \item{Unit}{Unit of measurement (e.g., Bushel, Pound)}
-#'   \item{T-0 Reference Price}{The statutory reference price for the current marketing year}
-#'   \item{115% of T-0 Reference Price}{115% of the statutory reference price, used as a ceiling for the effective reference price}
-#'   \item{T-5  MYA Price}{Marketing Year Average (MYA) price from five years prior}
-#'   \item{T-4  MYA Price}{MYA price from four years prior}
-#'   \item{T-3 MYA Price}{MYA price from three years prior}
-#'   \item{T-2 MYA Price}{MYA price from two years prior}
-#'   \item{T-1 MYA Price}{MYA price from one year prior}
-#'   \item{85% of 5-year avg, dropping high and low prices}{Calculated 85% of the Olympic average of the five MYA prices}
-#'   \item{T-0 Effective Reference Price}{Final effective reference price for the marketing year}
-#'   \item{MAX}{Maximum value among the five MYA prices}
-#'   \item{MIN}{Minimum value among the five MYA prices}
-#'   \item{year}{Program year (e.g., "2021-2022")}
+#'   \item{crop}{Name of the commodity (e.g., Corn, Wheat, Peanuts)}
+#'   \item{marketing_year_dates}{The official marketing year for the commodity (e.g., "Sep. 1–Aug. 31")}
+#'   \item{marketing_year}{Label for the marketing year period (e.g., "2019-2020")}
+#'   \item{program_year}{The crop year used for program payment eligibility (e.g., 2019). FSA typically defines the program year as the calendar year in which the commodity is harvested.}
+#'   \item{unit}{Unit of measurement (e.g., Bushel, Pound)}
+#'   \item{statuatory_reference_price}{The statutory reference price for the crop}
+#'   \item{115_statuatory_reference_price}{The statutory reference price multiplied by 115%, used as a cap for the effective reference price}
+#'   \item{mya_price_lag5}{Marketing Year Average (MYA) price from five years prior}
+#'   \item{mya_price_lag4}{MYA price from four years prior}
+#'   \item{mya_price_lag3}{MYA price from three years prior}
+#'   \item{mya_price_lag2}{MYA price from two years prior}
+#'   \item{mya_price_lag1}{MYA price from one year prior}
+#'   \item{85_olympic_average_mya}{85% of the Olympic average of the five MYA prices, dropping the high and low}
+#'   \item{effective_reference_price}{Final effective reference price used for the program year}
+#'   \item{crop_type}{Subtype of the crop, if applicable (e.g., "long grain", "large")}
+#'   \item{rma_type_code}{RMA classification code for crop type, if available}
+#'   \item{rma_crop_code}{RMA crop code used for cross-agency alignment}
 #' }
 #'
 #' @usage data(fsaEffectiveRefPrices)
 #' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
 "fsaEffectiveRefPrices"
-
 
 #' ARC/PLC enrolled base acres by commodity
 #'

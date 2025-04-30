@@ -3,41 +3,44 @@
 \docType{data}
 \name{fsaArcCoBenchmarks}
 \alias{fsaArcCoBenchmarks}
-\title{ARC-CO benchmark revenues by county and crop}
+\title{ARC-CO Benchmark Data}
 \format{
-A data frame with 21 variables:
+A data frame with the following variables:
 \describe{
-\item{fips}{5-digit FIPS code identifying the county.}
-\item{state_name}{Name of the state.}
-\item{county_name}{Name of the county.}
-\item{crop_name}{Name of the crop (e.g., Barley).}
-\item{unit}{Unit of measurement (e.g., Bushel).}
-\item{yield_type}{Yield type (e.g., All, Irrigated, Non-Irrigated).}
-\item{year}{Year of the observation.}
-\item{county_yield}{County yield for the year (used in construction of the benchmark revenue).}
-\item{benchmark_revenue}{Benchmark revenue for the county and crop.}
-\item{guarantee_revenue}{ARC-CO guaranteed revenue level.}
-\item{maximum_payment_rate}{Maximum possible payment rate under ARC-CO.}
-\item{actual_yield}{Actual yield in the county for the crop and year.}
-\item{national_price}{National average price for the crop.}
-\item{actual_revenue}{Actual revenue in the county. Calculated using actual yield and price.}
-\item{formula_payment_rate}{Formula-based payment rate prior to limits.}
-\item{payment_rate}{Final ARC-CO payment rate.}
-\item{oa_bench_mark_price}{Olympic average benchmark price.}
-\item{oa_bench_mark_yield}{Olympic average benchmark yield.}
-\item{oa_bench_mark_years}{Years used in calculating the Olympic averages.}
-\item{county_yield_type}{Description of the county yield methodology.}
-\item{arc_co_payment_rate}{ARC-CO payment rate field (may be duplicated or alternative version).}
+\item{actual_revenue}{Actual county-level revenue for the program year}
+\item{actual_yield}{County yield for the program year}
+\item{arc_co_payment_rate}{Final ARC-CO payment rate per unit}
+\item{benchmark_revenue}{Benchmark revenue calculated using Olympic average yields and prices}
+\item{county_name}{Name of the county}
+\item{county_yield}{County yield used in benchmark calculations}
+\item{county_yield_type}{Type of yield used (e.g., "NASS", "RMA")}
+\item{crop}{Name of the commodity}
+\item{crop_type}{Crop subtype if applicable (e.g., "long grain")}
+\item{fips}{5-digit FIPS code for county identification}
+\item{formula_payment_rate}{The formula-derived payment rate prior to maximum cap}
+\item{guarantee_revenue}{88\% of the benchmark revenue}
+\item{maximum_payment_rate}{Maximum allowable payment rate (10\% of benchmark revenue)}
+\item{national_price}{Final national price used in revenue calculations}
+\item{oa_bench_mark_price}{Olympic average benchmark price}
+\item{oa_bench_mark_years}{Marketing years used for the Olympic average}
+\item{oa_bench_mark_yield}{Olympic average county yield}
+\item{payment_rate}{The final payment rate after applying caps}
+\item{program_year}{Crop year corresponding to payment eligibility}
+\item{rma_crop_code}{RMA commodity code}
+\item{rma_type_code}{RMA type classification code}
+\item{state_name}{Name of the state}
+\item{unit}{Unit of measurement (e.g., bushel, pound)}
+\item{yield_type}{Type of yield used in benchmark (e.g., NASS or RMA)}
 }
 }
 \source{
-\url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
+\url{https://www.fsa.usda.gov/programs-and-services/arcplc_program}
 }
 \usage{
 data(fsaArcCoBenchmarks)
 }
 \description{
-This dataset contains county-level benchmark and actual revenue data related to the USDA's Agriculture Risk Coverage – County (ARC-CO) program.
-The data spans multiple years and includes information on benchmark yields, benchmark prices, actual yields, and ARC-CO payment rates.
+A dataset containing ARC-CO benchmark and payment rate components, including yields, prices,
+payment formulas, and benchmark calculations by commodity and county.
 }
 \keyword{datasets}

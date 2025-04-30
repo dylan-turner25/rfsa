@@ -1,5 +1,5 @@
 # list all files in the raw data files folder
-files <- list.files("./data-raw/fsaArcPlc/input_data/plc_payment_rates",
+files <- list.files("./data-raw/fsaArcPlc/input_data/fsaPlcPaymentRate",
                     full.names = T)
 
 # initialize a data frame to store mya prices
@@ -39,6 +39,10 @@ for(year in 2014:(current_year - 1)){
     colnames(temp) <- colnames(plc_payment_rates)
   }
 
+  if(year > 2018){
+    colnames(temp) <- gsub("Statutory","Effective",colnames(temp))
+  }
+
   # if plc_payment_rates is null, define it
   if(is.null(plc_payment_rates)){
     plc_payment_rates <- temp
@@ -48,11 +52,63 @@ for(year in 2014:(current_year - 1)){
 
 }
 
-# strip any number followed by a "/" from the commodity name
-plc_payment_rates$Commodity <- gsub("[0-9]/","",plc_payment_rates$Commodity)
+# rename columns
+colnames(plc_payment_rates) <- c("crop","marketing_year_dates",
+                                 "publishing_dates_for_final_mya_price",
+                                 "unit","statutory_reference_price",
+                                 "current_mya_price","current_national_loan_rate",
+                                 "plc_price","plc_payment_rate",
+                                 "max_plc_payment_rate",
+                                 "marketing_year","effective_reference_price")
+
+# add program_year
+plc_payment_rates$program_year <- substr(plc_payment_rates$marketing_year,1,4)
 
 # type convert the columns
 plc_payment_rates <- readr::type_convert(plc_payment_rates)
+
+
+# add combined reference price
+plc_payment_rates$combined_reference_price <-plc_payment_rates$statutory_reference_price
+plc_payment_rates$combined_reference_price <- ifelse(is.na(plc_payment_rates$combined_reference_price),
+                                                     plc_payment_rates$effective_reference_price,
+                                                     plc_payment_rates$combined_reference_price)
+
+
+# add rma codes
+# extract crop type
+plc_payment_rates$crop_type <- unlist(lapply(plc_payment_rates$crop, extract_crop_type))
+
+# add rma crop codes where applicable
+plc_payment_rates$rma_type_code <- unlist(lapply(plc_payment_rates$crop, extract_crop_type, rma_code = TRUE))
+
+# clean crop names
+plc_payment_rates$crop <- unlist(lapply(plc_payment_rates$crop, clean_crop_names))
+
+# add rma crop codes
+plc_payment_rates$rma_crop_code <- unlist(lapply(plc_payment_rates$crop, assign_rma_cc))
+
+
+# reorder columns
+plc_payment_rates <- plc_payment_rates[,c(
+  "crop",
+  "marketing_year_dates",
+  "marketing_year",
+  "program_year",
+  "publishing_dates_for_final_mya_price",
+  "statutory_reference_price",
+  "effective_reference_price",
+  "combined_reference_price",
+  "unit",
+  "current_mya_price",
+  "current_national_loan_rate",
+  "plc_price",
+  "plc_payment_rate",
+  "max_plc_payment_rate",
+  "crop_type",
+  "rma_type_code",
+  "rma_crop_code"
+)]
 
 
 # convert  data to a tibble before exporting
