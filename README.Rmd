@@ -25,6 +25,7 @@ library(dplyr)
                    description = character(),
                    last_updated = character(),
                    data_downlod_date = character(),
+                   included_columns = character(),
                    stringsAsFactors = FALSE)
   
   # fill in the dataframe with the dataset names, number of rows, number of columns, years, and description using the files in "./data"
@@ -106,6 +107,7 @@ library(dplyr)
                                 years = years,
                                 last_updated = last_modified,
                                 data_downlod_date = data_downlod_date,
+                                included_columns = paste(colnames(get(name)), collapse = ", "),
                                 stringsAsFactors = FALSE))
     }
 
@@ -142,13 +144,27 @@ library(dplyr)
   
 
 # rename df columns
-colnames(df) <- c("Dataset", "Rows", "Columns", "Years", "Last Updated", "Data Download Date", "Description")
-  
+colnames(df) <- c("Dataset", "Rows", "Columns", "Years", "Last Updated", "Data Download Date", "Included Columns" ,"Description")
 
+# reorder the columns
+df <- df[,c("Dataset", "Description", "Rows", "Years", "Last Updated", "Data Download Date", "Included Columns")]
 
 ```
 # Installation
 `rfsa` can be installed directly from GitHub using `remotes::install_github("dylan-turner25/rfsa", force = TRUE)`.
+
+# Usage
+`rfsa` has no exported functions. To load an included data set use the `data()` function with one of the names of the data sets listed in the table below. For example, to load the `fsaMyaPrice` data set, use the following code:
+```{r}
+# load the rfsa package
+library(rfsa)
+
+# load marketing year average prices
+data("fsaMyaPrice")
+
+head(fsaMyaPrice)
+
+```
 
 # Avaliable Datasets
 The following table reports the currently available data sets in the `rfsa` package. The `Last Updated` column indicates the last time the data set was updated in the package. The `Data Download Date` indicates the date that the raw input data for the current year was downloaded from the FSA website (this is important as these data sets are sometimes revised or contain projected values for in progress marketing years).
