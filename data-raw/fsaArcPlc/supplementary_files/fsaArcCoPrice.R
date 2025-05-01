@@ -1,4 +1,4 @@
-files <- list.files("./data-raw/fsaArcPlc/input_data/arc_co_prices",
+files <- list.files("./data-raw/fsaArcPlc/input_data/fsaArcCoPrice",
                     full.names = T)
 
 # initialize a data frame to store arc-ic prices
@@ -58,14 +58,41 @@ for(year in 2014:(current_year - 1)){
 
 }
 
+# rename columns
+names(arc_co_prices) <- c("crop","marketing_year_dates",
+                           "publishing_dates_for_final_mya_price",
+                           "unit","reference_price_combined",
+                           "annual_benchmark_price_lag5",
+                           "annual_benchmark_price_lag4",
+                           "annual_benchmark_price_lag3",
+                           "annual_benchmark_price_lag2",
+                           "annual_benchmark_price_lag1",
+                           "current_arcco_benchmark_price",
+                           "current_mya_price",
+                           "current_national_loan_rate",
+                           "current_arcco_actual_price",
+                           "marketing_year")
+
+# add program_year
+arc_co_prices$program_year <- substr(arc_co_prices$marketing_year,1,4)
+
+# extract crop type
+arc_co_prices$crop_type <- unlist(lapply(arc_co_prices$crop, extract_crop_type))
+
+# add rma crop codes where applicable
+arc_co_prices$rma_type_code <- unlist(lapply(arc_co_prices$crop, extract_crop_type, rma_code = TRUE))
+
+# clean crop names
+arc_co_prices$crop <- unlist(lapply(arc_co_prices$crop, clean_crop_names))
+
+# add rma crop codes
+arc_co_prices$rma_crop_code <- unlist(lapply(arc_co_prices$crop, assign_rma_cc))
+
+# type convert the columns
+arc_co_prices <- readr::type_convert(arc_co_prices)
+
 # convert the fsaFarmPayments data to a tibble before exporting
 fsaArcCoPrice <- dplyr::as_tibble(arc_co_prices)
-
-# type check columns
-fsaArcCoPrice <- readr::type_convert(fsaArcCoPrice)
-
-# remove any footnote indictors in commodity names
-fsaArcCoPrice$Commodity <- trimws(gsub("[0-9]/","",fsaArcCoPrice$Commodity))
 
 # use export the data to the the package data folder
 usethis::use_data(fsaArcCoPrice, overwrite = TRUE)
