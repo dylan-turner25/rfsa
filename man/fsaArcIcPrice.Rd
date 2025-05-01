@@ -7,20 +7,24 @@
 \format{
 A tibble
 \describe{
-\item{Commodity}{The name of the commodity}
-\item{Marketing Year}{The dates for the commodity-specific marketing year}
-\item{Publishing Dates for the Final T - 0 MYA Price and T - 0 ARC-IC BM Price}{The publication date of the final marketing year average price and ARC-IC benchmark price}
-\item{Unit}{The unit of measurement (e.g., bushel, pound)}
-\item{Statutory Reference Price}{The statutory reference price for the commodity}
-\item{Final T - 5 Annual Benchmark Price}{The ARC-IC benchmark price 5 years prior to the marketing year}
-\item{Final T - 4 Annual Benchmark Price}{The ARC-IC benchmark price 4 years prior to the marketing year}
-\item{Final T - 3 Annual Benchmark Price}{The ARC-IC benchmark price 3 years prior to the marketing year}
-\item{Final T - 2 Annual Benchmark Price}{The ARC-IC benchmark price 2 years prior to the marketing year}
-\item{Final T - 1 Annual Benchmark Price}{The ARC-IC benchmark price 1 year prior to the marketing year}
-\item{Final T - 0 MYA Price}{The final marketing year average price}
-\item{T - 0 National Loan Rate}{The national loan rate for the marketing year}
-\item{Final T - 0 Actual ARC-IC Price}{The actual ARC-IC price for the marketing year}
-\item{year}{The two calendar years the commodity-specific marketing year spans}
+\item{crop}{Crop name or commodity covered by ARC/PLC.}
+\item{marketing_year_dates}{Date range defining the marketing year for the crop (e.g., "Sep. 1–Aug. 31").}
+\item{publishing_dates_for_final_mya_price}{Date the final MYA and ARC-IC actual prices were published.}
+\item{unit}{Unit of measure for the commodity (e.g., Bushel, Pound).}
+\item{reference_price_combined}{Statutory reference price up untill effective reference prices were introduced (following 2018 farm bill), at which point effective reference prices are reported}
+\item{annual_benchmark_price_lag5}{Price from five years prior to the marketing year (T-5), used in ARC-CO benchmark calculation.}
+\item{annual_benchmark_price_lag4}{Price from four years prior (T-4), used in ARC-CO benchmark calculation.}
+\item{annual_benchmark_price_lag3}{Price from three years prior (T-3), used in ARC-CO benchmark calculation.}
+\item{annual_benchmark_price_lag2}{Price from two years prior (T-2), used in ARC-CO benchmark calculation.}
+\item{annual_benchmark_price_lag1}{Price from one year prior (T-1), used in ARC-CO benchmark calculation.}
+\item{current_mya_price}{Marketing Year Average price for the current year (T-0).}
+\item{current_national_loan_rate}{National loan rate for the current marketing year.}
+\item{current_arcic_actual_price}{Actual ARC-IC price used in revenue calculations for T-0.}
+\item{marketing_year}{Marketing year (e.g., "2020–2021").}
+\item{program_year}{Program year corresponding to the marketing year (e.g., 2020).}
+\item{crop_type}{Subtype of the crop, if applicable (e.g., "long grain", "small").}
+\item{rma_type_code}{RMA type code used to classify crop type (may be NA).}
+\item{rma_crop_code}{RMA crop code used for identification of commodity.}
 }
 }
 \source{
