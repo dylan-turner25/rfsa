@@ -7,10 +7,13 @@
 \format{
 A data frame with 481 rows and 4 variables:
 \describe{
-\item{Program}{Character. Type of commodity program: \code{"ARC-CO"}, \code{"ARC-IC"}, or \code{"PLC"}.}
-\item{Crop}{Character. Name of the crop associated with the payment (e.g., \code{"Corn"}, \code{"Soybeans"}, \code{"Wheat"}).}
-\item{year}{Integer. Marketing year associated with the payment (e.g., \code{2014}, \code{2015}).}
-\item{Amount Paid}{Numeric. Total amount paid for the given crop, year, and program (in nominal dollars).}
+\item{program}{Character. Type of commodity program: \code{"ARC-CO"}, \code{"ARC-IC"}, or \code{"PLC"}.}
+\item{crop}{Character. Name of the crop associated with the payment (e.g., \code{"Corn"}, \code{"Soybeans"}, \code{"Wheat"}).}
+\item{program_year}{Integer. Program year associated with the payment. Program years are defined by FSA as the year the commodity was harvested. Program year does not typically reflect the calendar year when the payment is disbursed. I.e. for many crops harvested in the fall, the payment will be recieved by the producer in the next calendar year.}
+\item{payments}{Numeric. Total amount paid for the given crop, year, and program (in nominal dollars).}
+\item{crop_type}{Subtype of the crop, if applicable (e.g., "long grain", "small").}
+\item{rma_type_code}{RMA type code used to classify crop type (may be NA).}
+\item{rma_crop_code}{RMA crop code used for identification of commodity.}
 }
 }
 \source{
