@@ -93,6 +93,23 @@ for(prog in c("ARCCO","ARCIC","PLC")){
 # type convert columns
 arc_plc_payments <- readr::type_convert(arc_plc_payments)
 
+# rename columns
+names(arc_plc_payments) <- c("program","crop","program_year","payments")
+
+# extract crop type
+arc_plc_payments$crop_type <- unlist(lapply(arc_plc_payments$crop, extract_crop_type))
+
+# add rma crop codes where applicable
+arc_plc_payments$rma_type_code <- unlist(lapply(arc_plc_payments$crop, extract_crop_type, rma_code = TRUE))
+
+# clean crop names
+arc_plc_payments$crop <- unlist(lapply(arc_plc_payments$crop, clean_crop_names))
+
+# add rma crop codes
+arc_plc_payments$rma_crop_code <- unlist(lapply(arc_plc_payments$crop, assign_rma_cc))
+
+
+
 # save county-commodity-year payments
 fsaArcPlcPayments <- arc_plc_payments
 
