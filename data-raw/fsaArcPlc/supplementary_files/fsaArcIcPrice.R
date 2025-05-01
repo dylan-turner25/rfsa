@@ -1,5 +1,5 @@
 # list all files in the raw data files folder
-files <- list.files("./data-raw/fsaArcPlc/input_data/arc_ic_prices",
+files <- list.files("./data-raw/fsaArcPlc/input_data/fsaArcIcPrice",
                     full.names = T)
 
 # initialize a data frame to store arc-ic prices
@@ -61,15 +61,41 @@ for(year in 2015:(current_year - 1)){
 
 }
 
+# rename columns
+names(arc_ic_prices) <-  c("crop","marketing_year_dates",
+                           "publishing_dates_for_final_mya_price",
+                           "unit","reference_price_combined",
+                           "annual_benchmark_price_lag5",
+                           "annual_benchmark_price_lag4",
+                           "annual_benchmark_price_lag3",
+                           "annual_benchmark_price_lag2",
+                           "annual_benchmark_price_lag1",
+                           "current_mya_price",
+                           "current_national_loan_rate",
+                           "current_arcic_actual_price",
+                           "marketing_year")
 
-# strip any number followed by a "/" from the commodity name
-arc_ic_prices$Commodity <- gsub("[0-9]/","",arc_ic_prices$Commodity)
+
+
+# add program_year
+arc_ic_prices$program_year <- substr(arc_ic_prices$marketing_year,1,4)
+
+# extract crop type
+arc_ic_prices$crop_type <- unlist(lapply(arc_ic_prices$crop, extract_crop_type))
+
+# add rma crop codes where applicable
+arc_ic_prices$rma_type_code <- unlist(lapply(arc_ic_prices$crop, extract_crop_type, rma_code = TRUE))
+
+# clean crop names
+arc_ic_prices$crop <- unlist(lapply(arc_ic_prices$crop, clean_crop_names))
+
+# add rma crop codes
+arc_ic_prices$rma_crop_code <- unlist(lapply(arc_ic_prices$crop, assign_rma_cc))
 
 # type convert the columns
 arc_ic_prices <- readr::type_convert(arc_ic_prices)
 
-
-# convert the fsaFarmPayments data to a tibble before exporting
+# convert the data to a tibble before exporting
 fsaArcIcPrice <- dplyr::as_tibble(arc_ic_prices)
 
 # use the county level file in the package data folder
