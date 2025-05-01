@@ -126,32 +126,37 @@
 "fsaArcCoBenchmarks"
 
 
-#' ARC-CO benchmark prices.
+#' ARC-CO Benchmark and Actual Price Data
 #'
-#' A dataset containing annual commodity-level price data used in the calculation of ARC-CO (Agriculture Risk Coverage - County) benchmark prices.
+#' A dataset containing annual commodity-level price data used in the calculation of ARC-CO (Agriculture Risk Coverage - County) benchmark and actual prices, including statutory and market-based price indicators.
 #'
-#' @format A tibble
+#' @format A tibble with one row per crop, marketing year, and crop type (if applicable). Variables include:
 #' \describe{
-#'   \item{Commodity}{Crop name or commodity covered by ARC-CO and MYA prices.}
-#'   \item{Marketing Year}{The dates that define the commodity specific marketing year (e.x. Sep. 1-Aug. 31).}
-#'   \item{Publishing Dates for the Final T-0 MYA Price and T-0 Actual ARC-CO Price}{Date the final prices for the marketing year were published.}
-#'   \item{Unit}{Unit of measure for the commodity (e.g., Bushel, Pound).}
-#'   \item{Statutory Reference Price}{Reference price set in legislation, used in ARC and PLC payment calculations.}
-#'   \item{Final T-5 Annual Benchmark Price}{Price from five years prior to the marketing year, used in ARC-CO benchmark calculation.}
-#'   \item{Final T-4 Annual Benchmark Price}{Price from four years prior to the marketing year, used in ARC-CO benchmark calculation.}
-#'   \item{Final T-3 Annual Benchmark Price}{Price from three years prior to the marketing year, used in ARC-CO benchmark calculation.}
-#'   \item{Final T-2 Annual Benchmark Price}{Price from two years prior to the marketing year, used in ARC-CO benchmark calculation.}
-#'   \item{Final T-1 Annual Benchmark Price}{Price from one year prior to the marketing year, used in ARC-CO benchmark calculation.}
-#'   \item{Final T-0 ARC-CO Benchmark Price}{ARC-CO benchmark price for the current marketing year.}
-#'   \item{Final T-0 MYA Price}{Marketing Year Average price for the current year.}
-#'   \item{T-0 National Loan Rate}{National loan rate for the current marketing year.}
-#'   \item{Final T-0 Actual ARC-CO Price}{Actual price used in ARC-CO calculations}
-#'   \item{year}{Marketing year (e.g., "2020-2021").}
+#'   \item{crop}{Crop name or commodity covered by ARC/PLC.}
+#'   \item{marketing_year_dates}{Date range defining the marketing year for the crop (e.g., "Sep. 1–Aug. 31").}
+#'   \item{publishing_dates_for_final_mya_price}{Date the final MYA and ARC-CO actual prices were published.}
+#'   \item{unit}{Unit of measure for the commodity (e.g., Bushel, Pound).}
+#'   \item{reference_price_combined}{Statutory reference price up untill effective reference prices were introduced (following 2018 farm bill), at which point effective reference prices are reported}
+#'   \item{annual_benchmark_price_lag5}{Price from five years prior to the marketing year (T-5), used in ARC-CO benchmark calculation.}
+#'   \item{annual_benchmark_price_lag4}{Price from four years prior (T-4), used in ARC-CO benchmark calculation.}
+#'   \item{annual_benchmark_price_lag3}{Price from three years prior (T-3), used in ARC-CO benchmark calculation.}
+#'   \item{annual_benchmark_price_lag2}{Price from two years prior (T-2), used in ARC-CO benchmark calculation.}
+#'   \item{annual_benchmark_price_lag1}{Price from one year prior (T-1), used in ARC-CO benchmark calculation.}
+#'   \item{current_arcco_benchmark_price}{ARC-CO benchmark price for the current marketing year (T-0).}
+#'   \item{current_mya_price}{Marketing Year Average price for the current year (T-0).}
+#'   \item{current_national_loan_rate}{National loan rate for the current marketing year.}
+#'   \item{current_arcco_actual_price}{Actual ARC-CO price used in revenue calculations for T-0.}
+#'   \item{marketing_year}{Marketing year (e.g., "2020–2021").}
+#'   \item{program_year}{Program year corresponding to the marketing year (e.g., 2020).}
+#'   \item{crop_type}{Subtype of the crop, if applicable (e.g., "long grain", "small").}
+#'   \item{rma_type_code}{RMA type code used to classify crop type (may be NA).}
+#'   \item{rma_crop_code}{RMA crop code used for identification of commodity.}
 #' }
 #'
 #' @usage data(fsaArcCoPrice)
 #' @source \url{https://www.fsa.usda.gov/resources/programs/arc-plc/program-data}
 "fsaArcCoPrice"
+
 
 #' ARC/PLC Program Payments by Crop and Year
 #'
