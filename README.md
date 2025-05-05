@@ -8,10 +8,10 @@
 
 # Usage
 
-`rfsa` has no exported functions. To load an included data set use the
-`data()` function with one of the names of the data sets listed in the
-table below. For example, to load the `fsaMyaPrice` data set, use the
-following code:
+The`rfsa` package has no exported functions. To load an included data
+set use the `data()` function with one of the names of the data sets
+listed in the table below. For example, to load the `fsaMyaPrice` data
+set, use the following code:
 
 ``` r
 # load the rfsa package
