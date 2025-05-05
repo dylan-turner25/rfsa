@@ -7,10 +7,10 @@ output: github_document
 ```{r, include = FALSE}
 knitr::opts_chunk$set( 
   collapse = TRUE, 
-  comment = "#>", 
+  comment = "#>",  
   fig.path = "man/figures/README-", 
   out.width = "100%",
-  cache = FALSE 
+  cache = FALSE  
 ) 
 
 library(dplyr)
@@ -154,7 +154,7 @@ df <- df[,c("Dataset", "Description", "Rows", "Years", "Last Updated", "Data Dow
 `rfsa` can be installed directly from GitHub using `remotes::install_github("dylan-turner25/rfsa", force = TRUE)`.
 
 # Usage
-`rfsa` has no exported functions. To load an included data set use the `data()` function with one of the names of the data sets listed in the table below. For example, to load the `fsaMyaPrice` data set, use the following code:
+The`rfsa` package has no exported functions. To load an included data set use the `data()` function with one of the names of the data sets listed in the table below. For example, to load the `fsaMyaPrice` data set, use the following code:
 ```{r}
 # load the rfsa package
 library(rfsa)
