@@ -11,7 +11,7 @@ source("./data-raw/fsaFarmPayments/supplementary_files/download_payment_files.R"
 
 # merge all available info on FSA program details, by sourcing the following script which generates
 # the fsaProgramDetails data set which can be loaded with `data("fsaProgramDetails")`
-source("./data-raw/fsaFarmPayments/Supplementary Files/fsaProgramClassifications/fsaProgramClassifications.R")
+#isource("./data-raw/fsaFarmPayments/Supplementary Files/fsaProgramClassifications/fsaProgramClassifications.R")
 
 # Second, run get_program_descriptions.R to create an excel file of unique program descriptions.
 # This script will use the data set `fsaProgramDetails` created above to try to classify each
@@ -19,7 +19,7 @@ source("./data-raw/fsaFarmPayments/Supplementary Files/fsaProgramClassifications
 # if there are new payment descriptions that are not captured in the fsaProgramDetails data set and the
 # script will append them to  "program_detail_manual.csv.In that case,
 # you need to open program_detail_manual.csv and manually update any missing program classifications.
-source("./data-raw/fsaFarmPayments/Supplementary Files/get_program_descriptions.R")
+source("./data-raw/fsaFarmPayments/supplementary_files/get_program_descriptions.R")
 
 # Third, run this file to apply some cleaning operations, then convert each individual payment file to rds files
 # for better compression and faster loading. These rds files get saved in the "individual payment files" sub folder.
