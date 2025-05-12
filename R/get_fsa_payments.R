@@ -25,7 +25,12 @@ get_fsa_payments <- function(year,
                              aggregation = "national"){
 
   # path to directory containing payment files
-  dir = paste0("./inst/extdata/fsaFarmPayments/",year_type,"_year_files")
+  dir = system.file(
+    "extdata",
+    "fsaFarmPayments",
+    paste0(year_type, "_year_files"),
+    package = "rfsa"
+  )
 
   if(!is.null(program)){
   # check if program is valid
