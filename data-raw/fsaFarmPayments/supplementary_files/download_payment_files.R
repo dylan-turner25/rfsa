@@ -1,5 +1,5 @@
 
-# identify opperating system
+# identify operating system
 system <- tolower(Sys.info())
 if(T %in% grepl("windows",system)){
   os <-"windows"
@@ -10,7 +10,6 @@ if(T %in% grepl("linux",system)){
 if(T %in% grepl("darwin",system)){
   os <-"mac"
 }
-## need to get access to a mac to add option for mac os
 
 # set timeout
 options(timeout=1000)
@@ -23,7 +22,8 @@ files <- links[grepl(".xlsx",links)] # pickout only the links that lead to excel
 
 
 # manual url entries: 2024 files introduced a nested structure that is difficult to scrape,
-# adding he  4 or 5 urls mannually each year is easier
+# adding the4 or 5 urls manually each year is more time efficient than maintaining
+# a complicated scraping script that may break each year.
 manual_additions <- c(
   "2025-01/state%20ia-mi.foia_.na_.pmt24.final_.dt25002.xlsx",
   "2025-01/state%20tx-wy.foia_.na_.pmt24.final_.dt25002.xlsx",
@@ -32,18 +32,12 @@ manual_additions <- c(
   "2025-01/state%20al-in.foia_.na_.pmt24.final_.dt25002.xlsx"
 )
 
+
 files <- c(files,manual_additions)
 
 # clean up the files links
 files <- gsub('href=\"',"",files, fixed = T) # remove non-unique prefix from file links
 files <- gsub("xlsx\"","xlsx",files) # remove non-unique prefix from file links
-#files <- gsub("2023/2018-payments-files/","",files) # remove non-unique prefix from file links
-#for(y in 2000:2030){
-#  files <- gsub(paste0("2023/",y,"-payment-files/"),"",files)
-#  files <- gsub(paste0(y,"-"),"",files)
-#  files <- gsub(paste0(y),"",files)
-#}
-#files <- gsub("\\/","",files)
 
 
 xlsx_location <- str_locate(files,"xlsx") # locate where .xlsx is in the string
@@ -95,13 +89,5 @@ for(i in 1:length(files)){
     }
   }
 }
-
-
-# fsa_payment <- tempfile(fileext = ".xlsx")
-# download.file(paste0(PaymentFiles$url[i]),destfile=fsa_payment,mode="wb")
-# sheet <- readxl::excel_sheets(path = fsa_payment)
-
-
-
 
 

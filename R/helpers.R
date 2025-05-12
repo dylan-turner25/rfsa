@@ -1,3 +1,115 @@
+#' Splits FSA individual payment files into program/state files
+#'
+#' @param data a data frame containing FSA payment data
+#' @param year_type a character string indicating the type of year to split by.
+#'
+#' @return splits data into subsets by payment year and FSA program then saves them to the
+#' relevant rds file
+#' @noRd
+#' @keywords internal
+#' @import dplyr rlang
+#'
+split_file <- function(data, year_type){
+
+  # merge duplicate entries into a single transaction
+  data <- data %>%
+    group_by(across(-.data$disbursement_amount)) %>%
+    summarise(disbursement_amount = sum(.data$disbursement_amount, na.rm = TRUE),
+              .groups = "drop")
+
+  years    <- unique(data$payment_year)
+  programs <- unique(data$prog_abb)
+
+  for(y in years){
+    for(p in programs){
+      # make sure folder exists
+      dir <- file.path("inst","extdata","fsaFarmPayments",
+                       paste0(year_type, "_year_files"), y)
+      dir.create(dir, recursive = TRUE, showWarnings = FALSE)
+
+      file_name <- file.path(dir, paste0(p, ".rds"))
+
+      new_observations <- switch(
+        year_type,
+        payment = filter(data, .data$prog_abb     == p, .data$payment_year == y),
+        fiscal  = filter(data, .data$prog_abb     == p, .data$fiscal_year  == y),
+        program = filter(data, .data$prog_abb     == p, .data$program_year == y),
+        stop("Unknown year_type")
+      )
+
+      old_observations <- readRDS(file_name)
+
+      # … fuzzy‐matching code here, also using .data$col …
+      # then combine and save:
+      combined_observations <- bind_rows(new_observations, old_observations) %>%
+        distinct()
+
+      saveRDS(combined_observations, file_name)
+    }
+  }
+}
+
+
+
+
+#' Clean fips codes or construct them from state and county codes
+#'
+#' If a string is passed to fips, the function will convert the fips codes
+#' to 5 digit codes (in the case where 3 or 4 digit codes are present)
+#'
+#' If state and county fips codes are passed to the county and state arguemnts,
+#' a 5 digit fips code will be constructed
+#'
+#' @param fips a character vector representing a fips codes
+#' @param county a character vector representing a county fips code
+#' @param state a character vector representing a state fips code
+#'
+#' @return returns a character vector containing 5 digit fips codes
+#'
+#' @noRd
+#' @keywords internal
+#'
+#' @examples
+#' clean_fips(fips = "1001")
+#' clean_fips(county = "1", state = "1")
+#'
+clean_fips <- Vectorize(function(fips = NULL,county = NULL,state = NULL){
+
+
+  if(is.null(fips)){
+    if(nchar(state) == 1){
+      state_clean <- paste0("0",state)
+    }
+    if(nchar(state) == 2){
+      state_clean <- as.character(state)
+    }
+    if(nchar(county) == 1){
+      county_clean <- paste0("00",county)
+    }
+    if(nchar(county) == 2){
+      county_clean <- paste0("0",county)
+    }
+    if(nchar(county) == 3){
+      county_clean <- as.character(county)
+    }
+    fips <- paste0(state_clean,county_clean)
+    return(fips)
+  }
+  if(is.null(fips) == F){
+    if(nchar(fips) == 4){
+      fips_clean <- paste0("0",fips)
+    }
+    if(nchar(fips) < 4){
+      print("Warning: fips codes should be either 4 or 5 character strings. Returning NA")
+      return(NA)
+    }
+    if(nchar(fips) == 5){
+      fips_clean <- as.character(fips)
+    }
+    return(fips_clean)
+  }
+})
+
 #' Clean and standardize column names for FSA MYA Price files
 #'
 #' Takes a data frame of FSA "MYA Price" data and replaces fiscal-year patterns
@@ -143,3 +255,40 @@ assign_rma_cc <- function(crop_name) {
     return(NA_integer_)
   }
 }
+
+
+
+
+#' Convert POSIX date object to U.S. Government fiscal year
+#'
+#' @param date A calendar date formatted as a posix object
+#'
+#' @return returns a numeric value for the Government fiscal year corresponding
+#' to the POSIX date
+#' @noRd
+#' @keywords internal
+#'
+get_fiscal_year <- function(date){
+
+  # extract the calendar year from the date input
+  year <- as.numeric(format(date, format="%Y"))
+
+  # if date is between october 1st of last year and september 30th of this year
+  # return the current calendar year
+  if(date >=  as.Date(paste0((year - 1),"-10-01"),"%Y-%m-%d") &
+     date <=   as.Date(paste0((year),"-09-30"),"%Y-%m-%d")) {
+    return(year)
+  }
+
+  # if date is between october 1st of this calendar year and september 30th of
+  # next calender year, return the current calendar year + 1
+  if(date >=  as.Date(paste0((year),"-10-01"),"%Y-%m-%d") &
+     date <=   as.Date(paste0((year + 1),"-09-30"),"%Y-%m-%d")) {
+    return(year + 1)
+  }
+
+}
+
+
+
+
