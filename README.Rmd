@@ -1,5 +1,9 @@
 ---
-output: github_document
+title: "rfsa: A package for accessing and analyzing USDA Farm Service Agency data"
+output:
+  github_document:
+    toc: true
+    toc_depth: 2
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -13,7 +17,11 @@ knitr::opts_chunk$set(
   cache = FALSE  
 ) 
 
+devtools::load_all()
 library(dplyr)
+library(kableExtra)
+library(knitr)
+
 ```
 
 ```{r data_set_table, include=FALSE, cache=FALSE}
@@ -174,10 +182,52 @@ The following table reports the currently available data sets related to ARC and
 ``` 
 
 # FSA Individual Payment Files
-FSA Individual Payment Files
+
+The USDA Farm Service Agency makes available Individual Payment Files that contain payment information for programs administered by FSA. 
 
 
 
 # Data Validation Checks
+
+The following table contains data validation checks. These are comparisons between values derived from the `rfsa` package functions against the same values obtained from another source. For example, the first row calculates total ARC-CO payments in program year 2023 using the `get_fsa_payments()` function and compares it to the total ARC-CO payments in program year 2023 from an aggregated file on the FSA website. The `check_passed` column indicates whether the difference between the two values is less than 1%. If you are reading this and have a value of interest that you would like to see added to this table, please open an issue on the GitHub repository with the relevant information including code to generate the value using the `rfsa` package as well as an external source to validate the value against.
+
+```{r, echo = F}
+
+# create a data frame with columns for dataset name, code, package generated value, external value, external source
+df <- data.frame(dataset = character(),
+                 code = character(),
+                 package_value = numeric(),
+                 external_value = numeric(),
+                 external_source = character(),
+                 stringsAsFactors = FALSE)
+
+# add a row for ARC-CO payments in program year 2024
+metric = as.numeric(get_fsa_payments(year = 2023,program = c("ARC-CO"),year_type = "program",aggregation = "national")[,"payment_amount"])
+external_value = 461724994.11
+percentage_difference = (metric - external_value)/(external_value) 
+df <- rbind(df, data.frame(value = "National ARC-CO payments in program year 2023",
+                             code = 'get_fsa_payments(year = 2023,program = c("ARC-CO"),year_type = "program",aggregation = "national")[,"payment_amount"]',
+                             package_value = metric,
+                             external_value = external_value,
+                             external_source = "https://www.fsa.usda.gov/sites/default/files/2025-01/ARCCO%20Non-ProgYr%20Specific%20Payment%20Data%20%282025-01-06%29.xlsx",
+                             percentage_difference = paste0("%",round((percentage_difference * 100),4)),
+                             check_passed = ifelse(abs(percentage_difference) < .01,
+                                                    cell_spec("✓",   
+                                                    format    = "html",
+                                                    color     = "white",
+                                                    background= "forestgreen",
+                                                    bold      = TRUE),
+                                                    # red box, white cross
+                                                    cell_spec("✗",
+                                                    format    = "html",
+                                                    color     = "white",
+                                                    background= "firebrick",
+                                                    bold      = TRUE)),
+                             stringsAsFactors = FALSE))
+
+knitr::kable(df)
+
+
+```
 
 

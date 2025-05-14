@@ -17,15 +17,22 @@ library(data.table)
 # csv file any fill out any missing information before continuing.
 source("./data-raw/fsaFarmPayments/supplementary_files/get_program_descriptions.R")
 
-# Third, run this file to apply some cleaning operations, then convert each individual payment file to rds files
-# for better compression and faster loading.
+
+# run this script to convert each excel file into an rds file before saving. This
+# cuts load times way down if you have to go back to the source files to rebuild from scratch
+source("./data-raw/fsaFarmPayments/supplementary_files/convert_to_rds.R")
+
+
+# run this script to apply some cleaning operations to each rds file from the previous step.
+# these files all receive a "cleaned" suffix in the file name.
+source("./data-raw/fsaFarmPayments/supplementary_files/clean_rds.R")
+
+
 # This script also splits all the individual payment files up into year and state files to make it easier to
-# retrieve data later on.
+# retrieve data later on. These year-program files get saved in the inst/extdata/fsaFarmPayments folder and
+# are what is accessed within the package.
 source("./data-raw/fsaFarmPayments/supplementary_files/split_payment_files.R")
-# Note should probably split the above script into three steps:
-  # 1) convert excel files to RDS
-  # 2) clean the individual RDS files
-  # 3) split the RDS files into year/program files
+
 
 
 

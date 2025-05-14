@@ -1,3 +1,12 @@
+rfsa: A package for accessing and analyzing USDA Farm Service Agency
+data
+================
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [ARC and PLC Program Data](#arc-and-plc-program-data)
+- [FSA Individual Payment Files](#fsa-individual-payment-files)
+- [Data Validation Checks](#data-validation-checks)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -61,6 +70,24 @@ progress marketing years).
 
 # FSA Individual Payment Files
 
-FSA Individual Payment Files
+The USDA Farm Service Agency makes available Individual Payment Files
+that contain payment information for programs administered by FSA.
 
 # Data Validation Checks
+
+The following table contains data validation checks. These are
+comparisons between values derived from the `rfsa` package functions
+against the same values obtained from another source. For example, the
+first row calculates total ARC-CO payments in program year 2023 using
+the `get_fsa_payments()` function and compares it to the total ARC-CO
+payments in program year 2023 from an aggregated file on the FSA
+website. The `check_passed` column indicates whether the difference
+between the two values is less than 1%. If you are reading this and have
+a value of interest that you would like to see added to this table,
+please open an issue on the GitHub repository with the relevant
+information including code to generate the value using the `rfsa`
+package as well as an external source to validate the value against.
+
+| value | code | package_value | external_value | external_source | percentage_difference | check_passed |
+|:---|:---|---:|---:|:---|:---|:---|
+| National ARC-CO payments in program year 2023 | get_fsa_payments(year = 2023,program = c(“ARC-CO”),year_type = “program”,aggregation = “national”)\[,“payment_amount”\] | 460388613 | 461724994 | <https://www.fsa.usda.gov/sites/default/files/2025-01/ARCCO%20Non-ProgYr%20Specific%20Payment%20Data%20%282025-01-06%29.xlsx> | %-0.2894 | <span style=" font-weight: bold;    color: white !important;border-radius: 4px; padding-right: 4px; padding-left: 4px; background-color: forestgreen !important;">✓</span> |

@@ -170,9 +170,9 @@ Accounting Program Code,Accounting Program Description,prog_abb,prog_full
 3070,GRASSLANDS RESERVE PROGRAM,GRP,Grasslands Reserve Program
 2721,HURRICANE INDEMNITY PROGRAM,HIP,Hurricane Indemnity Program
 2776,HAWAII SUGAR DISASTER PROGRAM,HSDP,Hawaii Sugar Disaster Program
-2300,INTEREST PENALTY,Interest Penalty,Interest Payment
-2310,ADDITIONAL INTEREST PENALTY,Interest Penalty,Interest Payment
-2380,INTEREST PENALTY,Interest Penalty,Interest Payment
+2300,INTEREST PENALTY,Interest-Penalty,Interest Payment
+2310,ADDITIONAL INTEREST PENALTY,Interest-Penalty,Interest Payment
+2380,INTEREST PENALTY,Interest-Penalty,Interest Payment
 2523,LIVESTOCK COMPENSATION PROGRAM AUTHORIZE,LCP,Livestock Compensation Program
 2556,LIVESTOCK COMPENSATION PROGRAM - HURRICANE,LCP,Livestock Compensation Program
 2561,05 - 07 LIVESTOCK COMPENSATION PROGRAM,LCP,Livestock Compensation Program

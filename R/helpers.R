@@ -12,44 +12,64 @@
 split_file <- function(data, year_type){
 
   # merge duplicate entries into a single transaction
-  data <- data %>%
+  data <- data.frame(data %>%
     group_by(across(-.data$disbursement_amount)) %>%
     summarise(disbursement_amount = sum(.data$disbursement_amount, na.rm = TRUE),
-              .groups = "drop")
+              .groups = "drop"))
 
-  years    <- unique(data$payment_year)
+  # convert entire data frame to character
+  data <- data %>% mutate(across(everything(), as.character))
+
+
+  if(year_type == "program"){
+    year_var <- "accounting_program_year"
+  }
+  if(year_type == "payment"){
+    year_var <- "payment_year"
+  }
+  if(year_type == "fiscal"){
+    year_var <- "fiscal_year"
+  }
+
+  years    <- unique(data[,year_var])
   programs <- unique(data$prog_abb)
 
   for(y in years){
     for(p in programs){
+      #print( paste0(year_type," year ",y,"-",p) )
       # make sure folder exists
       dir <- file.path("inst","extdata","fsaFarmPayments",
                        paste0(year_type, "_year_files"), y)
-      dir.create(dir, recursive = TRUE, showWarnings = FALSE)
+
+      #print(dir)
+      if(!dir.exists(dir)){
+        dir.create(dir, recursive = TRUE)
+      }
 
       file_name <- file.path(dir, paste0(p, ".rds"))
+      #print(file_name)
 
       new_observations <- switch(
         year_type,
         payment = filter(data, .data$prog_abb     == p, .data$payment_year == y),
         fiscal  = filter(data, .data$prog_abb     == p, .data$fiscal_year  == y),
-        program = filter(data, .data$prog_abb     == p, .data$program_year == y),
+        program = filter(data, .data$prog_abb     == p, .data$accounting_program_year == y),
         stop("Unknown year_type")
       )
 
-      old_observations <- readRDS(file_name)
-
-      # … fuzzy‐matching code here, also using .data$col …
-      # then combine and save:
-      combined_observations <- bind_rows(new_observations, old_observations) %>%
-        distinct()
-
-      saveRDS(combined_observations, file_name)
+      # if file_name does not exist, save new observations as file name
+      # otherwise read in existing file and merge with new observations before saving
+      if(!file.exists(file_name)){
+        saveRDS(new_observations, file_name)
+      } else {
+        existing_observations <- readRDS(file_name)
+        merged_observations   <- dplyr::distinct(bind_rows(existing_observations, new_observations))
+        saveRDS(merged_observations, file_name)
+      }
     }
   }
+
 }
-
-
 
 
 #' Clean fips codes or construct them from state and county codes
