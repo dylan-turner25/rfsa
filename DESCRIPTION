@@ -13,5 +13,7 @@ Depends:
 Imports:
   dplyr,
   purrr,
-  rlang
+  rlang,
+  gh,
+  piggyback
 LazyData: false

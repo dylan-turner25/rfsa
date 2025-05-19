@@ -34,6 +34,24 @@ source("./data-raw/fsaFarmPayments/supplementary_files/clean_rds.R")
 source("./data-raw/fsaFarmPayments/supplementary_files/split_payment_files.R")
 
 
+# upload cleaned files as a data release
+piggyback::pb_new_release(
+  repo = "dylan-turner25/rfsa",
+  tag  = "v0.1.0",
+  name = "First data release",
+  body = "This release contains all individual year-program files."
+)
+
+# 2. upload your .rds files into that release
+rds_files <- list.files("data-raw/fsaFarmPayments/output_data", "\\.rds$",
+                        full.names = TRUE, recursive = TRUE)
+
+piggyback::pb_upload(
+  rds_files,
+  repo = "dylan-turner25/rfsa",
+  tag  = "v0.1.0",
+  overwrite = F
+)
 
 
 

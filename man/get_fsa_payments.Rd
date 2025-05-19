@@ -5,7 +5,7 @@
 \title{Loads data from FSA individual payment files for specified years and programs}
 \usage{
 get_fsa_payments(
-  year,
+  year = NULL,
   program = NULL,
   year_type = "program",
   aggregation = "national"

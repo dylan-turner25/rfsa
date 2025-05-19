@@ -1,3 +1,87 @@
+#' List asset names from the latest GitHub release
+#'
+#' Retrieves the metadata for the most recent release of the **rfsa** repository
+#' on GitHub and extracts the names of all attached release assets.
+#'
+#' @return A character vector of file names (assets) in the latest release.
+#' @keywords internal
+#' @examples
+#' \dontrun{
+#' files = list_data_assets()
+#' }
+#' @importFrom gh gh
+list_data_assets <- function(){
+  # 1. Fetch the release metadata (by tag, or "latest")
+  release <- gh::gh(
+    "/repos/{owner}/{repo}/releases/latest",
+    owner = "dylan-turner25",
+    repo  = "rfsa"
+  )
+
+  # 2. Extract the assets list
+  assets <- release$assets
+
+  # 3. Pull out the bits you care about
+  df <- data.frame(
+    name = vapply(assets, `[[`, "", "name"),
+    url  = vapply(assets, `[[`, "", "browser_download_url"),
+    size = vapply(assets, `[[`, 0,  "size"),
+    stringsAsFactors = FALSE
+  )
+
+  return(df$name)
+}
+
+
+#' @title Download a data file from GitHub Releases via piggyback
+#' @param name   The basename of the .rds file, e.g. "foo.rds"
+#' @param tag    Which release tag to download from (default: latest)
+#' @return       The local path to the downloaded file
+#' @keywords internal
+#' @noRd
+#' @import piggyback
+get_cached_rds <- function(name,
+                           repo = "dylan-turner25/rfsa",
+                           tag  = NULL) {
+  dest_dir <- tools::R_user_dir("rfsa", which = "cache")
+  if (!dir.exists(dest_dir)) dir.create(dest_dir, recursive = TRUE)
+
+  dest_file <- file.path(dest_dir, name)
+  if (!file.exists(dest_file)) {
+    # download from the Release
+   piggyback::pb_download(
+      file     = name,
+      repo     = repo,
+      tag      = tag,
+      dest = dest_dir
+    )
+  }
+  readRDS(dest_file)
+}
+
+#' Clear the package cache of downloaded RDS files
+#'
+#' Deletes the entire cache directory used by the **rfsa** package to store
+#' downloaded \*.rds files. Useful if you need to force re-download of data,
+#' or free up disk space.
+#'
+#' @return Invisibly returns `NULL`. A message is printed indicating which
+#'   directory was cleared.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Remove all cached RDS files so they will be re-downloaded on next use
+#' clear_rfsa_cache()
+#' }
+clear_rfsa_cache <- function(){
+  dest_dir <- tools::R_user_dir("rfsa", which = "cache")
+  if (dir.exists(dest_dir)) {
+    unlink(dest_dir, recursive = TRUE, force = TRUE)
+  }
+  message("Cleared cached files in ", dest_dir)
+  invisible(NULL)
+}
 #' Splits FSA individual payment files into program/state files
 #'
 #' @param data a data frame containing FSA payment data
@@ -36,9 +120,13 @@ split_file <- function(data, year_type){
 
   for(y in years){
     for(p in programs){
+
+      # ensure names are portables
+      p <- gsub(" ","-",p)
+
       #print( paste0(year_type," year ",y,"-",p) )
       # make sure folder exists
-      dir <- file.path("inst","extdata","fsaFarmPayments",
+      dir <- file.path("data-raw","fsaFarmPayments","output_data",
                        paste0(year_type, "_year_files"), y)
 
       #print(dir)
@@ -46,7 +134,7 @@ split_file <- function(data, year_type){
         dir.create(dir, recursive = TRUE)
       }
 
-      file_name <- file.path(dir, paste0(p, ".rds"))
+      file_name <- file.path(dir, paste0(year_type,"_",y,"_",p, ".rds"))
       #print(file_name)
 
       new_observations <- switch(

@@ -19,69 +19,46 @@
 #'                                     program = c("ARC-CO","PLC"),
 #'                                     year_type = "program",
 #'                                     aggregation = "county")}
-get_fsa_payments <- function(year,
+get_fsa_payments <- function(year = NULL,
                              program = NULL,
                              year_type = "program",
                              aggregation = "national"){
 
-  # path to directory containing payment files
-  dir = system.file(
-    "extdata",
-    "fsaFarmPayments",
-    paste0(year_type, "_year_files"),
-    package = "rfsa"
-  )
+  # get list of all assets
+  files  <- list_data_assets()
+
+  # get all programs
+  all_programs <-  gsub("program_|fiscal_|payment_|\\.rds|","",files)
+  all_programs <- unique(gsub("_","",substr(all_programs, 5,nchar(all_programs))))
+
+  # filter by year_type
+  files <- files[grepl(year_type, files)]
+
+  # if year is null, set to all years
+  current_year <- as.numeric(format(Sys.Date(), "%Y"))
+  year <- 1990:current_year
+
+  # filter by year
+  files <- files[grepl(paste0(year, collapse = "|"), files)]
 
   if(!is.null(program)){
-  # check if program is valid
-  all_programs <- gsub("\\.rds","",list.files(path = paste0(dir,"/2024")))
-
-
   for(p in program){
     if(!p %in% all_programs){
       stop(paste0("Program ", p, " is not a valid program. Valid programs are: ", paste(all_programs, collapse = ", ")))
     }
   }
-
-  # get a vector of all the files to load
-  files = c()
-  for( y in year){
-    files = c(files, paste0(y,"/",program,".rds"))
-  }
-
-  # add the directory
-  files = paste0(dir,"/",files)
   } else {
-    files = list.files(path = dir, pattern = "*.rds", full.names = TRUE, recursive = TRUE)
+    program <- all_programs
   }
 
-  # check if the files exist
-  if(length(files) == 0){
-    stop(paste0("No files found for the specified year(s) and program(s)."))
-  }
-
-  # loop over each file and check if it exists
-  for (file in files) {
-    if (!file.exists(file)) {
-
-      # extract just the year and program name from file
-      file_parts <- strsplit(file, "/")[[1]]
-      year_part <- file_parts[length(file_parts) - 1]
-      program_part <- file_parts[length(file_parts)]
-      program_part <- gsub("\\.rds", "", program_part)
-
-      # remove the file from files
-      files <- files[files != file]
-
-      warning(paste0("Data for ", program_part, " in ",year_type," year ",year_part,
-                     " does not exist. This usually means the program did not exist at that time or has not made payments yet for the specified year type"))
-    }
-  }
+  # filter by program
+  files <- files[grepl(paste0(program, collapse = "|"), files)]
 
 
   # load the files
   data <- files |>
-    purrr::map_dfr(readRDS)
+    purrr::map_dfr(get_cached_rds)
+
 
   # set column names
   colnames(data) <- c("state_cd_fsa","state_name_fsa","county_cd_fsa","county_name_fsa",
@@ -143,5 +120,4 @@ get_fsa_payments <- function(year,
   }
   return(data)
 }
-
 
