@@ -35,8 +35,10 @@ get_fsa_payments <- function(year = NULL,
   files <- files[grepl(year_type, files)]
 
   # if year is null, set to all years
+  if(is.null(year)){
   current_year <- as.numeric(format(Sys.Date(), "%Y"))
   year <- 1990:current_year
+  }
 
   # filter by year
   files <- files[grepl(paste0(year, collapse = "|"), files)]

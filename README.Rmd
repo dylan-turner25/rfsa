@@ -201,7 +201,7 @@ df <- data.frame(dataset = character(),
                  external_source = character(),
                  stringsAsFactors = FALSE)
 
-# add a row for ARC-CO payments in program year 2024
+# add a row for ARC-CO payments in program year 2023
 metric = as.numeric(get_fsa_payments(year = 2023,program = c("ARC-CO"),year_type = "program",aggregation = "national")[,"payment_amount"])
 external_value = 461724994.11
 percentage_difference = (metric - external_value)/(external_value) 
@@ -224,6 +224,39 @@ df <- rbind(df, data.frame(value = "National ARC-CO payments in program year 202
                                                     background= "firebrick",
                                                     bold      = TRUE)),
                              stringsAsFactors = FALSE))
+
+
+# add a row for ARC-CO payments in program year 2023 using the ARC/PLC program data
+data("fsaArcPlcPayments") 
+metric = fsaArcPlcPayments %>%
+filter(program == "ARC-CO", program_year == 2023) %>%
+group_by(program_year) %>%
+summarize(payments = sum(payments))
+metric = metric$payments
+external_value = 461724994.11
+percentage_difference = (metric - external_value)/(external_value) 
+df <- rbind(df, data.frame(value = "National ARC-CO payments in program year 2023",
+                             code =  'data(fsaArcPlcPayments); fsaArcPlcPayments %>% filter(program == "ARC-CO", program_year == 2023) %>% group_by(program_year) %>% summarize(payments = sum(payments))',
+                             package_value = metric,
+                             external_value = external_value,
+                             external_source = "https://www.fsa.usda.gov/sites/default/files/2025-01/ARCCO%20Non-ProgYr%20Specific%20Payment%20Data%20%282025-01-06%29.xlsx",
+                             percentage_difference = paste0("%",round((percentage_difference * 100),4)),
+                             check_passed = ifelse(abs(percentage_difference) < .01,
+                                                    cell_spec("✓",   
+                                                    format    = "html",
+                                                    color     = "white",
+                                                    background= "forestgreen",
+                                                    bold      = TRUE),
+                                                    # red box, white cross
+                                                    cell_spec("✗",
+                                                    format    = "html",
+                                                    color     = "white",
+                                                    background= "firebrick",
+                                                    bold      = TRUE)),
+                             stringsAsFactors = FALSE))
+
+
+
 
 knitr::kable(df)
 
