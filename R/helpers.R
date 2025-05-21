@@ -267,6 +267,9 @@ extract_crop_type <- function(crop_name, rma_code = FALSE) {
     if (grepl("seed", tolower(crop_name))) {
       return(if (rma_code) NA_character_ else "seed")
     }
+    if (grepl("upland", tolower(crop_name))) {
+      return(if (rma_code) NA_character_ else "upland")
+    }
   }
 
   # rice types
@@ -308,8 +311,70 @@ clean_crop_names <- function(crop_name) {
   cleaned_name <- gsub("[0-9]/", "", crop_name)
   cleaned_name <- tolower(cleaned_name)
   cleaned_name <- gsub("\\s*\\([^)]*\\)", "", cleaned_name)
-  cleaned_name <- gsub("\\blarge\\b|\\bsmall\\b|\\bseed\\b", "", cleaned_name)
+  cleaned_name <- gsub("\\blarge\\b|\\bsmall\\b|\\bseed\\b|\\bupland\\b", "", cleaned_name)
   cleaned_name <- trimws(cleaned_name)
+  return(cleaned_name)
+}
+
+
+#' An upgraded version of `clean_crop_names` that can handle weird abbreviations
+#'
+#' Remove footnote indicators, parentheses, size qualifiers, and trim whitespace.
+#' Also ccorrects abbreviated names to their full form.
+#'
+#' @param crop_name Character. The raw crop name possibly containing notes
+#'   or parentheses.
+#'
+#' @return Character. The cleaned crop name in lowercase without annotations.
+#' @noRd
+#' @keywords internal
+clean_crop_names2 <- function(crop_name) {
+  if (is.na(crop_name)) return(NA_character_)
+
+  # Remove numeric patterns and slash
+  cleaned_name <- gsub("[0-9]/", "", crop_name)
+
+  # Convert to lowercase
+  cleaned_name <- tolower(cleaned_name)
+
+  # Remove text in parentheses
+  cleaned_name <- gsub("\\s*\\([^)]*\\)", "", cleaned_name)
+
+  # Remove specific words
+  cleaned_name <- gsub("\\blarge\\b|\\bsmall\\b|\\bseed\\b|\\bupland\\b", "", cleaned_name)
+
+  # Additional cleaning
+  cleaned_name <- gsub(" - blank$", "", cleaned_name)
+  cleaned_name <- gsub(" - .*grain$", "", cleaned_name)
+  cleaned_name <- gsub(" - temporate japonica$", "", cleaned_name)
+  cleaned_name <- gsub(" - garbanzo-lg kabuli$| - garbanzo-sm desi$", "", cleaned_name)
+
+  # Standardize abbreviated names
+  lookup <- c(
+    "barly" = "barley",
+    "pnuts" = "peanuts",
+    "snflr" = "sunflowers",
+    "sflwr" = "safflower",
+    "sorgh" = "sorghum",
+    "soybn" = "soybeans",
+    "canol" = "canola",
+    "sesme" = "sesame",
+    "lenti" = "lentils",
+    "mustd" = "mustard",
+    "rape" = "rapeseed",
+    "cramb" = "crambe"
+  )
+
+  for (abbr in names(lookup)) {
+    if (cleaned_name == abbr) {
+      cleaned_name <- lookup[abbr]
+      break
+    }
+  }
+
+  # Final trim of whitespace
+  cleaned_name <- trimws(cleaned_name)
+
   return(cleaned_name)
 }
 

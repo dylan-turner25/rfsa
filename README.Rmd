@@ -162,7 +162,7 @@ df <- df[,c("Dataset", "Description", "Rows", "Years", "Last Updated", "Data Dow
 `rfsa` can be installed directly from GitHub using `remotes::install_github("dylan-turner25/rfsa", force = TRUE)`.
 
 # Usage
-The`rfsa` package has no exported functions. To load an included data set use the `data()` function with one of the names of the data sets listed in the table below. For example, to load the `fsaMyaPrice` data set, use the following code:
+The`rfsa` package provides several ways to access data depending on the type of data set. The first way is by loading pre-built data sets using the `data()` function.  For example, to load the `fsaMyaPrice` data set, use the following code.
 ```{r}
 # load the rfsa package
 library(rfsa)
@@ -174,8 +174,23 @@ head(fsaMyaPrice)
 
 ```
 
+The other way to ob
+
+
 # ARC and PLC Program Data
-The following table reports the currently available data sets related to ARC and PLC in the `rfsa` package. The `Last Updated` column indicates the last time the data set was updated in the package. The `Data Download Date` indicates the date that the raw input data for the current year was downloaded from the FSA website (this is important as these data sets are sometimes revised or contain projected values for in progress marketing years).
+The following table reports the currently available data sets related to ARC and PLC in the `rfsa` package. These data sets are cleaned and compiled versions of data available on FSA's [ARC and PLC data landing page](https://www.fsa.usda.gov/resources/programs/arc-plc/program-data). Loading a data set is done using the `data` function. For example, to load the `fsaMyaPrice` data set, use the following code.
+```{r}
+# load the rfsa package
+library(rfsa)
+
+# load marketing year average prices
+data("fsaMyaPrice")
+ 
+head(fsaMyaPrice)
+
+```
+
+The following table provides some information about the ARC and PLC specific data sets in the `rfsa` package. The `Last Updated` column indicates the last time the data set was updated in the package. The `Data Download Date` indicates the date that the raw input data for the current year was downloaded from the FSA website (this is important as these data sets are sometimes revised or contain projected values for in progress marketing years).
 
 ```{r, include = TRUE, echo = FALSE, cache=FALSE}
  knitr::kable(df) 
@@ -183,9 +198,20 @@ The following table reports the currently available data sets related to ARC and
 
 # FSA Individual Payment Files
 
-The USDA Farm Service Agency makes available Individual Payment Files that contain payment information for programs administered by FSA. 
+The USDA Farm Service Agency provides access to [individual payment files](https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/electronic-reading-room/frequently-requested/payment-files) that contain payment information for programs administered by FSA. The data in these files can be accessed using the `get_fsa_payments()` function. 
 
+```{r, include = TRUE, echo = TRUE, cache=FALSE}
 
+library(rfsa)
+
+data <- get_fsa_payments(year = 2023, 
+                         program = c("CRP"), 
+                         year_type = "program", 
+                         aggregation = "national")
+
+head(data)
+
+```
 
 # Data Validation Checks
 
