@@ -125,6 +125,25 @@ arc_plc_base_acres <- janitor::clean_names(arc_plc_base_acres)
 # type convert columns
 arc_plc_base_acres <- readr::type_convert(arc_plc_base_acres)
 
+# clean crop names
+arc_plc_base_acres$covered_commodity <- unlist(lapply(arc_plc_base_acres$covered_commodity, clean_crop_names))
+
+# extract crop type
+arc_plc_base_acres$crop_type <- unlist(lapply(arc_plc_base_acres$covered_commodity, extract_crop_type))
+
+# add rma crop codes where applicable
+arc_plc_base_acres$rma_type_code <- unlist(lapply(arc_plc_base_acres$covered_commodity, extract_crop_type, rma_code = TRUE))
+
+# add rma crop codes
+arc_plc_base_acres$rma_crop_code <- unlist(lapply(arc_plc_base_acres$covered_commodity, assign_rma_cc))
+
+# add a duplicate of covered commodity called "crop"
+arc_plc_base_acres$crop <- arc_plc_base_acres$covered_commodity
+
+# rename year program_year
+arc_plc_base_acres <- arc_plc_base_acres %>%
+  dplyr::rename(program_year = year)
+
 # convert to a tibble before exporting
 fsaArcPlcBaseAcres <- dplyr::as_tibble(arc_plc_base_acres)
 

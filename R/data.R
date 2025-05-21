@@ -220,26 +220,31 @@
 
 #' ARC/PLC enrolled base acres by commodity
 #'
-#' This dataset provides annual  base acreage by program and commodity under the ARC-CO, ARC-IC, and PLC programs
-#' administered by the USDA Farm Service Agency. It includes acreage originally attributed to generic base, as well as total
-#' enrolled acreage by commodity and year. From 2018 onward, base assignments under the Seed Cotton program are also reflected.
+#' This dataset provides annual base acreage by program and commodity under the ARC-CO,
+#' ARC-IC, and PLC programs administered by the USDA Farm Service Agency. It includes
+#' acreage originally attributed to generic base, as well as total enrolled acreage by commodity
+#' and year. From 2018 onward, base assignments under the Seed Cotton program are also reflected.
 #'
-#' @format A data frame with 225 rows and 14 variables:
+#' @format A data frame with 225 rows and 18 variables:
 #' \describe{
-#'   \item{covered_commodity}{Name of the covered commodity}
-#'   \item{plc_covered_commodity_contract_base}{Acres enrolled in PLC with covered commodity base}
-#'   \item{plc_plantings_attributed_to_generic_base}{Acres assigned to PLC from generic base}
-#'   \item{arc_co_covered_commodity_contract_base}{Acres enrolled in ARC-CO with covered commodity base}
-#'   \item{arc_co_plantings_attributed_to_generic_base}{Acres assigned to ARC-CO from generic base}
-#'   \item{arc_ic_enrolled_base_covered_commodity_contract_base}{Acres enrolled in ARC-IC with covered commodity base}
-#'   \item{total}{Total base acres enrolled for the commodity in all programs}
-#'   \item{plc_total}{Total PLC base acres}
-#'   \item{arc_co_total}{Total ARC-CO base acres}
-#'   \item{arc_ic_total}{Total ARC-IC base acres}
-#'   \item{year}{Year of enrollment}
-#'   \item{arc_co_all}{ARC-CO acreage (all base types), available for 2018 onward}
-#'   \item{arc_co_irrigated}{Irrigated ARC-CO acreage, available for 2018 onward}
-#'   \item{arc_co_nonirrigated}{Nonirrigated ARC-CO acreage, available for 2018 onward}
+#'   \item{covered_commodity}{character. FSA’s covered commodity identifier (e.g. "rice-temp japonica").}
+#'   \item{plc_covered_commodity_contract_base}{numeric. Acres enrolled in PLC with covered-commodity base.}
+#'   \item{plc_plantings_attributed_to_generic_base}{numeric. Acres assigned to PLC from generic base.}
+#'   \item{arc_co_covered_commodity_contract_base}{numeric. Acres enrolled in ARC-CO with covered-commodity base.}
+#'   \item{arc_co_plantings_attributed_to_generic_base}{numeric. Acres assigned to ARC-CO from generic base.}
+#'   \item{arc_ic_enrolled_base_covered_commodity_contract_base}{numeric. Acres enrolled in ARC-IC with covered-commodity base.}
+#'   \item{total}{numeric. Total base acres enrolled for the commodity across all programs.}
+#'   \item{plc_total}{numeric. Total PLC base acres (sum across all commodities).}
+#'   \item{arc_co_total}{numeric. Total ARC-CO base acres (sum across all commodities).}
+#'   \item{arc_ic_total}{numeric. Total ARC-IC base acres (sum across all commodities).}
+#'   \item{program_year}{integer. Program year (e.g. 2018, 2019, …).}
+#'   \item{arc_co_all}{numeric. ARC-CO acreage (all base types), available from 2018 onward.}
+#'   \item{arc_co_irrigated}{numeric. Irrigated ARC-CO acreage (acres), available from 2018 onward.}
+#'   \item{arc_co_nonirrigated}{numeric. Non-irrigated ARC-CO acreage (acres), available from 2018 onward.}
+#'   \item{crop_type}{character. FSA crop-type classification (e.g. "long grain", "temperate japonica").}
+#'   \item{rma_type_code}{character. RMA program type code.}
+#'   \item{rma_crop_code}{integer. RMA crop code.}
+#'   \item{crop}{character. Duplicate of covered_commodity for convienence when other data sets reference "crop"}
 #' }
 #'
 #' @usage data(fsaArcPlcBaseAcres)
