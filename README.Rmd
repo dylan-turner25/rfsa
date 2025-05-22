@@ -1,5 +1,5 @@
 ---
-title: "rfsa: A package for accessing and analyzing USDA Farm Service Agency data"
+title: "rfsa: A package for accessing and USDA Farm Service Agency data"
 output:
   github_document:
     toc: true
@@ -23,6 +23,11 @@ library(kableExtra)
 library(knitr)
 
 ```
+
+# Introduction
+The `rfsa` package provides cleaned and aggregated version of publicly available data sets related to programs administered by the USDA, Farm Service Agency. 
+
+Disclaimer: This product uses data provided by the USDA, but is not endorsed by or affiliated with USDA or the Federal Government.
 
 ```{r data_set_table, include=FALSE, cache=FALSE}
   # initialize a dataframe with the columns "dataset","rows","columns","years","description"
@@ -198,20 +203,40 @@ The following table provides some information about the ARC and PLC specific dat
 
 # FSA Individual Payment Files
 
-The USDA Farm Service Agency provides access to [individual payment files](https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/electronic-reading-room/frequently-requested/payment-files) that contain payment information for programs administered by FSA. The data in these files can be accessed using the `get_fsa_payments()` function. 
+The USDA Farm Service Agency provides access to [individual payment files](https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/electronic-reading-room/frequently-requested/payment-files) that contain payment information for programs administered by FSA. The data in these files can be accessed using the `get_fsa_payments()` function. This function pulls data from [pre-cleaned files](https://github.com/dylan-turner25/rfsa/releases/tag/v0.1.0) that are stored as GitHub Releases on the `rfsa` GitHub Repository. This approach minimizes memory overhead and compute time when only a small portion of the data is needed. The `get_fsa_payments()` function has several arguments that allow the user to filter the data. The `year` argument specifies the year of interest (can be a vector of multiple year), the `program` argument specifies the program of interest (ex: "ARC-CO","ARC-IC","PLC", "CRP"), and the `year_type` argument specifies whether to pull data that has been aggregated by `program_year` (i.e. the year corresponding to the event that prompted the payment), the `fiscal_year` (i.e. the Government fiscal year corresponding to the payment), or `payment_year` (i.e. the actual calendar year when funds were disbursed) . The `aggregation` argument specifies whether to aggregate the data at the `national`,`state`, `county`, or `individual` level. The first time that a combination of `year`, `program`, and `year_type` are specified will prompt the relevant files to be downloaded which will then be cached on your local machine. This means that depending on the quanity of data needed, the initial query may take some time, however, subsequent function calls for the same data will be much quicker. To remove all cached data use `clear_rfsa_cache()`. 
+Below are several examples of how to use the `get_fsa_payments()` function.
 
 ```{r, include = TRUE, echo = TRUE, cache=FALSE}
 
 library(rfsa)
 
+# get national level data on payments made through the conservation reserve program in program year 2023. 
 data <- get_fsa_payments(year = 2023, 
                          program = c("CRP"), 
                          year_type = "program", 
                          aggregation = "national")
 
-head(data)
 
 ```
+
+
+The following table provides a list of all the program abbreviations that can be passed to the `program` argument in the `get_fsa_payments()` function. A complete list of every unique accounting description that occurs in all FSA individual payment files and how each description was classified into one of the program listed below, see [this file](https://github.com/dylan-turner25/rfsa/blob/main/data-raw/fsaFarmPayments/supplementary_files/program_details.csv) (pointing out any suspected incorrect classifications is encouraged!). 
+```{r, echo = FALSE, cache=FALSE, include = FALSE}
+
+abb <- distinct(readr::read_csv("./data-raw/fsaFarmPayments/supplementary_files/program_details.csv") %>%
+  select(prog_abb, prog_full)) %>%
+  rename(program_abbreviation = prog_abb,
+         program_full_name = prog_full) 
+
+
+```
+
+```{r, echo = FALSE}
+knitr::kable(abb)
+```
+
+
+
 
 # Data Validation Checks
 
@@ -289,4 +314,106 @@ knitr::kable(df)
 
 ```
 
+# Example Usage
+
+## Plot payments made via the Conservation Reserve Program relative to total payments over time 
+```{r, cache=TRUE, echo=TRUE, include=TRUE}
+library(rfsa)
+library(ggplot2)
+
+# note this is aggregating roughly 60 million individual payments behind the scenes
+# and takes up roughly 20 GB of memory. A more memory efficient approach would be
+# to loop over years and aggregate each year individually to avoid loading all the data into memory at once.
+data <- get_fsa_payments(year = 2004:2023,
+                         year_type = "program",
+                         aggregation = "national")
+
+
+data %>%
+  mutate(program_category = if_else(program_abb %in% c("CRP"),
+                                    "Conservation Reserve Program",
+                                    "Other")) %>%
+  ggplot(aes(x = year, y = payment_amount/1e9, fill = program_category)) +
+  geom_bar(stat = "identity") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Conservation Reserve Program" = "forestgreen",
+                               "Other" = "grey")) +
+  labs(
+    title = "FSA Payments by Program (2004-2023)",
+    x = "Program Year",
+    y = "Total Payments (Billions USD)",
+    fill = "Program"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size = 8))
+
+
+```
+
+
+
+## Plot county level payments made through the livestock indemnity program in program year 2023
+```{r, cache=TRUE, echo=TRUE, include=TRUE}
+library(ggplot2)
+library(maps)
+library(mapproj)
+library(dplyr)
+
+data <- get_fsa_payments(year = 2023, 
+                         year_type = "program",
+                         program = c("LIP"),
+                         aggregation = "county") %>%
+  mutate(
+    state_fips = substr(fips_fsa, 1, 2),
+    county_fips = substr(fips_fsa, 3, 5)
+  )
+
+# Get county map data
+counties <- map_data("county")
+
+# Get state and county names from FIPS codes
+fips_codes <- data %>%
+  select(fips_fsa, county_name_fsa) %>%
+  distinct() %>%
+  mutate(
+    state = state.fips$polyname[match(state_cd_fsa, state.fips$fips)],
+    county = tolower(county_name_fsa)
+  )
+
+# Join payment data with map data
+map_data <- counties %>%
+  left_join(
+    data %>%
+      left_join(fips_codes, by = "fips_fsa") %>%
+      select(state, county, payment_amount),
+    by = c("region" = "state", "subregion" = "county")
+  )
+
+
+# Create the map
+ggplot(map_data, aes(x = long, y = lat, group = group, fill = payment_amount)) +
+geom_polygon(color = "white", size = 0.1) +
+coord_map("albers", lat0 = 30, lat1 = 40) +
+scale_fill_viridis_c(
+  option = "magma",
+  name = "",
+  trans = "log10",
+  labels = scales::dollar_format(),
+  na.value = "grey90",
+  direction = -1
+) +
+labs(
+  title = "Total Livestock Indemnity Program Payments in Program Year 2023",
+  caption = "Source: FSA Payment Data"
+) +
+theme_minimal() +
+theme(
+  axis.text = element_blank(),
+  axis.title = element_blank(),
+  panel.grid = element_blank()
+)
+
+
+```
 

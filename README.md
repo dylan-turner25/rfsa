@@ -1,14 +1,30 @@
-rfsa: A package for accessing and analyzing USDA Farm Service Agency
-data
+rfsa: A package for accessing and USDA Farm Service Agency data
 ================
 
+- [Introduction](#introduction)
 - [Installation](#installation)
 - [Usage](#usage)
 - [ARC and PLC Program Data](#arc-and-plc-program-data)
 - [FSA Individual Payment Files](#fsa-individual-payment-files)
 - [Data Validation Checks](#data-validation-checks)
+- [Example Usage](#example-usage)
+  - [Plot payments made via the Conservation Reserve Program relative to
+    total payments over
+    time](#plot-payments-made-via-the-conservation-reserve-program-relative-to-total-payments-over-time)
+  - [Plot county level payments made through the livestock indemnity
+    program in program year
+    2023](#plot-county-level-payments-made-through-the-livestock-indemnity-program-in-program-year-2023)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
+# Introduction
+
+The `rfsa` package provides cleaned and aggregated version of publicly
+available data sets related to programs administered by the USDA, Farm
+Service Agency.
+
+Disclaimer: This product uses data provided by the USDA, but is not
+endorsed by or affiliated with USDA or the Federal Government.
 
 # Installation
 
@@ -109,24 +125,110 @@ The USDA Farm Service Agency provides access to [individual payment
 files](https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/electronic-reading-room/frequently-requested/payment-files)
 that contain payment information for programs administered by FSA. The
 data in these files can be accessed using the `get_fsa_payments()`
-function.
+function. This function pulls data from [pre-cleaned
+files](https://github.com/dylan-turner25/rfsa/releases/tag/v0.1.0) that
+are stored as GitHub Releases on the `rfsa` GitHub Repository. This
+approach minimizes memory overhead and compute time when only a small
+portion of the data is needed. The `get_fsa_payments()` function has
+several arguments that allow the user to filter the data. The `year`
+argument specifies the year of interest (can be a vector of multiple
+year), the `program` argument specifies the program of interest (ex:
+“ARC-CO”,“ARC-IC”,“PLC”, “CRP”), and the `year_type` argument specifies
+whether to pull data that has been aggregated by `program_year`
+(i.e. the year corresponding to the event that prompted the payment),
+the `fiscal_year` (i.e. the Government fiscal year corresponding to the
+payment), or `payment_year` (i.e. the actual calendar year when funds
+were disbursed) . The `aggregation` argument specifies whether to
+aggregate the data at the `national`,`state`, `county`, or `individual`
+level. The first time that a combination of `year`, `program`, and
+`year_type` are specified will prompt the relevant files to be
+downloaded which will then be cached on your local machine. This means
+that depending on the quanity of data needed, the initial query may take
+some time, however, subsequent function calls for the same data will be
+much quicker. To remove all cached data use `clear_rfsa_cache()`. Below
+are several examples of how to use the `get_fsa_payments()` function.
 
 ``` r
 
 library(rfsa)
 
+# get national level data on payments made through the conservation reserve program in program year 2023. 
 data <- get_fsa_payments(year = 2023, 
                          program = c("CRP"), 
                          year_type = "program", 
                          aggregation = "national")
-
-head(data)
-#> # A tibble: 1 × 5
-#> # Groups:   year, program_abb [1]
-#>    year program_abb program_name                 payment_amount year_type
-#>   <dbl> <chr>       <chr>                                 <dbl> <chr>    
-#> 1  2023 CRP         Conservation Reserve Program     567520854. program
 ```
+
+The following table provides a list of all the program abbreviations
+that can be passed to the `program` argument in the `get_fsa_payments()`
+function. A complete list of every unique accounting description that
+occurs in all FSA individual payment files and how each description was
+classified into one of the program listed below, see [this
+file](https://github.com/dylan-turner25/rfsa/blob/main/data-raw/fsaFarmPayments/supplementary_files/program_details.csv)
+(pointing out any suspected incorrect classifications is encouraged!).
+
+| program_abbreviation | program_full_name |
+|:---|:---|
+| ACRE | Average Crop Revenue Election |
+| AILFP | American Indian Livestock Feed Program |
+| ARC-CO | Agricultural Risk Coverage-County Coverage |
+| ARC-IC | Agricultural Risk Coverage-Individual Coverage |
+| BCAP | Biomass Crop Assistance Program |
+| CDP | Crop Disaster Program |
+| CFAP | Coronavirus Food Assistance Program |
+| CGCS | Cotton Ginning Cost Share Program |
+| CRP | Conservation Reserve Program |
+| CTAP | Cotton Transition Assistance Program |
+| DCP | Direct and Counter-Cyclical Program |
+| DDAPP | Dairy Disaster Assistance Payment Program |
+| DELAP | Dairy Economic Loss Assistance Program |
+| DIPP | Dairy Indemnity Payment Program |
+| DMC | Dairy Margin Coverage Program |
+| DMC | Dairy Indemnity Payment Program |
+| ECP | Emergency Conservation Program |
+| EFRP | Emergency Forest Restoration Program |
+| ELAP | Emergency Livestock Assistance Program |
+| ELRP | Emergency Livestock Relief Program |
+| ELRRPP | Ewe Lamb Replacement and Retention Payment Program |
+| ERP | Emergency Relief Program |
+| FHADA | Florida Hurricane Agricultural Disaster Assistance |
+| FSFL | Farm Storage Facility Loan Program |
+| GO | Graze Out Program |
+| GRP | Grasslands Reserve Program |
+| HIP | Hurricane Indemnity Program |
+| HSDP | Hawaii Sugar Disaster Program |
+| Interest-Penalty | Interest Payment |
+| LCP | Livestock Compensation Program |
+| LDP | Loan Defiency Program |
+| LFP | Livestock Forage Program |
+| LIP | Livestock Indemnity Program |
+| MAL | Market Assistance Loan |
+| MFP | Market Facilitation Program |
+| MILC | Milk Income Loss Contract Program |
+| MLP | Milk Loss Program |
+| Other | Other Programs/Vague Accounting Descriptions |
+| PLC | Price Loss Coverage |
+| ODMAP | Organic Dairy Marketing Assistance Program |
+| RPP | Rice Production Program |
+| CARES-ACT | CARES-ACT |
+| COVID-Unspecified | COVID-Unspecified |
+| MAP | Market Access Program |
+| PARP | Pandemic Assistance Revenue Program |
+| OTECP | Organic and Transitional Education and Certification Program |
+| NAP | Non-Insured Crop Disaster Assistance Program |
+| OCCSP | Organic Certification Cost Share Program |
+| PATHH | Pandemic Assistance for Timber Harvesters and Haulers |
+| PLIP | Pandemic Livestock Indemnity Program |
+| QLA | Quality Loss Adjustment Program |
+| RTCP | Reimbursement Transportation Cost Payment Program for Geographically Disadvantaged Farmers and Ranchers |
+| SMHPP | Spot Market Hog Pandemic Program |
+| STRP | Seafood Trade Relief Program |
+| SURE | Supplemental Revenue Assistance Program |
+| TAAF | Trade Adjustment Assistance for Farmers |
+| TAP | Tree Assistance Program |
+| TIP | Tree Indemnity Program |
+| TTPP | Tobacco Transition Payment Program |
+| WHIP | Wildfires and Hurricanes Indemnity Program |
 
 # Data Validation Checks
 
@@ -147,3 +249,116 @@ package as well as an external source to validate the value against.
 |:---|:---|---:|---:|:---|:---|:---|
 | National ARC-CO payments in program year 2023 | get_fsa_payments(year = 2023,program = c(“ARC-CO”),year_type = “program”,aggregation = “national”)\[,“payment_amount”\] | 460388613 | 461724994 | <https://www.fsa.usda.gov/sites/default/files/2025-01/ARCCO%20Non-ProgYr%20Specific%20Payment%20Data%20%282025-01-06%29.xlsx> | %-0.2894 | <span style=" font-weight: bold;    color: white !important;border-radius: 4px; padding-right: 4px; padding-left: 4px; background-color: forestgreen !important;">✓</span> |
 | National ARC-CO payments in program year 2023 | data(fsaArcPlcPayments); fsaArcPlcPayments %\>% filter(program == “ARC-CO”, program_year == 2023) %\>% group_by(program_year) %\>% summarize(payments = sum(payments)) | 461724994 | 461724994 | <https://www.fsa.usda.gov/sites/default/files/2025-01/ARCCO%20Non-ProgYr%20Specific%20Payment%20Data%20%282025-01-06%29.xlsx> | %0 | <span style=" font-weight: bold;    color: white !important;border-radius: 4px; padding-right: 4px; padding-left: 4px; background-color: forestgreen !important;">✓</span> |
+
+# Example Usage
+
+## Plot payments made via the Conservation Reserve Program relative to total payments over time
+
+``` r
+library(rfsa)
+library(ggplot2)
+
+# note this is aggregating roughly 60 million individual payments behind the scenes
+# and takes up roughly 20 GB of memory. A more memory efficient approach would be
+# to loop over years and aggregate each year individually to avoid loading all the data into memory at once.
+data <- get_fsa_payments(year = 2004:2023,
+                         year_type = "program",
+                         aggregation = "national")
+#> Warning in get_fsa_payments(year = 2004:2023, year_type = "program",
+#> aggregation = "national"): NAs introduced by coercion
+
+
+data %>%
+  mutate(program_category = if_else(program_abb %in% c("CRP"),
+                                    "Conservation Reserve Program",
+                                    "Other")) %>%
+  ggplot(aes(x = year, y = payment_amount/1e9, fill = program_category)) +
+  geom_bar(stat = "identity") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Conservation Reserve Program" = "forestgreen",
+                               "Other" = "grey")) +
+  labs(
+    title = "FSA Payments by Program (2004-2023)",
+    x = "Program Year",
+    y = "Total Payments (Billions USD)",
+    fill = "Program"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size = 8))
+```
+
+<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
+
+## Plot county level payments made through the livestock indemnity program in program year 2023
+
+``` r
+library(ggplot2)
+library(maps)
+library(mapproj)
+library(dplyr)
+
+data <- get_fsa_payments(year = 2023, 
+                         year_type = "program",
+                         program = c("LIP"),
+                         aggregation = "county") %>%
+  mutate(
+    state_fips = substr(fips_fsa, 1, 2),
+    county_fips = substr(fips_fsa, 3, 5)
+  )
+
+# Get county map data
+counties <- map_data("county")
+
+# Get state and county names from FIPS codes
+fips_codes <- data %>%
+  select(fips_fsa, county_name_fsa) %>%
+  distinct() %>%
+  mutate(
+    state = state.fips$polyname[match(state_cd_fsa, state.fips$fips)],
+    county = tolower(county_name_fsa)
+  )
+#> Adding missing grouping variables: `state_cd_fsa`, `county_cd_fsa`, `year`,
+#> `program_abb`
+
+# Join payment data with map data
+map_data <- counties %>%
+  left_join(
+    data %>%
+      left_join(fips_codes, by = "fips_fsa") %>%
+      select(state, county, payment_amount),
+    by = c("region" = "state", "subregion" = "county")
+  )
+#> Adding missing grouping variables: `fips_fsa`
+
+
+# Create the map
+ggplot(map_data, aes(x = long, y = lat, group = group, fill = payment_amount)) +
+geom_polygon(color = "white", size = 0.1) +
+coord_map("albers", lat0 = 30, lat1 = 40) +
+scale_fill_viridis_c(
+  option = "magma",
+  name = "",
+  trans = "log10",
+  labels = scales::dollar_format(),
+  na.value = "grey90",
+  direction = -1
+) +
+labs(
+  title = "Total Livestock Indemnity Program Payments in Program Year 2023",
+  caption = "Source: FSA Payment Data"
+) +
+theme_minimal() +
+theme(
+  axis.text = element_blank(),
+  axis.title = element_blank(),
+  panel.grid = element_blank()
+)
+#> Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+#> ℹ Please use `linewidth` instead.
+#> This warning is displayed once every 8 hours.
+#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+#> generated.
+```
+
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
