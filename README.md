@@ -14,6 +14,9 @@ rfsa: A package for accessing and USDA Farm Service Agency data
   - [Plot county level payments made through the livestock indemnity
     program in program year
     2023](#plot-county-level-payments-made-through-the-livestock-indemnity-program-in-program-year-2023)
+  - [Plot a histogram showing the number of programs individual payee’s
+    recieved payments from in program year
+    2020](#plot-a-histogram-showing-the-number-of-programs-individual-payees-recieved-payments-from-in-program-year-2020)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -362,3 +365,44 @@ theme(
 ```
 
 <img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+
+## Plot a histogram showing the number of programs individual payee’s recieved payments from in program year 2020
+
+``` r
+library(rfsa)
+library(dplyr)
+library(ggplot2)
+
+data <- get_fsa_payments(year = 2020,
+                         year_type = "program",
+                         aggregation = "individual") %>%
+  group_by(name_payee) %>%
+  summarise(unique_programs = n_distinct(program_abb))
+
+
+
+ggplot(data, aes(x = unique_programs)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "white") +
+  labs(title = "Histogram of Unique Programs per Payee in Program Year 2020",
+       x = "Number of Programs",
+       y = "Count") +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = scales::pretty_breaks()) +
+  annotate("text", x = max(data$unique_programs) * 0.8, y = max(table(data$unique_programs)) * 0.8,
+           label = paste("Mean:", round(mean(data$unique_programs), 2),
+                         "\nMedian:", median(data$unique_programs),
+                         "\nMax:", max(data$unique_programs)),
+           hjust = 0, size = 3,
+           family = "sans") +
+  annotate("rect", 
+           xmin = max(data$unique_programs) * 0.75, 
+           xmax = max(data$unique_programs) * 0.95,
+           ymin = max(table(data$unique_programs)) * 0.7,
+           ymax = max(table(data$unique_programs)) * 0.9,
+           alpha = 0, fill = "white",
+           color = "black", linewidth = 0.5) +
+  theme(text = element_text(size = 12))
+```
+
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
