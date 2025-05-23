@@ -1,4 +1,4 @@
-rfsa: A package for accessing and USDA Farm Service Agency data
+rfsa: A package for accessing USDA Farm Service Agency data
 ================
 
 - [Introduction](#introduction)

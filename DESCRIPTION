@@ -15,5 +15,6 @@ Imports:
   purrr,
   rlang,
   gh,
-  piggyback
+  piggyback,
+  memoise
 LazyData: false
