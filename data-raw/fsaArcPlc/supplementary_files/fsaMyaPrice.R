@@ -14,12 +14,20 @@ for(year in 2014:(current_year - 1)){
   #try(temp <- readxl::read_xls(file))
   #try(temp <- readxl::read_xlsx(file))
   temp <- readxl::read_excel(file)
-
+  # locate row containing "Commodity" which contains column names
 
   # clean the raw data
   colnames(temp) <- temp[3,]
-  temp <- temp[-c(1:4),]
-  temp <- temp[-c(which(is.na(temp$Commodity)):nrow(temp)),]
+  commodity_row <- min(which(grepl("commodity",tolower(data.frame(temp)[,1]))))
+  temp <- temp[-c(1:commodity_row),]
+
+  # remove rows with all NA values
+  temp <- temp[rowSums(is.na(temp)) != ncol(temp),]
+
+  temp <- temp[-c(which(is.na(temp$`Marketing Year`)):nrow(temp)),]
+
+
+
   temp$year <- paste0(year,"-",year+1)
   colnames(temp)[3] <- "Publishing Dates for the  Final T - 0 MYA Price"
   colnames(temp) <- rename_mya_cols(temp,year = year)
