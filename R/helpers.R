@@ -348,6 +348,14 @@ clean_crop_names2 <- function(crop_name) {
   cleaned_name <- gsub(" - .*grain$", "", cleaned_name)
   cleaned_name <- gsub(" - temporate japonica$", "", cleaned_name)
   cleaned_name <- gsub(" - garbanzo-lg kabuli$| - garbanzo-sm desi$", "", cleaned_name)
+  
+  # Remove common crop type suffixes
+  cleaned_name <- gsub("\\s+lint$", "", cleaned_name)  # "cotton lint" -> "cotton"
+  cleaned_name <- gsub("\\bmed/short grain$|\\blong grain$|\\bmedium grain$|\\bshort grain$", "", cleaned_name)
+  cleaned_name <- gsub("\\btemperate japonica$|\\btropical japonica$", "", cleaned_name)
+  cleaned_name <- gsub("\\blarge kabuli$|\\bsmall desi$", "", cleaned_name)
+  cleaned_name <- gsub("\\boil type$|\\bconfection type$", "", cleaned_name)
+  cleaned_name <- gsub("\\bdark northern spring$|\\bhard red winter$|\\bsoft red winter$|\\bwhite$|\\bdurum$", "", cleaned_name)
 
   # Standardize abbreviated names
   lookup <- c(

@@ -310,3 +310,48 @@
 "fsaEnrolledCountyBaseAcres"
 
 
+#' County-level PLC yields by commodity and program year
+#'
+#' A dataset containing county-level Price Loss Coverage (PLC) yield data by commodity
+#' and program year. This data provides the average PLC yields used for payment calculations
+#' at the county level, along with enrolled base acres information where available.
+#'
+#' @format A data frame with the following variables:
+#' \describe{
+#'   \item{fips}{character. Five-digit FIPS code identifying the county.}
+#'   \item{state}{character. Full name of the state.}
+#'   \item{county}{character. Name of the county.}
+#'   \item{crop}{character. Name of the covered commodity (cleaned, with crop types removed).}
+#'   \item{crop_type}{character. Crop subtype classification (e.g., "lint", "long grain", "hard red winter").}
+#'   \item{plc_yield}{numeric. Average PLC yield for the commodity in the county (yield per acre).}
+#'   \item{plc_yield_units}{character. Units of measurement for the yield (e.g., "Bushel", "Pound").}
+#'   \item{enrolled_base}{numeric. Total enrolled base acres for the commodity in the county (acres). Available for 2019+ data.}
+#'   \item{program_year}{integer. Program year (e.g., 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025).}
+#'   \item{crop_year}{integer. Crop year corresponding to the yield data.}
+#'   \item{rma_crop_code}{integer. RMA commodity code for cross-agency alignment.}
+#'   \item{rma_type_code}{character. RMA crop type code for insurance classification.}
+#' }
+#'
+#' @details
+#' This dataset combines PLC yield data from multiple sources and formats:
+#' 
+#' **Data sources by year:**
+#' - **2018 and earlier**: Counter-cyclical Payment (CCP) yields in wide format
+#' - **2019 onwards**: PLC yields in long format with additional enrolled base information
+#' 
+#' **Key features:**
+#' - County-level geographic detail with FIPS codes
+#' - Standardized crop names with separated crop types  
+#' - Consistent units and measurement standards
+#' - Integration with other ARC/PLC datasets via common identifiers
+#' 
+#' PLC yields are used to calculate potential PLC payments by multiplying the yield
+#' by base acres and the PLC payment rate (reference price minus MYA price, when positive).
+#' 
+#' To view code used to generate this data set, see `./data-raw/fsaArcPlc/supplementary_files/fsaPlcYields.R`
+#'
+#' @usage data(fsaPlcYields)
+#' @source \url{https://www.fsa.usda.gov/programs-and-services/arcplc_program/index}
+"fsaPlcYields"
+
+
