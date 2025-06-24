@@ -179,7 +179,6 @@ head(fsaMyaPrice)
 
 ```
 
-The other way to ob
 
 
 # ARC and PLC Program Data

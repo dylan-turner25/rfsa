@@ -1,3 +1,4 @@
+
 #' County‐level base acres and average PLC yields by crop
 #'
 #' A dataset containing county‐level base acreage and average PLC yield for each covered
@@ -277,5 +278,35 @@
 "fsaArcPlcBaseAcres"
 
 
+#' County-level enrolled base acres by program and commodity
+#'
+#' A dataset containing county-level enrolled base acreage data for ARC-CO and PLC programs
+#' by commodity and program year. This data shows the actual acres enrolled in each program
+#' at the county level, providing geographic detail for program participation analysis.
+#'
+#' @format A data frame with the following variables:
+#' \describe{
+#'   \item{fips}{character. Five-digit FIPS code identifying the county.}
+#'   \item{state}{character. Full name of the state.}
+#'   \item{county}{character. Name of the county.}
+#'   \item{crop}{character. Name of the covered commodity.}
+#'   \item{program}{character. Program type: "ARCCO" for ARC-CO or "PLC" for Price Loss Coverage.}
+#'   \item{enrolled_base}{numeric. Base acres enrolled in the specified program for the commodity in the county.}
+#'   \item{program_year}{integer. Program year (e.g., 2019, 2020, 2021, 2022, 2023, 2024).}
+#'   \item{crop_type}{character. Crop subtype classification (e.g., "med/short grain", "long grain").}
+#'   \item{rma_type_code}{character. RMA crop type code for insurance classification.}
+#'   \item{rma_crop_code}{integer. RMA commodity code for cross-agency alignment.}
+#' }
+#'
+#' @details
+#' This dataset provides county-level detail on enrolled base acres by program, allowing for
+#' geographic analysis of ARC-CO versus PLC program participation. The data spans program years
+#' 2019-2025 and includes all covered commodities eligible for ARC/PLC programs.
+#'
+#' To view code used to generate this data set, see `./data-raw/fsaArcPlc/supplementary_files/fsaEnrolledCountyBaseAcres.R`
+#'
+#' @usage data(fsaEnrolledCountyBaseAcres)
+#' @source \url{https://www.fsa.usda.gov/programs-and-services/arcplc_program/index}
+"fsaEnrolledCountyBaseAcres"
 
 

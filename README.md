@@ -66,8 +66,6 @@ head(fsaMyaPrice)
 #> #   rma_type_code <chr>
 ```
 
-The other way to ob
-
 # ARC and PLC Program Data
 
 The following table reports the currently available data sets related to
@@ -119,7 +117,8 @@ progress marketing years).
 | fsaArcPlcPayments | ARC/PLC Program Payments by Crop and Year | 481 | 2014-2023 | 05/05/2025 | 05/05/2025 | program, crop, program_year, payments, crop_type, rma_type_code, rma_crop_code |
 | fsaCountyBaseAcres | County‐level base acres and average PLC yields by crop | 99308 | 2014-2023 | 05/21/2025 | 05/05/2025 | state, county, state_code, county_code, crop, crop_type, base_acres, avg_plc_yield, program_year, rma_type_code, rma_crop_code, fips |
 | fsaEffectiveRefPrices | Effective Reference Prices for ARC/PLC Commodities | 158 | 2019-2025 | 05/05/2025 | 05/05/2025 | crop, marketing_year_dates, marketing_year, program_year, unit, statutory_reference_price, 115_statutory_reference_price, mya_price_lag5, mya_price_lag4, mya_price_lag3, mya_price_lag2, mya_price_lag1, 85_olympic_average_mya, effective_reference_price, crop_type, rma_type_code, rma_crop_code |
-| fsaMyaPrice | FSA Marketing Year Average Prices | 245 | 2014-2024 | 05/05/2025 | 05/05/2025 | crop, marketing_year, marketing_year_dates, publishing_dates_for_final_mya_price, unit, current_mya_price, final_mya_price_lag1, final_mya_price_lag2, final_mya_price_lag3, final_mya_price_lag4, final_mya_price_lag5, final_mya_price_lag6, rma_crop_code, crop_type, rma_type_code |
+| fsaEnrolledCountyBaseAcres | County-level enrolled base acres by program and commodity | 139387 | 2019-2025 | 06/24/2025 | 06/24/2025 | fips, state, county, crop, program, enrolled_base, program_year, crop_type, rma_type_code, rma_crop_code |
+| fsaMyaPrice | FSA Marketing Year Average Prices | 249 | 2014-2024 | 06/16/2025 | 05/05/2025 | crop, marketing_year, marketing_year_dates, publishing_dates_for_final_mya_price, unit, current_mya_price, final_mya_price_lag1, final_mya_price_lag2, final_mya_price_lag3, final_mya_price_lag4, final_mya_price_lag5, final_mya_price_lag6, rma_crop_code, crop_type, rma_type_code |
 | fsaPlcPaymentRate | Price Loss Coverage (PLC) Payment Rates by Crop and Program Year | 249 | 2014-2024 | 05/05/2025 | 05/05/2025 | crop, marketing_year_dates, marketing_year, program_year, publishing_dates_for_final_mya_price, statutory_reference_price, effective_reference_price, combined_reference_price, unit, current_mya_price, current_national_loan_rate, plc_price, plc_payment_rate, max_plc_payment_rate, crop_type, rma_type_code, rma_crop_code |
 
 # FSA Individual Payment Files
