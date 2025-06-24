@@ -374,6 +374,9 @@ clean_crop_names2 <- function(crop_name) {
 
   # Final trim of whitespace
   cleaned_name <- trimws(cleaned_name)
+  
+  # Remove trailing hyphens (fixes cases like "cotton-" from "seed cotton-upland")
+  cleaned_name <- gsub("-+$", "", cleaned_name)
 
   return(cleaned_name)
 }

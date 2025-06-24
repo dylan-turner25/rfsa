@@ -7,8 +7,11 @@ current_year <- as.numeric(substr(Sys.Date(),1,4))
 # define range of years to download data for
 years <- 2014:current_year
 
+# clean county level total base acres ---------------------------------------
+source("./data-raw/fsaArcPlc/supplementary_files/fsaCountyBaseAcres.R")
+
 # clean county level arc plc enrollment data --------------------------------
-source("./data-raw/fsaArcPlc/Supplementary Files/fsaEnrolledCountyBaseAcres.R")
+source("./data-raw/fsaArcPlc/supplementary_files/fsaEnrolledCountyBaseAcres.R")
 
 # clean MYA Prices -------------------------------------------------------------
 source("./data-raw/fsaArcPlc/supplementary_files/fsaMyaPrice.R")
