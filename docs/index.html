@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rfsa Package Documentation</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            line-height: 1.6; 
+        }
+        .header { 
+            text-align: center; 
+            padding: 20px 0; 
+            border-bottom: 2px solid #eee; 
+        }
+        .vignette-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background-color: #f9f9f9;
+        }
+        .vignette-card h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .features {
+            list-style-type: none;
+            padding: 0;
+        }
+        .features li {
+            padding: 5px 0;
+            margin: 5px 0;
+        }
+        .features li:before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rfsa Package Documentation</h1>
+        <p>USDA Farm Service Agency Data and Analysis Tools</p>
+    </div>
+
+    <div class="vignette-card">
+        <h2>📖 Calculating Price Loss Coverage (PLC) Payments</h2>
+        <p>A comprehensive guide to using the <code>calc_plc_payment()</code> function for calculating Price Loss Coverage payments administered by the USDA Farm Service Agency.</p>
+        
+        <h3>This guide covers:</h3>
+        <ul class="features">
+            <li>Basic PLC payment calculations and formulas</li>
+            <li>Working with different crop types and locations</li>
+            <li>Batch processing for multiple scenarios</li>
+            <li>Custom price data and historical calculations</li>
+            <li>Understanding payment scenarios and edge cases</li>
+            <li>Best practices for production use</li>
+        </ul>
+
+        <a href="plc-payment-calculations.html" class="btn">View Vignette</a>
+        <a href="https://github.com/dylan-turner25/rfsa" class="btn">GitHub Repository</a>
+    </div>
+
+    <div class="vignette-card">
+        <h2>📦 Installation</h2>
+        <p>Install the rfsa package directly from GitHub:</p>
+        <pre><code>remotes::install_github("dylan-turner25/rfsa", force = TRUE)</code></pre>
+    </div>
+
+    <div class="vignette-card">
+        <h2>🚀 Quick Start</h2>
+        <p>Calculate a PLC payment with just a few lines of code:</p>
+        <pre><code>library(rfsa)
+
+# Calculate PLC payment for 100 acres of corn
+payment <- calc_plc_payment(
+  crop = "corn",
+  program_year = 2024,
+  base_acres = 100,
+  quiet = TRUE
+)
+
+print(paste("PLC payment:", round(payment, 2)))</code></pre>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #666;">
+        <p>For more information, visit the <a href="https://github.com/dylan-turner25/rfsa">rfsa GitHub repository</a></p>
+    </div>
+</body>
+</html>

@@ -166,7 +166,41 @@ df <- df[,c("Dataset", "Description", "Rows", "Years", "Last Updated", "Data Dow
 # Installation
 `rfsa` can be installed directly from GitHub using `remotes::install_github("dylan-turner25/rfsa", force = TRUE)`.
 
+# Documentation
+
+For detailed examples and tutorials, see the package vignette:
+
+📖 **[Calculating Price Loss Coverage (PLC) Payments](https://github.com/dylan-turner25/rfsa/blob/main/inst/doc/plc-payment-calculations.html)**
+
+This comprehensive guide covers:
+- Basic PLC payment calculations and formulas
+- Working with different crop types and locations
+- Batch processing for multiple scenarios
+- Custom price data and historical calculations
+- Best practices for production use
+
 # Usage
+
+## PLC Payment Calculations
+
+The `rfsa` package includes the `calc_plc_payment()` function for calculating Price Loss Coverage payments:
+
+```{r plc-example}
+# Calculate PLC payment for 100 acres of corn
+payment <- calc_plc_payment(
+  crop = "corn",
+  program_year = 2024,
+  base_acres = 100,
+  quiet = TRUE
+)
+
+print(paste("PLC payment:", round(payment, 2)))
+```
+
+For detailed examples and comprehensive documentation, see the [PLC Payment Calculations vignette](https://github.com/dylan-turner25/rfsa/blob/main/inst/doc/plc-payment-calculations.html).
+
+## Loading Data Sets
+
 The`rfsa` package provides several ways to access data depending on the type of data set. The first way is by loading pre-built data sets using the `data()` function.  For example, to load the `fsaMyaPrice` data set, use the following code.
 ```{r}
 # load the rfsa package
