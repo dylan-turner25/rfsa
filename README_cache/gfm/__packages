@@ -6,3 +6,4 @@ knitr
 ggplot2
 maps
 mapproj
+testthat
