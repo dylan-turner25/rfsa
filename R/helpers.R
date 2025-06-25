@@ -1,3 +1,175 @@
+
+#' Get PLC Yield Data
+#'
+#' This internal helper function retrieves and filters PLC yield data from the
+#' fsaPlcYields dataset based on crop, program year, and optional location parameters.
+#' It handles flexible location input including state names, abbreviations, FIPS codes,
+#' and county specifications.
+#'
+#' @param crop Character. The crop name to filter for (e.g., "corn", "soybeans").
+#' @param program_year Numeric. The program year to filter for (e.g., 2024).
+#' @param state Character, optional. State identifier that can be:
+#'   \itemize{
+#'     \item State abbreviation (e.g., "IA", "IL")
+#'     \item Full state name (e.g., "Iowa", "Illinois")
+#'     \item State FIPS code (e.g., "19", "17")
+#'   }
+#' @param county Character, optional. County name (requires state to also be specified).
+#' @param fips Character, optional. 5-digit FIPS code for specific county-level data.
+#'
+#' @return Numeric. The PLC yield value. Returns:
+#'   \itemize{
+#'     \item County-specific yield if fips or state+county provided
+#'     \item State average yield if only state provided (with message)
+#'     \item National average yield if no location specified (with message)
+#'   }
+#'
+#' @details
+#' The function follows this priority order for location filtering:
+#' \enumerate{
+#'   \item If \code{fips} is provided, uses it directly after validation
+#'   \item If \code{state} and \code{county} are provided, filters by both
+#'   \item If only \code{state} is provided, calculates state average
+#'   \item If no location parameters, calculates national average
+#' }
+#'
+#' State abbreviations are automatically converted to full state names since the
+#' underlying data uses full state names for filtering.
+#'
+#' @examples
+#' \dontrun{
+#' # County-specific yield using FIPS
+#' get_plc_yield("corn", 2024, fips = "19001")
+#'
+#' # County-specific yield using state + county
+#' get_plc_yield("corn", 2024, state = "IA", county = "Adair")
+#'
+#' # State average (abbreviation converted to full name)
+#' get_plc_yield("corn", 2024, state = "IA")
+#'
+#' # National average
+#' get_plc_yield("corn", 2024)
+#' }
+#'
+#' @keywords internal
+get_plc_yield <- function(crop, program_year, state = NULL, county = NULL, fips = NULL) {
+  data("fsaPlcYields")
+
+  # filter on crop and marketing year
+  # note: plc average county yields aren't avaliable prior to 2018, so function defaults to 2018 for earlier years
+  plc_yield = fsaPlcYields %>%
+    dplyr::filter(.data$crop == .env$crop,
+                  .data$program_year == ifelse(.env$program_year <= 2018, 2018, .env$program_year) )
+
+  # filter the yield data based on location input
+  if (!is.null(fips)) {
+    # Use fips if provided - clean and validate using clean_fips approach
+    fips_clean <- clean_fips(fips = fips)
+    plc_yield <- plc_yield %>% dplyr::filter(.data$fips == fips_clean)
+    warning("No PLC yield supplied. Using counuty average PLC yield for calculations.")
+  } else if (!is.null(state)) {
+    # Validate state input (accepts names, abbreviations, or fips codes)
+    state <- valid_state(state)
+
+    # Convert state abbreviation to full name if needed (since data has full names)
+    if (tolower(state) %in% tolower(datasets::state.abb)) {
+      # Convert abbreviation to full name
+      state_index <- which(tolower(datasets::state.abb) == tolower(state))
+      state_name <- datasets::state.name[state_index]
+    } else if (tolower(state) %in% tolower(datasets::state.name)) {
+      # State is already a full name
+      state_name <- state
+    } else if (nchar(state) <= 2 && suppressWarnings(!is.na(as.numeric(state)))) {
+      # State is a fips code - need to convert to state name
+      state_fips <- sprintf("%02d", as.numeric(state))
+      # Get state name from fips code
+      fips_to_state <- data.frame(
+        fips = usmap::fips(state = datasets::state.name),
+        name = datasets::state.name
+      )
+      state_match <- fips_to_state[fips_to_state$fips == state_fips, "name"]
+      if (length(state_match) == 0) {
+        stop("Invalid state fips code: ", state)
+      }
+      state_name <- state_match[1]
+    } else {
+      stop("Invalid state input: ", state)
+    }
+
+    if (!is.null(county)) {
+      # Both state and county provided - filter by state name and county
+      plc_yield <- plc_yield %>% dplyr::filter(.data$state == state_name, .data$county == county)
+    } else {
+      # Only state provided - filter by state name and average
+      plc_yield <- plc_yield %>% dplyr::filter(.data$state == state_name) %>%
+        summarize(plc_yield = mean(.data$plc_yield, na.rm = TRUE))
+      warning("No PLC yield or county supplied. Using state average PLC yield for calculations.")
+    }
+  } else {
+    # No location filtering - use national average
+    warning("No PLC yield or location parameters supplied. Using national average PLC yield for calculations.")
+    plc_yield <- plc_yield %>%
+      summarize(plc_yield = mean(.data$plc_yield, na.rm = TRUE))  # Average yield for national
+  }
+
+  return(plc_yield$plc_yield)
+}
+
+#' Calculate Effective Reference Price (Internal Function)
+#'
+#' This internal helper function calculates the effective reference price (ERP) using
+#' the Olympic average method based on 5 years of Marketing Year Average (MYA) prices
+#' and the statutory reference price.
+#'
+#' @param mya_prices Numeric vector. Five years of MYA prices for Olympic average calculation.
+#' @param srp Numeric. The statutory reference price for the crop.
+#'
+#' @return Numeric. The calculated effective reference price based on the formula:
+#'   \itemize{
+#'     \item If 85% of Olympic average < SRP, then ERP = SRP
+#'     \item If 85% of Olympic average >= 115% of SRP, then ERP = 115% of SRP  
+#'     \item Otherwise, ERP = 85% of Olympic average
+#'   }
+#'
+#' @details
+#' The Olympic average removes the highest and lowest values from the 5 MYA prices
+#' and averages the remaining 3 middle values. The ERP is then calculated as 85%
+#' of this Olympic average, subject to minimum and maximum bounds relative to the SRP.
+#'
+#' @examples
+#' \dontrun{
+#' # Calculate ERP with 5 years of MYA prices
+#' mya_prices <- c(3.70, 3.60, 3.50, 3.40, 3.30)
+#' srp <- 3.90
+#' calc_effective_reference_price(mya_prices, srp)
+#' }
+#'
+#' @keywords internal
+calc_effective_reference_price <- function(mya_prices, srp) {
+  # Validate inputs
+  if(length(mya_prices) != 5) {
+    stop("Exactly 5 MYA prices are required for ERP calculation")
+  }
+  if(is.null(srp) || !is.numeric(srp)) {
+    stop("Statutory reference price (srp) must be a numeric value")
+  }
+  
+  # Calculate Olympic average (remove highest and lowest, average the rest)
+  sorted_prices <- sort(mya_prices)
+  olympic_avg <- mean(sorted_prices[2:(length(sorted_prices)-1)])
+  
+  # Apply ERP formula
+  if(0.85 * olympic_avg < srp) {
+    erp <- srp
+  } else if(0.85 * olympic_avg >= 1.15 * srp) {
+    erp <- srp * 1.15
+  } else {
+    erp <- 0.85 * olympic_avg
+  }
+  
+  return(erp)
+}
+
 #' List asset names from the latest GitHub release
 #'
 #' Retrieves the metadata for the most recent release of the **rfsa** repository
@@ -32,6 +204,21 @@ list_data_assets <- function(){
   return(df$name)
 }
 
+#' A helper function that checks to make sure the specified state is valid
+#' @noRd
+#' @keywords internal
+#'
+valid_state <- function(state) {
+  if (!(F %in% (tolower(state) %in% tolower(datasets::state.name)))) {
+    return(state)
+  } else if (!(F %in% (tolower(state) %in% tolower(datasets::state.abb)))) {
+    return(state)
+  } else if (!(F %in% (suppressWarnings(as.numeric(state) %in% as.numeric(usmap::fips(state = datasets::state.name)))))) {
+    return(state)
+  } else {
+    stop("Parameter value for state not valid.")
+  }
+}
 
 #' @title Download a data file from GitHub Releases via piggyback
 #' @param name   The basename of the .rds file, e.g. "foo.rds"
@@ -348,7 +535,7 @@ clean_crop_names2 <- function(crop_name) {
   cleaned_name <- gsub(" - .*grain$", "", cleaned_name)
   cleaned_name <- gsub(" - temporate japonica$", "", cleaned_name)
   cleaned_name <- gsub(" - garbanzo-lg kabuli$| - garbanzo-sm desi$", "", cleaned_name)
-  
+
   # Remove common crop type suffixes
   cleaned_name <- gsub("\\s+lint$", "", cleaned_name)  # "cotton lint" -> "cotton"
   cleaned_name <- gsub("\\bmed/short grain$|\\blong grain$|\\bmedium grain$|\\bshort grain$", "", cleaned_name)
@@ -382,7 +569,7 @@ clean_crop_names2 <- function(crop_name) {
 
   # Final trim of whitespace
   cleaned_name <- trimws(cleaned_name)
-  
+
   # Remove trailing hyphens (fixes cases like "cotton-" from "seed cotton-upland")
   cleaned_name <- gsub("-+$", "", cleaned_name)
 

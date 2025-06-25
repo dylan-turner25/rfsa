@@ -5,6 +5,12 @@ rds_files <- list.files(path = "./data-raw/fsaFarmPayments/input_data", pattern 
 # remove rds files that are already cleaned
 rds_files <- rds_files[!grepl("cleaned",rds_files)]
 
+# load program_details.csv
+program_details <- readr::read_csv("./data-raw/fsaFarmPayments/supplementary_files/program_details.csv")
+
+# get paths to all downloaded files
+downloads <- list.files(path = "./data-raw/fsaFarmPayments/input_data", pattern = "*.xlsx", full.names = TRUE)
+
 # make sure the number rds files matches the number of downloads
 if(length(rds_files) != length(downloads)){
   stop("The number of rds files does not match the number of raw excel files.")
