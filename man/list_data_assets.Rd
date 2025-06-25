@@ -14,7 +14,7 @@ Retrieves the metadata for the most recent release of the \strong{rfsa} reposito
 on GitHub and extracts the names of all attached release assets.
 }
 \examples{
-\dontrun{
+\\dontrun{
 files = list_data_assets()
 }
 }

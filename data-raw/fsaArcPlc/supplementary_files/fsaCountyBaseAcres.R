@@ -117,6 +117,7 @@ county_base_acres <- dplyr::left_join(county_base_acres, unique_fips)
 # convert to a tibble before exporting
 fsaCountyBaseAcres <- dplyr::as_tibble(county_base_acres)
 
+
 # use the county level file in the package data folder
 usethis::use_data(fsaCountyBaseAcres , overwrite = TRUE)
 

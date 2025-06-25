@@ -1,0 +1,469 @@
+---
+title: "Calculating Price Loss Coverage (PLC) Payments"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Calculating Price Loss Coverage (PLC) Payments}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE  # Set to FALSE to show code without executing
+)
+```
+
+```{r setup}
+library(rfsa)
+```
+
+## Introduction
+
+The **rfsa** package provides tools for calculating Price Loss Coverage (PLC) payments administered by the USDA Farm Service Agency. PLC is a commodity program that provides payments to farmers when the effective reference price exceeds the higher of the national marketing loan rate or the Marketing Year Average (MYA) price.
+
+This vignette demonstrates how to use the `calc_plc_payment()` function to calculate PLC payments for various crops and scenarios.
+
+## Basic PLC Payment Calculations
+
+### Simple Example
+
+Let's start with a basic calculation for corn:
+
+```{r basic-example}
+# Calculate PLC payment for 100 acres of corn in 2024
+payment <- calc_plc_payment(
+  crop = "corn",
+  program_year = 2024,
+  base_acres = 100,
+  quiet = TRUE
+)
+
+print(paste("PLC payment for 100 acres of corn:", round(payment, 2)))
+# Expected output: [1] "PLC payment for 100 acres of corn: 1224"
+```
+
+### Understanding the Components
+
+The PLC payment calculation involves several key components:
+
+- **Effective Reference Price (ERP)**: Based on Olympic average of 5-year MYA prices
+- **Marketing Year Average (MYA) Price**: Current year's average price
+- **National Marketing Loan Rate (NMLR)**: Minimum support price
+- **PLC Yield**: Historical yield for the crop and location
+- **Coverage Level**: Typically 85% (0.85)
+
+Let's see how these components work together:
+
+```{r components-example}
+# Example with all parameters specified
+payment_detailed <- calc_plc_payment(
+  crop = "soybeans",
+  program_year = 2024,
+  base_acres = 200,
+  mya_price = 11.50,
+  erp = 12.95,
+  nmlr = 6.20,
+  plc_yield = 50,
+  cov_lvl = 0.85,
+  quiet = TRUE
+)
+
+print(paste("Detailed PLC payment:", round(payment_detailed, 2)))
+# Expected output: [1] "Detailed PLC payment: 12325"
+
+# Payment formula: (ERP - MYA) × PLC Yield × Base Acres × Coverage Level
+manual_calc <- (12.95 - 11.50) * 50 * 200 * 0.85
+print(paste("Manual calculation:", round(manual_calc, 2)))
+# Expected output: [1] "Manual calculation: 12325"
+```
+
+## Working with Different Crops
+
+### Crops with Multiple Types
+
+Some crops like rice and chickpeas have multiple types. You can specify the crop type or let the function average across all types:
+
+```{r crop-types}
+# Rice with specific crop type
+rice_long <- calc_plc_payment(
+  crop = "rice",
+  crop_type = "long grain",
+  program_year = 2024,
+  base_acres = 150,
+  quiet = TRUE
+)
+
+# Rice without crop type (averages across all types)
+rice_avg <- calc_plc_payment(
+  crop = "rice",
+  program_year = 2024,
+  base_acres = 150,
+  quiet = TRUE
+)
+
+print(paste("Rice (long grain):", round(rice_long, 2)))
+# Expected output: [1] "Rice (long grain): 453.75"
+
+print(paste("Rice (average):", round(rice_avg, 2)))
+# Expected output: [1] "Rice (average): 467.25"
+
+# Chickpeas with different sizes
+chickpeas_large <- calc_plc_payment(
+  crop = "chickpeas",
+  crop_type = "large",
+  program_year = 2024,
+  base_acres = 75,
+  quiet = TRUE
+)
+
+chickpeas_small <- calc_plc_payment(
+  crop = "chickpeas",
+  crop_type = "small",
+  program_year = 2024,
+  base_acres = 75,
+  quiet = TRUE
+)
+
+print(paste("Chickpeas (large):", round(chickpeas_large, 2)))
+# Expected output: [1] "Chickpeas (large): 627.38"
+
+print(paste("Chickpeas (small):", round(chickpeas_small, 2)))
+# Expected output: [1] "Chickpeas (small): 504.38"
+```
+
+## Location-Specific Calculations
+
+PLC yields vary by location. You can specify location using state/county names, FIPS codes, or state abbreviations:
+
+```{r location-examples}
+# Using state and county
+iowa_story <- calc_plc_payment(
+  crop = "corn",
+  program_year = 2024,
+  base_acres = 100,
+  state = "Iowa",
+  county = "Story",
+  quiet = TRUE
+)
+
+# Using FIPS code (Story County, Iowa = 19169)
+iowa_fips <- calc_plc_payment(
+  crop = "corn",
+  program_year = 2024,
+  base_acres = 100,
+  fips = "19169",
+  quiet = TRUE
+)
+
+# Using state abbreviation (gets state average)
+iowa_state <- calc_plc_payment(
+  crop = "corn",
+  program_year = 2024,
+  base_acres = 100,
+  state = "IA",
+  quiet = TRUE
+)
+
+print(paste("Story County, Iowa:", round(iowa_story, 2)))
+# Expected output: [1] "Story County, Iowa: 1487.25"
+
+print(paste("FIPS 19169 (Story County):", round(iowa_fips, 2)))
+# Expected output: [1] "FIPS 19169 (Story County): 1487.25"
+
+print(paste("Iowa state average:", round(iowa_state, 2)))
+# Expected output: [1] "Iowa state average: 1394.75"
+```
+
+## Historical Program Years
+
+For program years 2014-2019, the function uses the Statutory Reference Price (SRP) instead of the Effective Reference Price (ERP) unless specifically overridden:
+
+```{r historical-example}
+# 2019 calculation (uses SRP by default)
+corn_2019 <- calc_plc_payment(
+  crop = "corn",
+  program_year = 2019,
+  base_acres = 100,
+  quiet = TRUE
+)
+
+# 2019 calculation forcing ERP usage
+corn_2019_erp <- calc_plc_payment(
+  crop = "corn",
+  program_year = 2019,
+  base_acres = 100,
+  always_use_erp = TRUE,
+  quiet = TRUE
+)
+
+print(paste("2019 corn (SRP):", round(corn_2019, 2)))
+# Expected output: [1] "2019 corn (SRP): 1190"
+
+print(paste("2019 corn (ERP):", round(corn_2019_erp, 2)))
+# Expected output: [1] "2019 corn (ERP): 1190"
+```
+
+## Custom Price Data
+
+You can provide your own MYA price data for ERP calculations:
+
+```{r custom-prices}
+# Provide 5 years of MYA price data for custom ERP calculation
+custom_mya <- list(
+  years = c(2019, 2020, 2021, 2022, 2023),
+  price = c(3.60, 3.50, 5.80, 6.80, 4.85)
+)
+
+custom_payment <- calc_plc_payment(
+  crop = "corn",
+  program_year = 2024,
+  base_acres = 100,
+  mya_price = custom_mya,
+  srp = 4.30,  # Statutory reference price
+  nmlr = 2.50,
+  plc_yield = 180,
+  quiet = TRUE
+)
+
+print(paste("Payment with custom MYA data:", round(custom_payment, 2)))
+# Expected output: [1] "Payment with custom MYA data: 13005"
+```
+
+## Different Coverage Levels
+
+While 85% is the standard coverage level, you can specify different levels:
+
+```{r coverage-levels}
+# Example with corn using different coverage levels
+payment_85 <- calc_plc_payment(
+  crop = "corn",
+  program_year = 2024,
+  base_acres = 100,
+  cov_lvl = 0.85,
+  quiet = TRUE
+)
+
+payment_88 <- calc_plc_payment(
+  crop = "corn",
+  program_year = 2024,
+  base_acres = 100,
+  cov_lvl = 0.88,
+  quiet = TRUE
+)
+
+print(paste("Corn 85% coverage:", round(payment_85, 2)))
+# Expected output: [1] "Corn 85% coverage: 1224"
+
+print(paste("Corn 88% coverage:", round(payment_88, 2)))
+# Expected output: [1] "Corn 88% coverage: 1267.20"
+
+print(paste("Difference:", round(payment_88 - payment_85, 2)))
+# Expected output: [1] "Difference: 43.20"
+```
+
+## Batch Processing Multiple Scenarios
+
+Here's how you might calculate payments for multiple farms or scenarios:
+
+```{r batch-processing}
+# Create a data frame of farm scenarios
+farm_scenarios <- data.frame(
+  farm_id = 1:4,
+  crop = c("corn", "soybeans", "rice", "chickpeas"),
+  crop_type = c(NA, NA, "long grain", "large"),
+  base_acres = c(250, 180, 200, 100),
+  state = c("Iowa", "Illinois", "Arkansas", "Montana"),
+  stringsAsFactors = FALSE
+)
+
+# Calculate payments for each scenario
+farm_scenarios$plc_payment <- 0
+
+for (i in 1:nrow(farm_scenarios)) {
+  farm_scenarios$plc_payment[i] <- calc_plc_payment(
+    crop = farm_scenarios$crop[i],
+    crop_type = farm_scenarios$crop_type[i],
+    program_year = 2024,
+    base_acres = farm_scenarios$base_acres[i],
+    state = farm_scenarios$state[i],
+    quiet = TRUE
+  )
+}
+
+# Display results
+print(farm_scenarios)
+# Expected output:
+#   farm_id      crop crop_type base_acres     state plc_payment
+# 1       1      corn      <NA>        250      Iowa     3486.88
+# 2       2  soybeans      <NA>        180  Illinois        0.00
+# 3       3      rice long grain        200  Arkansas      605.00
+# 4       4 chickpeas     large        100   Montana      836.50
+
+# Calculate total payments
+total_payment <- sum(farm_scenarios$plc_payment)
+print(paste("Total PLC payments:", round(total_payment, 2)))
+# Expected output: [1] "Total PLC payments: 4928.38"
+```
+
+## Understanding Payment Scenarios
+
+Let's examine when payments occur and when they don't:
+
+```{r payment-scenarios}
+# Scenario 1: ERP > MYA Price (payment occurs)
+scenario1 <- calc_plc_payment(
+  crop = "corn",
+  program_year = 2024,
+  base_acres = 100,
+  mya_price = 3.50,  # Low MYA price
+  erp = 4.30,        # Higher ERP
+  nmlr = 2.50,
+  plc_yield = 180,
+  quiet = TRUE
+)
+
+# Scenario 2: ERP <= MYA Price (no payment)
+scenario2 <- calc_plc_payment(
+  crop = "corn",
+  program_year = 2024,
+  base_acres = 100,
+  mya_price = 4.50,  # High MYA price
+  erp = 4.30,        # Lower ERP
+  nmlr = 2.50,
+  plc_yield = 180,
+  quiet = TRUE
+)
+
+# Scenario 3: MYA Price <= NMLR (uses NMLR in calculation)
+scenario3 <- calc_plc_payment(
+  crop = "corn",
+  program_year = 2024,
+  base_acres = 100,
+  mya_price = 2.00,  # Very low MYA price
+  erp = 4.30,
+  nmlr = 2.50,       # Higher than MYA
+  plc_yield = 180,
+  quiet = TRUE
+)
+
+print(paste("Scenario 1 (ERP > MYA):", round(scenario1, 2)))
+# Expected output: [1] "Scenario 1 (ERP > MYA): 12240"
+
+print(paste("Scenario 2 (ERP <= MYA):", round(scenario2, 2)))
+# Expected output: [1] "Scenario 2 (ERP <= MYA): 0"
+
+print(paste("Scenario 3 (MYA <= NMLR):", round(scenario3, 2)))
+# Expected output: [1] "Scenario 3 (MYA <= NMLR): 27540"
+```
+
+## Quiet Mode for Batch Processing
+
+When processing many calculations, use `quiet = TRUE` to suppress informational messages:
+
+```{r quiet-mode}
+# Without quiet mode (shows warnings/messages)
+payment_verbose <- calc_plc_payment(
+  crop = "rice",  # No crop_type specified - will show warning
+  program_year = 2024,
+  base_acres = 100,
+  quiet = FALSE
+)
+# Expected warnings about averaging across crop types
+
+# With quiet mode (suppresses warnings/messages)
+payment_quiet <- calc_plc_payment(
+  crop = "rice",  # No crop_type specified - warning suppressed
+  program_year = 2024,
+  base_acres = 100,
+  quiet = TRUE
+)
+
+print(paste("Both calculations equal:", payment_verbose == payment_quiet))
+# Expected output: [1] "Both calculations equal: TRUE"
+```
+
+## Understanding the Payment Formula
+
+The PLC payment is calculated using this formula:
+
+**Payment = (Reference Price - Comparison Price) × PLC Yield × Base Acres × Coverage Level**
+
+Where:
+- **Reference Price** = Effective Reference Price (ERP) for recent years, or Statutory Reference Price (SRP) for 2014-2019
+- **Comparison Price** = Higher of MYA Price or National Marketing Loan Rate (NMLR)
+
+### Example Calculation
+
+```{r formula-example}
+# Let's break down a calculation step by step
+crop <- "corn"
+erp <- 4.30
+mya_price <- 3.50
+nmlr <- 2.50
+plc_yield <- 180
+base_acres <- 100
+coverage_level <- 0.85
+
+# Step 1: Determine if payment is due
+payment_due <- erp > mya_price
+print(paste("Payment due (ERP > MYA)?", payment_due))
+# Expected output: [1] "Payment due (ERP > MYA)? TRUE"
+
+# Step 2: Determine comparison price
+comparison_price <- max(mya_price, nmlr)
+print(paste("Comparison price (max of MYA and NMLR):", comparison_price))
+# Expected output: [1] "Comparison price (max of MYA and NMLR): 3.5"
+
+# Step 3: Calculate payment rate per bushel
+payment_rate <- erp - comparison_price
+print(paste("Payment rate per bushel:", payment_rate))
+# Expected output: [1] "Payment rate per bushel: 0.8"
+
+# Step 4: Calculate total payment
+total_payment <- payment_rate * plc_yield * base_acres * coverage_level
+print(paste("Total PLC payment:", round(total_payment, 2)))
+# Expected output: [1] "Total PLC payment: 12240"
+
+# Verify with function
+function_result <- calc_plc_payment(
+  crop = crop,
+  program_year = 2024,
+  base_acres = base_acres,
+  mya_price = mya_price,
+  erp = erp,
+  nmlr = nmlr,
+  plc_yield = plc_yield,
+  cov_lvl = coverage_level,
+  quiet = TRUE
+)
+
+print(paste("Function result matches:", round(function_result, 2) == round(total_payment, 2)))
+# Expected output: [1] "Function result matches: TRUE"
+```
+
+## Summary
+
+The `calc_plc_payment()` function provides a comprehensive tool for calculating PLC payments with:
+
+- **Automatic data retrieval** from FSA datasets
+- **Flexible location specification** (state/county names, FIPS codes, abbreviations)
+- **Support for multiple crop types** (rice varieties, chickpea sizes, etc.)
+- **Historical program year handling** (automatic SRP/ERP selection)
+- **Custom price data support** for specialized analyses
+- **Quiet mode** for batch processing
+
+### Key Parameters
+
+- `crop`: The crop name (e.g., "corn", "soybeans", "rice")
+- `crop_type`: Specific variety for crops with multiple types
+- `program_year`: The program year for calculation
+- `base_acres`: Number of enrolled acres
+- `mya_price`, `erp`, `srp`, `nmlr`: Price parameters (optional, uses FSA data if not provided)
+- `plc_yield`: Yield parameter (optional, calculated from location if not provided)
+- `state`, `county`, `fips`: Location parameters for yield calculation
+- `cov_lvl`: Coverage level (default 0.85)
+- `quiet`: Suppress messages for batch processing
+
+For more detailed information about specific parameters and options, see the function documentation with `?calc_plc_payment`

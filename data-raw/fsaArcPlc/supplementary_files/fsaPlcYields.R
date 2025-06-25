@@ -1,3 +1,13 @@
+# Source helper functions
+source("./R/helpers.R")
+
+# Load required libraries
+library(dplyr)
+library(readxl)
+library(tidyr)
+library(readr)
+library(usethis)
+
 # list all files in the PLC yields input data folder
 files <- list.files("./data-raw/fsaArcPlc/input_data/fsaPlcYields",
                     full.names = TRUE, pattern = "\\.(xlsx|xls)$")

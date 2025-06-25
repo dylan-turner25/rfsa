@@ -1,3 +1,13 @@
+# Source helper functions
+source("./R/helpers.R")
+
+# Load required libraries
+library(dplyr)
+library(readxl)
+library(janitor)
+library(readr)
+library(usethis)
+
 # list all files in "./data-raw/fsaArcPlc/input_data/fsaEnrolledCountyBaseAcres"
 files <- list.files("./data-raw/fsaArcPlc/input_data/fsaEnrolledCountyBaseAcres",
                     full.names = TRUE, pattern = "\\.xlsx$")
@@ -9,10 +19,10 @@ enrolled_county_base_acres <- NULL
 for(file in files){
   # extract year from filename
   year <- as.numeric(gsub(".*([0-9]{4}).*", "\\1", basename(file)))
-  
+
   # read the first sheet of each file
   temp <- readxl::read_excel(file, sheet = 1)
-  
+
   # handle different file formats based on year
   if(year <= 2021){
     # 2019-2021 format: standard headers
@@ -24,19 +34,19 @@ for(file in files){
     names(temp) <- c("st_cty", "state_name", "county_name", "crop_name", "program", "enrolled_base")
     temp <- temp[-1, ]  # remove the header row
   }
-  
+
   # remove any rows with all NA values
   temp <- temp[rowSums(is.na(temp)) != ncol(temp), ]
-  
+
   # add program year
   temp$program_year <- year
-  
+
   # ensure enrolled_base is numeric
   temp$enrolled_base <- as.numeric(temp$enrolled_base)
-  
+
   # type convert other columns
   temp <- readr::type_convert(temp)
-  
+
   # bind to master data frame
   enrolled_county_base_acres <- dplyr::bind_rows(enrolled_county_base_acres, temp)
 }

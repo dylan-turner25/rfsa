@@ -1,19 +1,99 @@
-crop = "corn"
-program_year = 2024
-base_acres = 1
-mya_price = NULL
-srp = NULL
-erp = NULL
-nmlr = NULL
-plc_yield = NULL
-cov_lvl = .85
-state = NULL
-county = NULL
-fips = NULL
 
+#' Calculate Price Loss Coverage (PLC) Payment
+#'
+#' This function calculates the Price Loss Coverage (PLC) payment for a specified crop,
+#' program year, and base acres. The PLC program provides payments when the effective
+#' reference price exceeds the higher of the loan rate or the Marketing Year Average (MYA) price.
+#'
+#' @param crop Character. The crop name for which to calculate the PLC payment
+#'   (e.g., "corn", "soybeans", "rice", "wheat").
+#' @param crop_type Character, optional. The specific crop type when applicable
+#'   (e.g., "long grain" for rice, "large" for chickpeas). If not provided and
+#'   multiple crop types exist, the function will average across all types with warnings.
+#' @param program_year Numeric. The program year for the PLC calculation (e.g., 2024).
+#' @param base_acres Numeric, optional. The number of base acres enrolled in the program.
+#'   If NULL, defaults to 1 acre with a warning.
+#' @param mya_price Numeric or List, optional. The Marketing Year Average price.
+#'   Can be a single numeric value or a list with 'years' and 'price' vectors for
+#'   custom ERP calculation. If NULL, uses FSA data.
+#' @param srp Numeric, optional. The statutory reference price. If NULL, uses FSA data.
+#' @param erp Numeric, optional. The effective reference price. If NULL, uses FSA data
+#'   or calculates from provided MYA prices and SRP.
+#' @param always_use_erp Logical. If TRUE, uses ERP even for program years <= 2019.
+#'   If FALSE (default), uses SRP for program years <= 2019.
+#' @param nmlr Numeric, optional. The national marketing loan rate. If NULL, uses FSA data.
+#' @param plc_yield Numeric, optional. The PLC yield for the crop and location.
+#'   If NULL, uses county/state/national averages based on location parameters.
+#' @param cov_lvl Numeric. The coverage level as a decimal (default: 0.85 for 85%).
+#' @param state Character, optional. State identifier for location-specific yields.
+#'   Can be state name, abbreviation, or FIPS code.
+#' @param county Character, optional. County name for county-specific yields.
+#'   Requires state to also be specified.
+#' @param fips Character, optional. 5-digit FIPS code for county-specific yields.
+#' @param quiet Logical. If TRUE, suppresses warning messages and other
+#'   non-error messages (default: FALSE). Useful for batch processing or
+#'   when warnings are not needed.
+#'
+#' @return Numeric. The calculated PLC payment amount in dollars.
+#'   Returns 0 if the effective reference price is less than or equal to the MYA price.
+#'
+#' @details
+#' The PLC payment calculation follows this logic:
+#' \\enumerate{
+#'   \\item If ERP <= MYA Price: Payment = 0
+#'   \\item If MYA Price <= National Marketing Loan Rate: Payment = (ERP - NMLR) × PLC Yield × Base Acres × Coverage Level
+#'   \\item Otherwise: Payment = (ERP - MYA Price) × PLC Yield × Base Acres × Coverage Level
+#' }
+#'
+#' For program years 2014-2019, the statutory reference price (SRP) is used instead of
+#' the effective reference price (ERP) unless \\code{always_use_erp = TRUE}.
+#'
+#' When crop_type is not specified for crops with multiple types (like rice or chickpeas),
+#' the function will average prices and yields across all available types and issue warnings.
+#'
+#' The function automatically retrieves missing data from FSA datasets:
+#' \\itemize{
+#'   \\item MYA prices from \\code{fsaMyaPrice}
+#'   \\item Reference prices from \\code{fsaEffectiveRefPrices}
+#'   \\item Marketing loan rates from \\code{fsaPlcPaymentRate}
+#'   \\item PLC yields from \\code{fsaPlcYields}
+#' }
+#'
+#' @examples
+#' \\dontrun{
+#' # Basic PLC payment calculation
+#' calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100)
+#'
+#' # Rice with specific crop type
+#' calc_plc_payment(crop = "rice", crop_type = "long grain",
+#'                  program_year = 2024, base_acres = 150)
+#'
+#' # County-specific calculation
+#' calc_plc_payment(crop = "soybeans", program_year = 2024, base_acres = 200,
+#'                  state = "Iowa", county = "Story")
+#'
+#' # Using FIPS code for location
+#' calc_plc_payment(crop = "wheat", program_year = 2024, base_acres = 75,
+#'                  fips = "19169")
+#'
+#' # Custom coverage level
+#' calc_plc_payment(crop = "cotton", program_year = 2024, base_acres = 50,
+#'                  cov_lvl = 0.88)
+#'
+#' # Provide custom prices
+#' calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100,
+#'                  mya_price = 4.50, erp = 4.30)
+#' }
+#'
+#' @seealso
+#' \\code{\\link{get_plc_yield}} for PLC yield calculations
+#' \\code{\\link{calc_effective_reference_price}} for ERP calculations
+#'
+#' @export
 calc_plc_payment <- function(crop,
+                             crop_type = NULL,
                              program_year,
-                             base_acres,
+                             base_acres = NULL,
                              mya_price = NULL,
                              srp = NULL,
                              erp = NULL,
@@ -24,7 +104,13 @@ calc_plc_payment <- function(crop,
                              state = NULL,
                              county = NULL,
                              fips = NULL,
-                             level = "individual"){
+                             quiet = FALSE){
+
+  # if base acres is null, default to 1
+  if(is.null(base_acres)){
+    base_acres <- 1
+    if(!quiet) warning("No base acres supplied. Defaulting to 1 base acre.")
+  }
 
   # define marketing year based off of program year
   marketing_year <- paste0(program_year, "-", program_year + 1)
@@ -52,9 +138,9 @@ calc_plc_payment <- function(crop,
         # check if we have all 5 years
         if(length(mya_price$years) == 5) {
           calculate_erp <- TRUE
-          message("No effective reference price supplied, calculating based on supplied MYA price and statutory reference price.")
+          if(!quiet) message("No effective reference price supplied, calculating based on supplied MYA price and statutory reference price.")
         } else if(length(mya_price$years) < 5) {
-          warning("Not enough MYA price data supplied to calculate the Effective Reference Price. Defaulting to FSA's effective reference price for the crop and marketing year.")
+          if(!quiet) warning("Not enough MYA price data supplied to calculate the Effective Reference Price. Defaulting to FSA's effective reference price for the crop and marketing year.")
         }
       }
     }
@@ -66,20 +152,45 @@ calc_plc_payment <- function(crop,
   # mya price
   if(is.null(mya_price)){
     data("fsaMyaPrice")
+
     mya_price = fsaMyaPrice %>%
-      dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$marketing_year)  %>%
-      pull(current_mya_price)
+      dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$marketing_year)
+
+    if(!is.null(crop_type)){
+      mya_price <- mya_price %>%
+        dplyr::filter(.data$crop_type == .env$crop_type)
+    }
+
+    mya_price <- mya_price %>% pull(current_mya_price)
+
+    if(length(mya_price) > 1){
+     if(!quiet) warning( paste0("No crop type supplied, taking the average MYA price across all crop types for ", crop) )
+     mya_price <- mean(mya_price, na.rm = TRUE)
+    }
+
   }
 
   # statutory reference price
   if(is.null(srp)){
     data("fsaEffectiveRefPrices")
-    srp = unique(fsaEffectiveRefPrices %>%
-      dplyr::filter(.data$crop == .env$crop) %>%
-      pull(statutory_reference_price))
+
+    srp = fsaEffectiveRefPrices %>%
+      dplyr::filter(.data$crop == .env$crop, .data$program_year == ifelse(.env$program_year <= 2019,2019, .env$program_year))
+
+    if(!is.null(crop_type)){
+      srp <- srp %>%
+        dplyr::filter(.data$crop_type == .env$crop_type)
+    }
+
+    srp <- srp %>% pull(statutory_reference_price)
 
     if(length(srp) > 1){
-      stop(paste("Multiple statutory reference prices found for crop:", crop))
+      if(!quiet) warning(paste0("No crop type supplied, taking the average statutory reference price across all crop types for ", crop))
+      srp <- mean(srp, na.rm = TRUE)
+    }
+
+    if(length(srp) == 0){
+      stop(paste("No statutory reference price found for crop:", crop))
     }
   }
 
@@ -88,25 +199,58 @@ calc_plc_payment <- function(crop,
   if(is.null(erp)){
 
     if(calculate_erp){
-      # Calculate ERP using helper function
+      # Calculate ERP using helper function - mya_price is still a list here since calculate_erp is only TRUE when user supplies it
       erp <- calc_effective_reference_price(mya_prices = mya_price$price, srp = srp)
     } else {
       data("fsaEffectiveRefPrices")
+
+      if(program_year >= 2019){
       erp = fsaEffectiveRefPrices %>%
-        dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$marketing_year) %>%
-        pull(effective_reference_price)
+        dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$marketing_year)
+
+      if(!is.null(crop_type)){
+        erp <- erp %>%
+          dplyr::filter(.data$crop_type == .env$crop_type)
+      }
+
+      erp <- erp %>% pull(effective_reference_price)
+
+      if(length(erp) > 1){
+        if(!quiet) warning(paste0("No crop type supplied, taking the average effective reference price across all crop types for ", crop))
+        erp <- mean(erp, na.rm = TRUE)
+      }
+
+      if(length(erp) == 0){
+        stop(paste("No effective reference price found for crop:", crop, "and marketing year:", marketing_year))
+      }
+      } else {
+        erp = srp
+      }
+
+
     }
 
-
-
-    if(length(mya_price) > 1){
+    # Handle case where user supplied custom MYA price data as a list with multiple years
+    if(is.list(mya_price) && all(c("years", "price") %in% names(mya_price)) && length(mya_price$price) > 1){
       mya_price <- mya_price$price[which(mya_price$years == program_year)]
       if(length(mya_price) == 0){
-        warning("No MYA price found for the specified program year. Using MYA price supplied by FSA.")
+        if(!quiet) warning("No MYA price found for the specified program year. Using MYA price supplied by FSA.")
         data("fsaMyaPrice")
+
         mya_price = fsaMyaPrice %>%
-          dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$marketing_year)  %>%
-          pull(current_mya_price)
+          dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$marketing_year)
+
+        if(!is.null(crop_type)){
+          mya_price <- mya_price %>%
+            dplyr::filter(.data$crop_type == .env$crop_type)
+        }
+
+        mya_price <- mya_price %>% pull(current_mya_price)
+
+        if(length(mya_price) > 1){
+          if(!quiet) warning(paste0("No crop type supplied, taking the average MYA price across all crop types for ", crop))
+          mya_price <- mean(mya_price, na.rm = TRUE)
+        }
       }
     }
 
@@ -116,20 +260,31 @@ calc_plc_payment <- function(crop,
   # non marketing loan rate
   if(is.null(nmlr)){
     data("fsaPlcPaymentRate")
+
     nmlr = fsaPlcPaymentRate %>%
-      dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$marketing_year) %>%
-      pull(current_national_loan_rate)
+      dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$marketing_year)
+
+    if(!is.null(crop_type)){
+      nmlr <- nmlr %>%
+        dplyr::filter(.data$crop_type == .env$crop_type)
+    }
+
+    nmlr <- nmlr %>% pull(current_national_loan_rate)
+
+    if(length(nmlr) > 1){
+      if(!quiet) warning(paste0("No crop type supplied, taking the average national marketing loan rate across all crop types for ", crop))
+      nmlr <- mean(nmlr, na.rm = TRUE)
+    }
+
+    if(length(nmlr) == 0){
+      stop(paste("No national marketing loan rate found for crop:", crop, "and marketing year:", marketing_year))
+    }
   }
 
   # plc yield
   if(is.null(plc_yield)){
     plc_yield <- get_plc_yield(crop = crop, program_year = program_year,
-                               state = state, county = county, fips = fips)
-  }
-
-  # if program_year <= 2019, substitute srp for erp
-  if(program_year <= 2019 & always_use_erp == F){
-    erp <- srp
+                               crop_type = crop_type, state = state, county = county, fips = fips, quiet = quiet)
   }
 
 
@@ -150,6 +305,5 @@ calc_plc_payment <- function(crop,
 
 }
 
-calc_plc_payment(crop = "corn",
-                 program_year = 2024,
-                 base_acres = 100)
+
+

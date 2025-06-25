@@ -18,3 +18,9 @@ Imports:
   piggyback,
   memoise
 LazyData: false
+Suggests: 
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+Config/testthat/edition: 3
+VignetteBuilder: knitr

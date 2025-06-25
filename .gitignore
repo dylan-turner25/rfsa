@@ -7,3 +7,5 @@ data-raw/fsaFarmPayments/output_data
 inst
 README_cache
 .DS_Store
+/doc/
+/Meta/
