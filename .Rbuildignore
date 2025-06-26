@@ -7,4 +7,6 @@
 README_cache
 ^doc$
 ^Meta$
-^vignettes$
+^docs$
+^\.claude$
+^\.DS_Store$

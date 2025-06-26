@@ -61,7 +61,7 @@ State abbreviations are automatically converted to full state names since the
 underlying data uses full state names for filtering.
 }
 \examples{
-\\dontrun{
+\dontrun{
 # County-specific yield using FIPS
 get_plc_yield("corn", 2024, fips = "19001")
 

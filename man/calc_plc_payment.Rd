@@ -98,7 +98,7 @@ The function automatically retrieves missing data from FSA datasets:
 }
 }
 \examples{
-\\dontrun{
+\dontrun{
 # Basic PLC payment calculation
 calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100)
 

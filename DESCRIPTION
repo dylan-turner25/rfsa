@@ -1,6 +1,8 @@
 Package: rfsa
 Title: Data on programs administered by the USDA, Farm Service Agency
 Version: 0.0.0.9000
+Author: Dylan Turner <dylan.turner3@outlook.com>
+Maintainer: Dylan Turner <dylan.turner3@outlook.com>
 Authors@R: 
     person("Dylan", "Turner", , "dylan.turner3@outlook.com", role = c("aut", "cre"))
 Description: What the package does (one paragraph).
@@ -16,7 +18,9 @@ Imports:
   rlang,
   gh,
   piggyback,
-  memoise
+  memoise,
+  usmap,
+  utils
 LazyData: false
 Suggests: 
     testthat (>= 3.0.0),

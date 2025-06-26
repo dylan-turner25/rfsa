@@ -37,7 +37,7 @@ source("./data-raw/fsaFarmPayments/supplementary_files/split_payment_files.R")
 # upload cleaned files as a data release
 piggyback::pb_new_release(
   repo = "dylan-turner25/rfsa",
-  tag  = "v0.1.0",
+  tag  = "v0.1.1",
   name = "First data release",
   body = "This release contains all individual year-program files."
 )
@@ -46,11 +46,11 @@ piggyback::pb_new_release(
 rds_files <- list.files("data-raw/fsaFarmPayments/output_data", "\\.rds$",
                         full.names = TRUE, recursive = TRUE)
 
-
+options(piggyback.verbose = F)
 piggyback::pb_upload(
   rds_files,
   repo = "dylan-turner25/rfsa",
-  tag  = "v0.1.0",
+  tag  = "v0.1.1",
   overwrite = F
 )
 

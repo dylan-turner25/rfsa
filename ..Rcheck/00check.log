@@ -1,0 +1,17 @@
+* using log directory ‘/Users/dylanturner/Library/CloudStorage/Dropbox/rfsa/..Rcheck’
+* using R version 4.5.1 (2025-06-13)
+* using platform: aarch64-apple-darwin24.4.0
+* R was compiled by
+    Apple clang version 17.0.0 (clang-1700.0.13.3)
+    GNU Fortran (Homebrew GCC 15.1.0) 15.1.0
+* running under: macOS Sequoia 15.5
+* using session charset: UTF-8
+* using options ‘--no-examples --no-manual --no-vignettes’
+* checking for file ‘./DESCRIPTION’ ... OK
+* this is package ‘rfsa’ version ‘0.0.0.9000’
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... OK
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ...

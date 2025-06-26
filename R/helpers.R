@@ -39,7 +39,7 @@
 #' underlying data uses full state names for filtering.
 #'
 #' @examples
-#' \\dontrun{
+#' \dontrun{
 #' # County-specific yield using FIPS
 #' get_plc_yield("corn", 2024, fips = "19001")
 #'
@@ -53,16 +53,17 @@
 #' get_plc_yield("rice", 2024, crop_type = "long grain")
 #' }
 #'
+#' @importFrom utils data
 #' @keywords internal
 get_plc_yield <- function(crop, program_year, crop_type = NULL, state = NULL, county = NULL, fips = NULL, quiet = FALSE) {
-  data("fsaPlcYields")
+  data("fsaPlcYields", envir = environment())
 
   # filter on crop and marketing year
   # note: plc average county yields aren't avaliable prior to 2018, so function defaults to 2018 for earlier years
   plc_yield = fsaPlcYields %>%
     dplyr::filter(.data$crop == .env$crop,
                   .data$program_year == ifelse(.env$program_year <= 2018, 2018, .env$program_year) )
-  
+
   # filter by crop_type if provided
   if(!is.null(crop_type)){
     plc_yield <- plc_yield %>%
@@ -124,7 +125,7 @@ get_plc_yield <- function(crop, program_year, crop_type = NULL, state = NULL, co
   if(is.null(crop_type) && nrow(plc_yield) > 1 && "plc_yield" %in% names(plc_yield)){
     if(!quiet) warning(paste0("No crop type supplied, taking the average PLC yield across all crop types for ", crop))
   }
-  
+
   return(plc_yield$plc_yield)
 }
 
@@ -140,7 +141,7 @@ get_plc_yield <- function(crop, program_year, crop_type = NULL, state = NULL, co
 #' @return Numeric. The calculated effective reference price based on the formula:
 #'   \\itemize{
 #'     \\item If 85% of Olympic average < SRP, then ERP = SRP
-#'     \\item If 85% of Olympic average >= 115% of SRP, then ERP = 115% of SRP  
+#'     \\item If 85% of Olympic average >= 115% of SRP, then ERP = 115% of SRP
 #'     \\item Otherwise, ERP = 85% of Olympic average
 #'   }
 #'
@@ -150,7 +151,7 @@ get_plc_yield <- function(crop, program_year, crop_type = NULL, state = NULL, co
 #' of this Olympic average, subject to minimum and maximum bounds relative to the SRP.
 #'
 #' @examples
-#' \\dontrun{
+#' \dontrun{
 #' # Calculate ERP with 5 years of MYA prices
 #' mya_prices <- c(3.70, 3.60, 3.50, 3.40, 3.30)
 #' srp <- 3.90
@@ -166,11 +167,11 @@ calc_effective_reference_price <- function(mya_prices, srp) {
   if(is.null(srp) || !is.numeric(srp)) {
     stop("Statutory reference price (srp) must be a numeric value")
   }
-  
+
   # Calculate Olympic average (remove highest and lowest, average the rest)
   sorted_prices <- sort(mya_prices)
   olympic_avg <- mean(sorted_prices[2:(length(sorted_prices)-1)])
-  
+
   # Apply ERP formula
   if(0.85 * olympic_avg < srp) {
     erp <- srp
@@ -179,7 +180,7 @@ calc_effective_reference_price <- function(mya_prices, srp) {
   } else {
     erp <- 0.85 * olympic_avg
   }
-  
+
   return(erp)
 }
 
@@ -191,7 +192,7 @@ calc_effective_reference_price <- function(mya_prices, srp) {
 #' @return A character vector of file names (assets) in the latest release.
 #' @keywords internal
 #' @examples
-#' \\dontrun{
+#' \dontrun{
 #' files = list_data_assets()
 #' }
 #' @importFrom gh gh
@@ -270,7 +271,7 @@ get_cached_rds <- function(name,
 #' @export
 #'
 #' @examples
-#' \\dontrun{
+#' \dontrun{
 #' # Remove all cached RDS files so they will be re-downloaded on next use
 #' clear_rfsa_cache()
 #' }
@@ -556,13 +557,13 @@ clean_crop_names2 <- function(crop_name) {
   cleaned_name <- gsub("\\blarge kabuli$|\\bsmall desi$", "", cleaned_name)
   cleaned_name <- gsub("\\boil type$|\\bconfection type$", "", cleaned_name)
   cleaned_name <- gsub("\\bdark northern spring$|\\bhard red winter$|\\bsoft red winter$|\\bwhite$|\\bdurum$", "", cleaned_name)
-  
+
   # Remove underscore-separated type information (e.g., "chickpeas_large" -> "chickpeas")
   cleaned_name <- gsub("_.*$", "", cleaned_name)
-  
+
   # Remove specific rice type patterns that might remain
   cleaned_name <- gsub("\\s+(med/.*|long\\s+grain|temperate\\s+japonica)$", "", cleaned_name)
-  
+
   # Handle "beans- chickpeas" -> "chickpeas" (this specific case before hyphen removal)
   if(grepl("beans.*chickpea", cleaned_name)) {
     cleaned_name <- "chickpeas"

@@ -32,6 +32,6 @@ for (file in cleaned_files) {
   split_file(readRDS(file), year_type = "fiscal")
 }
 
-# finish it off
+# close progress bar
 cli_progress_done()
 

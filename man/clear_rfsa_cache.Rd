@@ -16,7 +16,7 @@ downloaded \*.rds files. Useful if you need to force re-download of data,
 or free up disk space.
 }
 \examples{
-\\dontrun{
+\dontrun{
 # Remove all cached RDS files so they will be re-downloaded on next use
 clear_rfsa_cache()
 }

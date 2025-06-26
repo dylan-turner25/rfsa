@@ -60,7 +60,7 @@
 #' }
 #'
 #' @examples
-#' \\dontrun{
+#' \dontrun{
 #' # Basic PLC payment calculation
 #' calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100)
 #'
@@ -89,6 +89,7 @@
 #' \\code{\\link{get_plc_yield}} for PLC yield calculations
 #' \\code{\\link{calc_effective_reference_price}} for ERP calculations
 #'
+#' @importFrom utils data
 #' @export
 calc_plc_payment <- function(crop,
                              crop_type = NULL,
@@ -151,7 +152,7 @@ calc_plc_payment <- function(crop,
 
   # mya price
   if(is.null(mya_price)){
-    data("fsaMyaPrice")
+    data("fsaMyaPrice", envir = environment())
 
     mya_price = fsaMyaPrice %>%
       dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$marketing_year)
@@ -172,7 +173,7 @@ calc_plc_payment <- function(crop,
 
   # statutory reference price
   if(is.null(srp)){
-    data("fsaEffectiveRefPrices")
+    data("fsaEffectiveRefPrices", envir = environment())
 
     srp = fsaEffectiveRefPrices %>%
       dplyr::filter(.data$crop == .env$crop, .data$program_year == ifelse(.env$program_year <= 2019,2019, .env$program_year))
@@ -202,7 +203,7 @@ calc_plc_payment <- function(crop,
       # Calculate ERP using helper function - mya_price is still a list here since calculate_erp is only TRUE when user supplies it
       erp <- calc_effective_reference_price(mya_prices = mya_price$price, srp = srp)
     } else {
-      data("fsaEffectiveRefPrices")
+      data("fsaEffectiveRefPrices", envir = environment())
 
       if(program_year >= 2019){
       erp = fsaEffectiveRefPrices %>%
@@ -235,7 +236,7 @@ calc_plc_payment <- function(crop,
       mya_price <- mya_price$price[which(mya_price$years == program_year)]
       if(length(mya_price) == 0){
         if(!quiet) warning("No MYA price found for the specified program year. Using MYA price supplied by FSA.")
-        data("fsaMyaPrice")
+        data("fsaMyaPrice", envir = environment())
 
         mya_price = fsaMyaPrice %>%
           dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$marketing_year)
@@ -259,7 +260,7 @@ calc_plc_payment <- function(crop,
 
   # non marketing loan rate
   if(is.null(nmlr)){
-    data("fsaPlcPaymentRate")
+    data("fsaPlcPaymentRate", envir = environment())
 
     nmlr = fsaPlcPaymentRate %>%
       dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$marketing_year)

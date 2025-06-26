@@ -30,7 +30,7 @@ and averages the remaining 3 middle values. The ERP is then calculated as 85\%
 of this Olympic average, subject to minimum and maximum bounds relative to the SRP.
 }
 \examples{
-\\dontrun{
+\dontrun{
 # Calculate ERP with 5 years of MYA prices
 mya_prices <- c(3.70, 3.60, 3.50, 3.40, 3.30)
 srp <- 3.90
