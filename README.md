@@ -8,6 +8,15 @@ rfsa: A package for accessing USDA Farm Service Agency data
 - [FSA Individual Payment Files](#fsa-individual-payment-files)
 - [Data Validation Checks](#data-validation-checks)
 - [Example Usage](#example-usage)
+  - [Plot payments made via the Conservation Reserve Program relative to
+    total payments over
+    time](#plot-payments-made-via-the-conservation-reserve-program-relative-to-total-payments-over-time)
+  - [Plot county level payments made through the livestock indemnity
+    program in program year
+    2023](#plot-county-level-payments-made-through-the-livestock-indemnity-program-in-program-year-2023)
+  - [Plot a histogram showing the number of programs individual payee’s
+    recieved payments from in program year
+    2020](#plot-a-histogram-showing-the-number-of-programs-individual-payees-recieved-payments-from-in-program-year-2020)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -244,118 +253,150 @@ package as well as an external source to validate the value against.
 
 # Example Usage
 
-<!-- ## Plot payments made via the Conservation Reserve Program relative to total payments over time  -->
-<!-- ```{r, cache=TRUE, echo=TRUE, include=TRUE} -->
-<!-- library(rfsa) -->
-<!-- library(ggplot2) -->
-<!-- # note this is aggregating millions individual payments behind the scenes. A more memory efficient approach would be to loop over years and aggregate each year individually to avoid loading all the data into memory at once. -->
-<!-- data <- get_fsa_payments(year = 2013:2023, -->
-<!--                          year_type = "program", -->
-<!--                          aggregation = "national") -->
-<!-- data %>% -->
-<!--   mutate(program_category = if_else(program_abb %in% c("CRP"), -->
-<!--                                     "Conservation Reserve Program", -->
-<!--                                     "Other")) %>% -->
-<!--   ggplot(aes(x = year, y = payment_amount/1e9, fill = program_category)) + -->
-<!--   geom_bar(stat = "identity") + -->
-<!--   scale_y_continuous(labels = scales::dollar_format()) + -->
-<!--   scale_fill_manual(values = c("Conservation Reserve Program" = "forestgreen", -->
-<!--                                "Other" = "grey")) + -->
-<!--   labs( -->
-<!--     title = "FSA Payments by Program (2004-2023)", -->
-<!--     x = "Program Year", -->
-<!--     y = "Total Payments (Billions USD)", -->
-<!--     fill = "Program" -->
-<!--   ) + -->
-<!--   theme_minimal() + -->
-<!--   theme(legend.position = "bottom", -->
-<!--         legend.text = element_text(size = 8)) -->
-<!-- ``` -->
-<!-- ## Plot county level payments made through the livestock indemnity program in program year 2023 -->
-<!-- ```{r, cache=TRUE, echo=TRUE, include=TRUE} -->
-<!-- library(ggplot2) -->
-<!-- library(maps) -->
-<!-- library(mapproj) -->
-<!-- library(dplyr) -->
-<!-- data <- get_fsa_payments(year = 2023,  -->
-<!--                          year_type = "program", -->
-<!--                          program = c("LIP"), -->
-<!--                          aggregation = "county") %>% -->
-<!--   mutate( -->
-<!--     state_fips = substr(fips_fsa, 1, 2), -->
-<!--     county_fips = substr(fips_fsa, 3, 5) -->
-<!--   ) -->
-<!-- # Get county map data -->
-<!-- counties <- map_data("county") -->
-<!-- # Get state and county names from FIPS codes -->
-<!-- fips_codes <- data %>% -->
-<!--   select(fips_fsa, county_name_fsa) %>% -->
-<!--   distinct() %>% -->
-<!--   mutate( -->
-<!--     state = state.fips$polyname[match(state_cd_fsa, state.fips$fips)], -->
-<!--     county = tolower(county_name_fsa) -->
-<!--   ) -->
-<!-- # Join payment data with map data -->
-<!-- map_data <- counties %>% -->
-<!--   left_join( -->
-<!--     data %>% -->
-<!--       left_join(fips_codes, by = "fips_fsa") %>% -->
-<!--       select(state, county, payment_amount), -->
-<!--     by = c("region" = "state", "subregion" = "county") -->
-<!--   ) -->
-<!-- # Create the map -->
-<!-- ggplot(map_data, aes(x = long, y = lat, group = group, fill = payment_amount)) + -->
-<!-- geom_polygon(color = "white", size = 0.1) + -->
-<!-- coord_map("albers", lat0 = 30, lat1 = 40) + -->
-<!-- scale_fill_viridis_c( -->
-<!--   option = "magma", -->
-<!--   name = "", -->
-<!--   trans = "log10", -->
-<!--   labels = scales::dollar_format(), -->
-<!--   na.value = "grey90", -->
-<!--   direction = -1 -->
-<!-- ) + -->
-<!-- labs( -->
-<!--   title = "Total Livestock Indemnity Program Payments in Program Year 2023", -->
-<!--   caption = "Source: FSA Payment Data" -->
-<!-- ) + -->
-<!-- theme_minimal() + -->
-<!-- theme( -->
-<!--   axis.text = element_blank(), -->
-<!--   axis.title = element_blank(), -->
-<!--   panel.grid = element_blank() -->
-<!-- ) -->
-<!-- ``` -->
-<!-- ## Plot a histogram showing the number of programs individual payee's recieved payments from in program year 2020 -->
-<!-- ```{r, cache=TRUE, echo=TRUE, include=TRUE} -->
-<!-- library(rfsa) -->
-<!-- library(dplyr) -->
-<!-- library(ggplot2) -->
-<!-- data <- get_fsa_payments(year = 2020, -->
-<!--                          year_type = "program", -->
-<!--                          aggregation = "individual") %>% -->
-<!--   group_by(name_payee) %>% -->
-<!--   summarise(unique_programs = n_distinct(program_abb)) -->
-<!-- ggplot(data, aes(x = unique_programs)) + -->
-<!--   geom_histogram(binwidth = 1, fill = "steelblue", color = "white") + -->
-<!--   labs(title = "Histogram of Unique Programs per Payee in Program Year 2020", -->
-<!--        x = "Number of Programs", -->
-<!--        y = "Count") + -->
-<!--   theme_minimal() + -->
-<!--   scale_y_continuous(labels = scales::comma) + -->
-<!--   scale_x_continuous(breaks = scales::pretty_breaks()) + -->
-<!--   annotate("text", x = max(data$unique_programs) * 0.8, y = max(table(data$unique_programs)) * 0.8, -->
-<!--            label = paste("Mean:", round(mean(data$unique_programs), 2), -->
-<!--                          "\nMedian:", median(data$unique_programs), -->
-<!--                          "\nMax:", max(data$unique_programs)), -->
-<!--            hjust = 0, size = 3, -->
-<!--            family = "sans") + -->
-<!--   annotate("rect",  -->
-<!--            xmin = max(data$unique_programs) * 0.75,  -->
-<!--            xmax = max(data$unique_programs) * 0.95, -->
-<!--            ymin = max(table(data$unique_programs)) * 0.7, -->
-<!--            ymax = max(table(data$unique_programs)) * 0.9, -->
-<!--            alpha = 0, fill = "white", -->
-<!--            color = "black", linewidth = 0.5) + -->
-<!--   theme(text = element_text(size = 12)) -->
-<!-- ``` -->
+## Plot payments made via the Conservation Reserve Program relative to total payments over time
+
+``` r
+library(rfsa)
+library(ggplot2)
+
+# note this is aggregating millions individual payments behind the scenes. A more memory efficient approach would be to loop over years and aggregate each year individually to avoid loading all the data into memory at once.
+data <- get_fsa_payments(year = 2013:2023,
+                         year_type = "program",
+                         aggregation = "national")
+
+
+data %>%
+  mutate(program_category = if_else(program_abb %in% c("CRP"),
+                                    "Conservation Reserve Program",
+                                    "Other")) %>%
+  ggplot(aes(x = year, y = payment_amount/1e9, fill = program_category)) +
+  geom_bar(stat = "identity") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Conservation Reserve Program" = "forestgreen",
+                               "Other" = "grey")) +
+  labs(
+    title = "FSA Payments by Program (2004-2023)",
+    x = "Program Year",
+    y = "Total Payments (Billions USD)",
+    fill = "Program"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size = 8))
+```
+
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
+
+## Plot county level payments made through the livestock indemnity program in program year 2023
+
+``` r
+library(ggplot2)
+library(maps)
+library(mapproj)
+library(dplyr)
+
+data <- get_fsa_payments(year = 2023,
+                         year_type = "program",
+                         program = c("LIP"),
+                         aggregation = "county") %>%
+  mutate(
+    state_fips = substr(fips_fsa, 1, 2),
+    county_fips = substr(fips_fsa, 3, 5)
+  )
+
+# Get county map data
+counties <- map_data("county")
+
+# Get state and county names from FIPS codes
+fips_codes <- data %>%
+  select(fips_fsa, county_name_fsa) %>%
+  distinct() %>%
+  mutate(
+    state = state.fips$polyname[match(state_cd_fsa, state.fips$fips)],
+    county = tolower(county_name_fsa)
+  )
+#> Adding missing grouping variables: `state_cd_fsa`, `county_cd_fsa`, `year`,
+#> `program_abb`
+
+# Join payment data with map data
+map_data <- counties %>%
+  left_join(
+    data %>%
+      left_join(fips_codes, by = "fips_fsa") %>%
+      select(state, county, payment_amount),
+    by = c("region" = "state", "subregion" = "county")
+  )
+#> Adding missing grouping variables: `fips_fsa`
+
+
+# Create the map
+ggplot(map_data, aes(x = long, y = lat, group = group, fill = payment_amount)) +
+geom_polygon(color = "white", size = 0.1) +
+coord_map("albers", lat0 = 30, lat1 = 40) +
+scale_fill_viridis_c(
+  option = "magma",
+  name = "",
+  trans = "log10",
+  labels = scales::dollar_format(),
+  na.value = "grey90",
+  direction = -1
+) +
+labs(
+  title = "Total Livestock Indemnity Program Payments in Program Year 2023",
+  caption = "Source: FSA Payment Data"
+) +
+theme_minimal() +
+theme(
+  axis.text = element_blank(),
+  axis.title = element_blank(),
+  panel.grid = element_blank()
+)
+#> Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+#> ℹ Please use `linewidth` instead.
+#> This warning is displayed once every 8 hours.
+#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+#> generated.
+```
+
+<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
+
+## Plot a histogram showing the number of programs individual payee’s recieved payments from in program year 2020
+
+``` r
+library(rfsa)
+library(dplyr)
+library(ggplot2)
+
+data <- get_fsa_payments(year = 2020,
+                         year_type = "program",
+                         aggregation = "individual") %>%
+  group_by(name_payee) %>%
+  summarise(unique_programs = n_distinct(program_abb))
+
+
+
+ggplot(data, aes(x = unique_programs)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "white") +
+  labs(title = "Histogram of Unique Programs per Payee in Program Year 2020",
+       x = "Number of Programs",
+       y = "Count") +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = scales::pretty_breaks()) +
+  annotate("text", x = max(data$unique_programs) * 0.8, y = max(table(data$unique_programs)) * 0.8,
+           label = paste("Mean:", round(mean(data$unique_programs), 2),
+                         "\nMedian:", median(data$unique_programs),
+                         "\nMax:", max(data$unique_programs)),
+           hjust = 0, size = 3,
+           family = "sans") +
+  annotate("rect",
+           xmin = max(data$unique_programs) * 0.75,
+           xmax = max(data$unique_programs) * 0.95,
+           ymin = max(table(data$unique_programs)) * 0.7,
+           ymax = max(table(data$unique_programs)) * 0.9,
+           alpha = 0, fill = "white",
+           color = "black", linewidth = 0.5) +
+  theme(text = element_text(size = 12))
+```
+
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
