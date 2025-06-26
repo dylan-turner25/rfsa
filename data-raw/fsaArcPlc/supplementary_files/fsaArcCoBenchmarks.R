@@ -1,3 +1,16 @@
+library(dplyr)
+library(tidyr)
+library(readxl)
+library(janitor)
+library(readr)
+library(usethis)
+
+# get current year
+current_year <- as.numeric(format(Sys.Date(), "%Y"))
+
+# load helper functions
+source("R/helpers.R")
+
 # list all files in the raw data files folder
 files <- list.files("./data-raw/fsaArcPlc/input_data/fsaArcCoBenchmarks",
                     full.names = T)
@@ -97,7 +110,7 @@ for(y in 2019:current_year){
   colnames(temp) <- temp[names_row,]
 
   # remove everything above the commodity_row
-  temp <- temp[-c(1:(names_row + 1)),]
+  temp <- temp[-c(1:(names_row )),]
 
   # remove sub county column if it exists
   if("Sub County" %in% colnames(temp)){
@@ -216,7 +229,7 @@ arc_co_benchmarks$crop_type <- unlist(lapply(arc_co_benchmarks$crop, extract_cro
 arc_co_benchmarks$rma_type_code <- unlist(lapply(arc_co_benchmarks$crop, extract_crop_type, rma_code = TRUE))
 
 # clean crop names
-arc_co_benchmarks$crop <- unlist(lapply(arc_co_benchmarks$crop, clean_crop_names))
+arc_co_benchmarks$crop <- unlist(lapply(arc_co_benchmarks$crop, clean_crop_names2))
 
 # add rma crop codes
 arc_co_benchmarks$rma_crop_code <- unlist(lapply(arc_co_benchmarks$crop, assign_rma_cc))

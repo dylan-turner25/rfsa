@@ -425,18 +425,16 @@ test_that("calc_plc_payment validates required parameters", {
   expect_error(calc_plc_payment(crop = "corn", base_acres = 100))
 })
 
-test_that("calc_plc_payment handles custom MYA price list for ERP calculation", {
-  # Test with 5 years of MYA price data for ERP calculation
-  mya_data <- list(
-    years = c(2019, 2020, 2021, 2022, 2023),
-    price = c(3.60, 3.50, 5.80, 6.80, 4.85)
-  )
+test_that("calc_plc_payment handles historic MYA prices for ERP calculation", {
+  # Test with 5 years of historic MYA price data for ERP calculation
+  historic_prices <- c(3.60, 3.50, 5.80, 6.80, 4.85)
 
   result <- calc_plc_payment(
     crop = "corn",
     program_year = 2024,
     base_acres = 100,
-    mya_price = mya_data,
+    mya_price = 4.50,  # Current year MYA price
+    historic_mya_prices = historic_prices,
     srp = 4.30,
     nmlr = 2.50,
     plc_yield = 180,
@@ -448,29 +446,41 @@ test_that("calc_plc_payment handles custom MYA price list for ERP calculation", 
   expect_gte(result, 0)
 })
 
-test_that("calc_plc_payment handles insufficient MYA price data", {
-  # Test with insufficient years for ERP calculation
-  mya_data <- list(
-    years = c(2022, 2023),
-    price = c(6.80, 4.85)
-  )
+test_that("calc_plc_payment handles insufficient historic MYA price data", {
+  # Test with insufficient historic MYA prices for ERP calculation
+  insufficient_prices <- c(6.80, 4.85)  # Only 2 values instead of required 5
 
-  # This should warn about insufficient data and fall back to FSA data
-  expect_warning(
-    result <- calc_plc_payment(
+  # This should error about insufficient data
+  expect_error(
+    calc_plc_payment(
       crop = "corn",
       program_year = 2024,
       base_acres = 100,
-      mya_price = mya_data,
+      mya_price = 4.50,
+      historic_mya_prices = insufficient_prices,
       srp = 4.30,
       nmlr = 2.50,
       plc_yield = 180,
       quiet = FALSE
     ),
-    "Not enough MYA price data|MYA price found"  # Either warning is acceptable
+    "historic_mya_prices must contain exactly 5 values"
   )
+})
 
-  expect_type(result, "double")
+test_that("calc_plc_payment validates historic MYA price data types", {
+  # Test with non-numeric historic MYA prices
+  expect_error(
+    calc_plc_payment(
+      crop = "corn",
+      program_year = 2024,
+      base_acres = 100,
+      mya_price = 4.50,
+      historic_mya_prices = c("a", "b", "c", "d", "e"),
+      srp = 4.30,
+      quiet = TRUE
+    ),
+    "historic_mya_prices must be numeric"
+  )
 })
 
 test_that("calc_plc_payment works with location parameters", {

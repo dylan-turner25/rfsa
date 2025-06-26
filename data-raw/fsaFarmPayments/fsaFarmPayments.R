@@ -46,7 +46,7 @@ piggyback::pb_new_release(
 rds_files <- list.files("data-raw/fsaFarmPayments/output_data", "\\.rds$",
                         full.names = TRUE, recursive = TRUE)
 
-options(piggyback.verbose = F)
+options(piggyback.verbose = T)
 piggyback::pb_upload(
   rds_files,
   repo = "dylan-turner25/rfsa",

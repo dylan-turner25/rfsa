@@ -65,7 +65,7 @@ get_plc_yield <- function(crop, program_year, crop_type = NULL, state = NULL, co
                   .data$program_year == ifelse(.env$program_year <= 2018, 2018, .env$program_year) )
 
   # filter by crop_type if provided
-  if(!is.null(crop_type)){
+  if(!is.null(crop_type) && length(crop_type) > 0 && !is.na(crop_type)){
     plc_yield <- plc_yield %>%
       dplyr::filter(.data$crop_type == .env$crop_type)
   }
@@ -129,6 +129,475 @@ get_plc_yield <- function(crop, program_year, crop_type = NULL, state = NULL, co
   return(plc_yield$plc_yield)
 }
 
+#' Get ARC-CO Benchmark Data
+#'
+#' This internal helper function retrieves and filters ARC-CO benchmark data (yield or price) from the
+#' fsaArcCoBenchmarks dataset based on crop, program year, yield type, and optional location parameters.
+#' It handles flexible location input including state names, abbreviations, FIPS codes,
+#' and county specifications.
+#'
+#' @param crop Character. The crop name to filter for (e.g., "corn", "soybeans").
+#' @param program_year Numeric. The program year to filter for (e.g., 2024).
+#' @param benchmark_type Character. Type of benchmark to return: "yield" or "price" (default: "yield").
+#' @param crop_type Character, optional. The crop type to filter for (e.g., "long grain", "large").
+#' @param yield_type Character, optional. The yield type to filter for from the yield_type column.
+#' @param historical_yields Numeric vector, optional. A vector of 5 historic yield values
+#'   for Olympic average calculation. If provided, the function will calculate the Olympic
+#'   average (removing highest and lowest values) instead of looking up FSA data.
+#'   Only used when benchmark_type = "yield".
+#' @param historical_prices Numeric vector, optional. A vector of 5 historic price values
+#'   for Olympic average calculation. If provided, the function will calculate the Olympic
+#'   average (removing highest and lowest values) instead of looking up FSA data.
+#'   Only used when benchmark_type = "price".
+#' @param erp Numeric, optional. The effective reference price. When benchmark_type = "price",
+#'   any annual benchmark price below this ERP value will be replaced with the ERP before
+#'   calculating the Olympic average. If NULL, the function will look up ERP from FSA data.
+#' @param state Character, optional. State identifier that can be:
+#'   \\itemize{
+#'     \\item State abbreviation (e.g., "IA", "IL")
+#'     \\item Full state name (e.g., "Iowa", "Illinois")
+#'     \\item State FIPS code (e.g., "19", "17")
+#'   }
+#' @param county Character, optional. County name (requires state to also be specified).
+#' @param fips Character, optional. 5-digit FIPS code for specific county-level data.
+#' @param quiet Logical. If TRUE, suppresses warning messages (default: FALSE).
+#'
+#' @return Numeric. The ARC-CO benchmark value (yield or price). Returns:
+#'   \\itemize{
+#'     \\item County-specific value if fips or state+county provided
+#'     \\item State average value if only state provided (with message)
+#'     \\item National average value if no location specified (with message)
+#'   }
+#'
+#' @details
+#' The function has two main modes of operation:
+#'
+#' **Historical Data Mode**: When historical_yields (for yield) or historical_prices (for price)
+#' are provided, the function calculates an Olympic average by removing the highest and lowest
+#' values and averaging the remaining three values. For price calculations, if an ERP is provided,
+#' any historical price below the ERP will be replaced with the ERP before calculating the Olympic average.
+#'
+#' **FSA Data Lookup Mode**: When no historical data is provided, the function follows this
+#' priority order for location filtering:
+#' \\enumerate{
+#'   \\item If \\code{fips} is provided, uses it directly after validation
+#'   \\item If \\code{state} and \\code{county} are provided, filters by both
+#'   \\item If only \\code{state} is provided, calculates state average
+#'   \\item If no location parameters, calculates national average
+#' }
+#'
+#' For benchmark price calculations, if the FSA benchmark price is below the ERP, it will be
+#' replaced with the ERP value. If no ERP is provided, the function will attempt to look it up
+#' from FSA effective reference price data.
+#'
+#' If no yield_type is specified and multiple yield types are found, the function
+#' will average across all yield types and issue a warning.
+#'
+#' State abbreviations are automatically converted to full state names since the
+#' underlying data uses full state names for filtering.
+#'
+#' @examples
+#' \dontrun{
+#' # County-specific yield using FIPS
+#' get_arcco_benchmarks("corn", 2024, "yield", fips = "19001")
+#'
+#' # County-specific price using state + county with crop type and yield type
+#' get_arcco_benchmarks("rice", 2024, "price", crop_type = "long grain", yield_type = "irrigated",
+#'                      state = "IA", county = "Adair")
+#'
+#' # State average yield (abbreviation converted to full name)
+#' get_arcco_benchmarks("corn", 2024, "yield", state = "IA")
+#'
+#' # National average price with crop type
+#' get_arcco_benchmarks("rice", 2024, "price", crop_type = "long grain")
+#'
+#' # Olympic average calculation using historical yields
+#' get_arcco_benchmarks("corn", 2024, "yield", historical_yields = c(170, 175, 180, 185, 190))
+#'
+#' # Olympic average calculation using historical prices
+#' get_arcco_benchmarks("corn", 2024, "price", historical_prices = c(4.20, 4.30, 4.40, 4.50, 4.60))
+#' }
+#'
+#' @importFrom utils data
+#' @keywords internal
+get_arcco_benchmarks <- function(crop, program_year, benchmark_type = "yield", crop_type = NULL, yield_type = NULL, historical_yields = NULL, historical_prices = NULL, erp = NULL, state = NULL, county = NULL, fips = NULL, quiet = FALSE) {
+  # Validate benchmark_type
+  if(!benchmark_type %in% c("yield", "price")) {
+    stop("benchmark_type must be either 'yield' or 'price'")
+  }
+
+  # If historical data is provided, calculate Olympic average instead of looking up data
+  if(benchmark_type == "yield" && !is.null(historical_yields)) {
+    # Validate historical yields input
+    if(length(historical_yields) != 5) {
+      stop("historical_yields must contain exactly 5 values")
+    }
+    if(!is.numeric(historical_yields)) {
+      stop("historical_yields must be numeric")
+    }
+    # Calculate Olympic average (remove highest and lowest, average the rest)
+    sorted_yields <- sort(historical_yields)
+    olympic_average <- mean(sorted_yields[2:(length(sorted_yields)-1)])
+    if(!quiet) message("Using Olympic average of provided historical yields for benchmark yield calculation.")
+    return(olympic_average)
+  }
+
+  if(benchmark_type == "price" && !is.null(historical_prices)) {
+    # Validate historical prices input
+    if(length(historical_prices) != 5) {
+      stop("historical_prices must contain exactly 5 values")
+    }
+    if(!is.numeric(historical_prices)) {
+      stop("historical_prices must be numeric")
+    }
+
+    # If ERP is provided, apply the adjustment: replace any price < ERP with ERP
+    adjusted_prices <- historical_prices
+    if(!is.null(erp)) {
+      if(!is.numeric(erp) || length(erp) != 1) {
+        stop("erp must be a single numeric value")
+      }
+      # Replace any benchmark price below ERP with ERP value
+      prices_below_erp <- adjusted_prices < erp
+      if(any(prices_below_erp)) {
+        adjusted_prices[prices_below_erp] <- erp
+        if(!quiet) message("Replaced ", sum(prices_below_erp), " benchmark price(s) below ERP (", erp, ") with ERP value.")
+      }
+    } else {
+      if(!quiet) message("No ERP provided - using raw historical prices for Olympic average calculation.")
+    }
+
+    # Calculate Olympic average (remove highest and lowest, average the rest)
+    sorted_prices <- sort(adjusted_prices)
+    olympic_average <- mean(sorted_prices[2:(length(sorted_prices)-1)])
+    if(!quiet) message("Using Olympic average of provided historical prices for benchmark price calculation.")
+    return(olympic_average)
+  }
+
+  data("fsaArcCoBenchmarks", envir = environment())
+
+  # filter on crop and marketing year
+  # note: arc-co average county benchmarks aren't available prior to 2014, so function defaults to 2014 for earlier years
+  arcco_data = fsaArcCoBenchmarks %>%
+    dplyr::filter(.data$crop == .env$crop,
+                  .data$program_year == ifelse(.env$program_year <= 2014, 2014, .env$program_year) )
+
+  # filter by crop_type if provided
+  if(!is.null(crop_type)){
+    arcco_data <- arcco_data %>%
+      dplyr::filter(.data$crop_type == .env$crop_type)
+  }
+
+  # filter by yield_type if provided
+  if(!is.null(yield_type)){
+    arcco_data <- arcco_data %>%
+      dplyr::filter(.data$yield_type == .env$yield_type)
+  }
+
+  # Determine column name based on benchmark_type
+  column_name <- ifelse(benchmark_type == "yield", "oa_bench_mark_yield", "oa_bench_mark_price")
+
+  # filter the data based on location input
+  if (!is.null(fips)) {
+    # Use fips if provided - clean and validate using clean_fips approach
+    fips_clean <- clean_fips(fips = fips)
+    arcco_data <- arcco_data %>% dplyr::filter(.data$fips == fips_clean)
+    if(!quiet) warning(paste("No ARC-CO", benchmark_type, "supplied. Using county average ARC-CO benchmark", benchmark_type, "for calculations."))
+  } else if (!is.null(state)) {
+    # Validate state input (accepts names, abbreviations, or fips codes)
+    state <- valid_state(state)
+
+    # Convert state abbreviation to full name if needed (since data has full names)
+    if (tolower(state) %in% tolower(datasets::state.abb)) {
+      # Convert abbreviation to full name
+      state_index <- which(tolower(datasets::state.abb) == tolower(state))
+      state_name <- datasets::state.name[state_index]
+    } else if (tolower(state) %in% tolower(datasets::state.name)) {
+      # State is already a full name
+      state_name <- state
+    } else if (nchar(state) <= 2 && suppressWarnings(!is.na(as.numeric(state)))) {
+      # State is a fips code - need to convert to state name
+      state_fips <- sprintf("%02d", as.numeric(state))
+      # Get state name from fips code
+      fips_to_state <- data.frame(
+        fips = usmap::fips(state = datasets::state.name),
+        name = datasets::state.name
+      )
+      state_match <- fips_to_state[fips_to_state$fips == state_fips, "name"]
+      if (length(state_match) == 0) {
+        stop("Invalid state fips code: ", state)
+      }
+      state_name <- state_match[1]
+    } else {
+      stop("Invalid state input: ", state)
+    }
+
+    if (!is.null(county)) {
+      # Both state and county provided - filter by state name and county
+      arcco_data <- arcco_data %>% dplyr::filter(.data$state == state_name, .data$county == county)
+    } else {
+      # Only state provided - filter by state name and average
+      arcco_data <- arcco_data %>% dplyr::filter(.data$state == state_name) %>%
+        summarize(!!column_name := mean(.data[[column_name]], na.rm = TRUE))
+      if(!quiet) warning(paste("No county supplied. Using state average ARC-CO benchmark", benchmark_type, "for calculations."))
+    }
+  } else {
+    # No location filtering - use national average
+    if(!quiet) warning(paste("No location parameters supplied. Using national average ARC-CO benchmark", benchmark_type, "for calculations."))
+    arcco_data <- arcco_data %>%
+      summarize(!!column_name := mean(.data[[column_name]], na.rm = TRUE))  # Average for national
+  }
+
+  # Check if we have multiple values and need to warn about averaging across types
+  if(nrow(arcco_data) > 1 && column_name %in% names(arcco_data)){
+    if(is.null(crop_type) && is.null(yield_type)){
+      if(!quiet) warning(paste0("No crop type or yield type supplied, taking the average ARC-CO benchmark ", benchmark_type, " across all types for ", crop))
+    } else if(is.null(crop_type)){
+      if(!quiet) warning(paste0("No crop type supplied, taking the average ARC-CO benchmark ", benchmark_type, " across all crop types for ", crop))
+    } else if(is.null(yield_type)){
+      if(!quiet) warning(paste0("No yield type supplied, taking the average ARC-CO benchmark ", benchmark_type, " across all yield types for ", crop))
+    } else {
+      if(!quiet) warning(paste0("Multiple ", benchmark_type, " values identified, taking the average ARC-CO benchmark ", benchmark_type, " for ", crop))
+    }
+    # Take the average when multiple rows exist
+    arcco_data <- arcco_data %>%
+      summarize(!!column_name := mean(.data[[column_name]], na.rm = TRUE))
+  }
+
+  # For benchmark price calculations using FSA data, apply ERP adjustment if needed
+  if(benchmark_type == "price" && is.null(historical_prices)) {
+    benchmark_price <- arcco_data[[column_name]]
+
+    # Skip ERP adjustment if benchmark price is missing
+    if(is.null(benchmark_price) || length(benchmark_price) == 0 || is.na(benchmark_price)) {
+      return(arcco_data[[column_name]])
+    }
+
+    # Look up ERP if not provided
+    if(is.null(erp)) {
+      # Define marketing year based off of program year
+      marketing_year <- paste0(program_year, "-", program_year + 1)
+
+      # Look up ERP using same logic as calc_arcco_payment
+      tryCatch({
+        data("fsaEffectiveRefPrices", envir = environment())
+
+        if(program_year >= 2019){
+          # First try the exact marketing year
+          erp_data = fsaEffectiveRefPrices %>%
+            dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$marketing_year)
+
+          # If no data found for marketing year, fall back to most recent available year for this crop
+          if(nrow(erp_data) == 0) {
+            available_years <- fsaEffectiveRefPrices %>%
+              dplyr::filter(.data$crop == .env$crop) %>%
+              pull(.data$program_year)
+
+            if(length(available_years) > 0) {
+              most_recent_year <- max(available_years)
+              most_recent_marketing_year <- paste0(most_recent_year, "-", most_recent_year + 1)
+              if(!quiet) warning(paste0("No effective reference price found for ", crop, " in ", marketing_year, ". Using most recent available year: ", most_recent_marketing_year))
+
+              erp_data = fsaEffectiveRefPrices %>%
+                dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$most_recent_marketing_year)
+            }
+          }
+
+          if(!is.null(crop_type)){
+            erp_data <- erp_data %>%
+              dplyr::filter(.data$crop_type == .env$crop_type)
+          }
+
+          erp_values <- erp_data %>% pull(effective_reference_price)
+
+          if(length(erp_values) > 1){
+            if(!quiet) warning(paste0("No crop type supplied, taking the average effective reference price across all crop types for ", crop))
+            erp <- mean(erp_values, na.rm = TRUE)
+          } else if(length(erp_values) == 1) {
+            erp <- erp_values[1]
+          }
+        } else {
+          # For program years before 2019, look up SRP as fallback
+          data("fsaEffectiveRefPrices", envir = environment())
+          srp_data = fsaEffectiveRefPrices %>%
+            dplyr::filter(.data$crop == .env$crop, .data$program_year == 2019)
+
+          if(!is.null(crop_type)){
+            srp_data <- srp_data %>%
+              dplyr::filter(.data$crop_type == .env$crop_type)
+          }
+
+          srp_values <- srp_data %>% pull(statutory_reference_price)
+          if(length(srp_values) > 0) {
+            erp <- ifelse(length(srp_values) > 1, mean(srp_values, na.rm = TRUE), srp_values[1])
+          }
+        }
+      }, error = function(e) {
+        if(!quiet) warning("Could not look up ERP for benchmark price adjustment: ", e$message)
+      })
+    }
+
+    # Apply ERP adjustment if ERP was found
+    if(!is.null(erp) && !is.na(erp) && !is.na(benchmark_price) && benchmark_price < erp) {
+      if(!quiet) message("Benchmark price (", benchmark_price, ") below ERP (", erp, "). Using ERP value.")
+      return(erp)
+    }
+  }
+
+  return(arcco_data[[column_name]])
+}
+
+#' Get ARC-CO Actual Revenue
+#'
+#' This internal helper function calculates ARC-CO actual revenue by retrieving actual yield
+#' from the fsaArcCoBenchmarks dataset and multiplying it by the higher of MYA price or
+#' national marketing loan rate (NMLR).
+#'
+#' @param crop Character. The crop name to filter for (e.g., "corn", "soybeans").
+#' @param program_year Numeric. The program year to filter for (e.g., 2024).
+#' @param mya_price Numeric. The Marketing Year Average price.
+#' @param nmlr Numeric. The national marketing loan rate.
+#' @param crop_type Character, optional. The crop type to filter for (e.g., "long grain", "large").
+#' @param yield_type Character, optional. The yield type to filter for from the yield_type column.
+#' @param state Character, optional. State identifier that can be:
+#'   \\itemize{
+#'     \\item State abbreviation (e.g., "IA", "IL")
+#'     \\item Full state name (e.g., "Iowa", "Illinois")
+#'     \\item State FIPS code (e.g., "19", "17")
+#'   }
+#' @param county Character, optional. County name (requires state to also be specified).
+#' @param fips Character, optional. 5-digit FIPS code for specific county-level data.
+#' @param quiet Logical. If TRUE, suppresses warning messages (default: FALSE).
+#'
+#' @return Numeric. The calculated ARC-CO actual revenue (actual_yield × max(mya_price, nmlr)).
+#'
+#' @details
+#' The function follows this calculation:
+#' \\enumerate{
+#'   \\item Retrieves actual_yield from fsaArcCoBenchmarks dataset
+#'   \\item If MYA price >= NMLR: revenue = actual_yield × mya_price
+#'   \\item If MYA price < NMLR: revenue = actual_yield × nmlr
+#' }
+#'
+#' Location filtering follows the same priority order as other ARC-CO functions.
+#'
+#' @examples
+#' \dontrun{
+#' # County-specific actual revenue
+#' get_arcco_actual_revenue("corn", 2024, mya_price = 4.50, nmlr = 4.30, fips = "19001")
+#'
+#' # State average with crop and yield types
+#' get_arcco_actual_revenue("rice", 2024, mya_price = 15.20, nmlr = 14.50,
+#'                          crop_type = "long grain", yield_type = "irrigated", state = "IA")
+#' }
+#'
+#' @importFrom utils data
+#' @keywords internal
+get_arcco_actual_revenue <- function(crop, program_year, mya_price, nmlr, crop_type = NULL, yield_type = NULL, state = NULL, county = NULL, fips = NULL, quiet = FALSE) {
+  # Validate inputs
+  if(is.null(mya_price) || !is.numeric(mya_price)) {
+    stop("mya_price must be a numeric value")
+  }
+  if(is.null(nmlr) || !is.numeric(nmlr)) {
+    stop("nmlr must be a numeric value")
+  }
+
+  data("fsaArcCoBenchmarks", envir = environment())
+
+  # filter on crop and marketing year
+  arcco_data = fsaArcCoBenchmarks %>%
+    dplyr::filter(.data$crop == .env$crop,
+                  .data$program_year == ifelse(.env$program_year <= 2014, 2014, .env$program_year) )
+
+  # filter by crop_type if provided
+  if(!is.null(crop_type)){
+    arcco_data <- arcco_data %>%
+      dplyr::filter(.data$crop_type == .env$crop_type)
+  }
+
+  # filter by yield_type if provided
+  if(!is.null(yield_type)){
+    arcco_data <- arcco_data %>%
+      dplyr::filter(.data$yield_type == .env$yield_type)
+  }
+
+  # filter the data based on location input
+  if (!is.null(fips)) {
+    # Use fips if provided - clean and validate using clean_fips approach
+    fips_clean <- clean_fips(fips = fips)
+    arcco_data <- arcco_data %>% dplyr::filter(.data$fips == fips_clean)
+    if(!quiet) warning("No actual yield supplied. Using county actual yield for ARC-CO revenue calculations.")
+  } else if (!is.null(state)) {
+    # Validate state input (accepts names, abbreviations, or fips codes)
+    state <- valid_state(state)
+
+    # Convert state abbreviation to full name if needed (since data has full names)
+    if (tolower(state) %in% tolower(datasets::state.abb)) {
+      # Convert abbreviation to full name
+      state_index <- which(tolower(datasets::state.abb) == tolower(state))
+      state_name <- datasets::state.name[state_index]
+    } else if (tolower(state) %in% tolower(datasets::state.name)) {
+      # State is already a full name
+      state_name <- state
+    } else if (nchar(state) <= 2 && suppressWarnings(!is.na(as.numeric(state)))) {
+      # State is a fips code - need to convert to state name
+      state_fips <- sprintf("%02d", as.numeric(state))
+      # Get state name from fips code
+      fips_to_state <- data.frame(
+        fips = usmap::fips(state = datasets::state.name),
+        name = datasets::state.name
+      )
+      state_match <- fips_to_state[fips_to_state$fips == state_fips, "name"]
+      if (length(state_match) == 0) {
+        stop("Invalid state fips code: ", state)
+      }
+      state_name <- state_match[1]
+    } else {
+      stop("Invalid state input: ", state)
+    }
+
+    if (!is.null(county)) {
+      # Both state and county provided - filter by state name and county
+      arcco_data <- arcco_data %>% dplyr::filter(.data$state == state_name, .data$county == county)
+    } else {
+      # Only state provided - filter by state name and average
+      arcco_data <- arcco_data %>% dplyr::filter(.data$state == state_name) %>%
+        summarize(actual_yield = mean(.data$actual_yield, na.rm = TRUE))
+      if(!quiet) warning("No county supplied. Using state average actual yield for ARC-CO revenue calculations.")
+    }
+  } else {
+    # No location filtering - use national average
+    if(!quiet) warning("No location parameters supplied. Using national average actual yield for ARC-CO revenue calculations.")
+    arcco_data <- arcco_data %>%
+      summarize(actual_yield = mean(.data$actual_yield, na.rm = TRUE))
+  }
+
+  # Check if we have multiple values and need to warn about averaging across types
+  if(nrow(arcco_data) > 1 && "actual_yield" %in% names(arcco_data)){
+    if(is.null(crop_type) && is.null(yield_type)){
+      if(!quiet) warning(paste0("No crop type or yield type supplied, taking the average actual yield across all types for ", crop))
+    } else if(is.null(crop_type)){
+      if(!quiet) warning(paste0("No crop type supplied, taking the average actual yield across all crop types for ", crop))
+    } else if(is.null(yield_type)){
+      if(!quiet) warning(paste0("No yield type supplied, taking the average actual yield across all yield types for ", crop))
+    } else {
+      if(!quiet) warning(paste0("Multiple actual yield values identified, taking the average actual yield for ", crop))
+    }
+    # Take the average when multiple rows exist
+    arcco_data <- arcco_data %>%
+      summarize(actual_yield = mean(.data$actual_yield, na.rm = TRUE))
+  }
+
+  # Get the actual yield and ensure it's numeric
+  actual_yield <- as.numeric(arcco_data$actual_yield)
+
+  # Calculate revenue: actual_yield × max(mya_price, nmlr)
+  price_to_use <- ifelse(mya_price >= nmlr, mya_price, nmlr)
+  actual_revenue <- actual_yield * price_to_use
+
+  return(actual_revenue)
+}
+
 #' Calculate Effective Reference Price (Internal Function)
 #'
 #' This internal helper function calculates the effective reference price (ERP) using
@@ -166,6 +635,9 @@ calc_effective_reference_price <- function(mya_prices, srp) {
   }
   if(is.null(srp) || !is.numeric(srp)) {
     stop("Statutory reference price (srp) must be a numeric value")
+  }
+  if(any(is.na(mya_prices))) {
+    stop("MYA prices cannot contain NA values. All 5 historic MYA prices must be numeric.")
   }
 
   # Calculate Olympic average (remove highest and lowest, average the rest)
@@ -241,6 +713,7 @@ valid_state <- function(state) {
 #' @keywords internal
 #' @noRd
 #' @import piggyback
+#' @importFrom cli cli_inform
 get_cached_rds <- function(name,
                            repo = "dylan-turner25/rfsa",
                            tag  = NULL) {
@@ -249,6 +722,13 @@ get_cached_rds <- function(name,
 
   dest_file <- file.path(dest_dir, name)
   if (!file.exists(dest_file)) {
+    # Only show CLI message if piggyback is not verbose
+    show_cli_message <- !isTRUE(getOption("piggyback.verbose", FALSE))
+
+    if (show_cli_message) {
+      cli::cli_inform("Downloading {.file {name}} from GitHub...")
+    }
+
     # download from the Release
    piggyback::pb_download(
       file     = name,
@@ -256,6 +736,10 @@ get_cached_rds <- function(name,
       tag      = tag,
       dest = dest_dir
     )
+
+    if (show_cli_message) {
+      cli::cli_inform("{.file {name}} downloaded successfully")
+    }
   }
   readRDS(dest_file)
 }

@@ -13,12 +13,14 @@
 #' @param program_year Numeric. The program year for the PLC calculation (e.g., 2024).
 #' @param base_acres Numeric, optional. The number of base acres enrolled in the program.
 #'   If NULL, defaults to 1 acre with a warning.
-#' @param mya_price Numeric or List, optional. The Marketing Year Average price.
-#'   Can be a single numeric value or a list with 'years' and 'price' vectors for
-#'   custom ERP calculation. If NULL, uses FSA data.
+#' @param mya_price Numeric, optional. The Marketing Year Average price for the current year.
+#'   If NULL, uses FSA data.
+#' @param historic_mya_prices Numeric vector, optional. A vector of 5 historic MYA prices
+#'   for ERP calculation. If provided, ERP will be calculated using these values instead
+#'   of looking up FSA data. Must contain exactly 5 numeric values.
 #' @param srp Numeric, optional. The statutory reference price. If NULL, uses FSA data.
 #' @param erp Numeric, optional. The effective reference price. If NULL, uses FSA data
-#'   or calculates from provided MYA prices and SRP.
+#'   or calculates from provided historic_mya_prices and SRP.
 #' @param always_use_erp Logical. If TRUE, uses ERP even for program years <= 2019.
 #'   If FALSE (default), uses SRP for program years <= 2019.
 #' @param nmlr Numeric, optional. The national marketing loan rate. If NULL, uses FSA data.
@@ -80,9 +82,13 @@
 #' calc_plc_payment(crop = "cotton", program_year = 2024, base_acres = 50,
 #'                  cov_lvl = 0.88)
 #'
-#' # Provide custom prices
+#' # Provide custom current MYA price and ERP
 #' calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100,
 #'                  mya_price = 4.50, erp = 4.30)
+#'
+#' # Calculate ERP from historic MYA prices
+#' calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100,
+#'                  mya_price = 4.50, historic_mya_prices = c(4.20, 4.30, 4.40, 4.10, 4.35))
 #' }
 #'
 #' @seealso
@@ -96,6 +102,7 @@ calc_plc_payment <- function(crop,
                              program_year,
                              base_acres = NULL,
                              mya_price = NULL,
+                             historic_mya_prices = NULL,
                              srp = NULL,
                              erp = NULL,
                              always_use_erp = FALSE,
@@ -116,35 +123,18 @@ calc_plc_payment <- function(crop,
   # define marketing year based off of program year
   marketing_year <- paste0(program_year, "-", program_year + 1)
 
-  # before the unsupplied data is looked up, decide
-  # if erp needs to be calculated based on if mya_price and srp are supplied
-  calculate_erp = F
-  if(is.null(erp) && !is.null(mya_price)){
-
-    # check to make sure mya_price is a list with years and prices
-    if(is.list(mya_price) || all(c("years", "price") %in% names(mya_price))){
-
-      # make sure the years supplied contains at least the 5 preceeding years of program year, if there are more years, filter just to the preceeding 5
-      if(length(mya_price$years) >= 5){
-        # identify the 5 years preceding the program year
-        target_years <- (program_year - 5):(program_year - 1)
-
-        # find which indices in mya_price correspond to these years
-        year_indices <- which(mya_price$years %in% target_years)
-
-        # filter to just those years and corresponding prices
-        mya_price$years <- mya_price$years[year_indices]
-        mya_price$price <- mya_price$price[year_indices]
-
-        # check if we have all 5 years
-        if(length(mya_price$years) == 5) {
-          calculate_erp <- TRUE
-          if(!quiet) message("No effective reference price supplied, calculating based on supplied MYA price and statutory reference price.")
-        } else if(length(mya_price$years) < 5) {
-          if(!quiet) warning("Not enough MYA price data supplied to calculate the Effective Reference Price. Defaulting to FSA's effective reference price for the crop and marketing year.")
-        }
-      }
+  # check if ERP should be calculated from historic MYA prices
+  calculate_erp <- FALSE
+  if(is.null(erp) && !is.null(historic_mya_prices)){
+    # Validate historic_mya_prices input
+    if(length(historic_mya_prices) != 5) {
+      stop("historic_mya_prices must contain exactly 5 values")
     }
+    if(!is.numeric(historic_mya_prices)) {
+      stop("historic_mya_prices must be numeric")
+    }
+    calculate_erp <- TRUE
+    if(!quiet) message("No effective reference price supplied, calculating based on provided historic MYA prices and statutory reference price.")
   }
 
 
@@ -200,8 +190,8 @@ calc_plc_payment <- function(crop,
   if(is.null(erp)){
 
     if(calculate_erp){
-      # Calculate ERP using helper function - mya_price is still a list here since calculate_erp is only TRUE when user supplies it
-      erp <- calc_effective_reference_price(mya_prices = mya_price$price, srp = srp)
+      # Calculate ERP using helper function with historic MYA prices
+      erp <- calc_effective_reference_price(mya_prices = historic_mya_prices, srp = srp)
     } else {
       data("fsaEffectiveRefPrices", envir = environment())
 
@@ -229,30 +219,6 @@ calc_plc_payment <- function(crop,
       }
 
 
-    }
-
-    # Handle case where user supplied custom MYA price data as a list with multiple years
-    if(is.list(mya_price) && all(c("years", "price") %in% names(mya_price)) && length(mya_price$price) > 1){
-      mya_price <- mya_price$price[which(mya_price$years == program_year)]
-      if(length(mya_price) == 0){
-        if(!quiet) warning("No MYA price found for the specified program year. Using MYA price supplied by FSA.")
-        data("fsaMyaPrice", envir = environment())
-
-        mya_price = fsaMyaPrice %>%
-          dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$marketing_year)
-
-        if(!is.null(crop_type)){
-          mya_price <- mya_price %>%
-            dplyr::filter(.data$crop_type == .env$crop_type)
-        }
-
-        mya_price <- mya_price %>% pull(current_mya_price)
-
-        if(length(mya_price) > 1){
-          if(!quiet) warning(paste0("No crop type supplied, taking the average MYA price across all crop types for ", crop))
-          mya_price <- mean(mya_price, na.rm = TRUE)
-        }
-      }
     }
 
   }

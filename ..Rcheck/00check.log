@@ -6,7 +6,7 @@
     GNU Fortran (Homebrew GCC 15.1.0) 15.1.0
 * running under: macOS Sequoia 15.5
 * using session charset: UTF-8
-* using options ‘--no-examples --no-manual --no-vignettes’
+* using option ‘--no-manual’
 * checking for file ‘./DESCRIPTION’ ... OK
 * this is package ‘rfsa’ version ‘0.0.0.9000’
 * package encoding: UTF-8

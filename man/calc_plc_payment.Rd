@@ -10,6 +10,7 @@ calc_plc_payment(
   program_year,
   base_acres = NULL,
   mya_price = NULL,
+  historic_mya_prices = NULL,
   srp = NULL,
   erp = NULL,
   always_use_erp = FALSE,
@@ -35,14 +36,17 @@ multiple crop types exist, the function will average across all types with warni
 \item{base_acres}{Numeric, optional. The number of base acres enrolled in the program.
 If NULL, defaults to 1 acre with a warning.}
 
-\item{mya_price}{Numeric or List, optional. The Marketing Year Average price.
-Can be a single numeric value or a list with 'years' and 'price' vectors for
-custom ERP calculation. If NULL, uses FSA data.}
+\item{mya_price}{Numeric, optional. The Marketing Year Average price for the current year.
+If NULL, uses FSA data.}
+
+\item{historic_mya_prices}{Numeric vector, optional. A vector of 5 historic MYA prices
+for ERP calculation. If provided, ERP will be calculated using these values instead
+of looking up FSA data. Must contain exactly 5 numeric values.}
 
 \item{srp}{Numeric, optional. The statutory reference price. If NULL, uses FSA data.}
 
 \item{erp}{Numeric, optional. The effective reference price. If NULL, uses FSA data
-or calculates from provided MYA prices and SRP.}
+or calculates from provided historic_mya_prices and SRP.}
 
 \item{always_use_erp}{Logical. If TRUE, uses ERP even for program years <= 2019.
 If FALSE (default), uses SRP for program years <= 2019.}
@@ -118,9 +122,13 @@ calc_plc_payment(crop = "wheat", program_year = 2024, base_acres = 75,
 calc_plc_payment(crop = "cotton", program_year = 2024, base_acres = 50,
                  cov_lvl = 0.88)
 
-# Provide custom prices
+# Provide custom current MYA price and ERP
 calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100,
                  mya_price = 4.50, erp = 4.30)
+
+# Calculate ERP from historic MYA prices
+calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100,
+                 mya_price = 4.50, historic_mya_prices = c(4.20, 4.30, 4.40, 4.10, 4.35))
 }
 
 }

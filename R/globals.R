@@ -7,6 +7,7 @@ utils::globalVariables(c(
   "fsaEffectiveRefPrices", 
   "fsaPlcPaymentRate",
   "fsaPlcYields",
+  "fsaArcCoBenchmarks",
   
   # Column names from datasets
   "current_mya_price",
@@ -14,6 +15,10 @@ utils::globalVariables(c(
   "effective_reference_price", 
   "current_national_loan_rate",
   "plc_yield",
+  "oa_bench_mark_yield",
+  "oa_bench_mark_price",
+  "actual_yield",
+  "yield_type",
   
   # dplyr/tidyverse variables
   ".data",
