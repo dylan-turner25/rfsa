@@ -283,7 +283,7 @@ get_arcco_benchmarks <- function(crop, program_year, benchmark_type = "yield", c
                   .data$program_year == ifelse(.env$program_year <= 2014, 2014, .env$program_year) )
 
   # filter by crop_type if provided
-  if(!is.null(crop_type)){
+  if(!is.null(crop_type) & !is.na(crop_type)){
     arcco_data <- arcco_data %>%
       dplyr::filter(.data$crop_type == .env$crop_type)
   }
@@ -510,7 +510,7 @@ get_arcco_actual_revenue <- function(crop, program_year, mya_price, nmlr, crop_t
                   .data$program_year == ifelse(.env$program_year <= 2014, 2014, .env$program_year) )
 
   # filter by crop_type if provided
-  if(!is.null(crop_type)){
+  if(!is.null(crop_type) & !is.na(crop_type)){
     arcco_data <- arcco_data %>%
       dplyr::filter(.data$crop_type == .env$crop_type)
   }

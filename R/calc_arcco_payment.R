@@ -19,6 +19,8 @@ state = NULL
 county = NULL
 fips = 1001
 quiet = FALSE
+
+
 calc_arcco_payment <- function(crop,
                              crop_type = NULL,
                              program_year,
@@ -101,11 +103,11 @@ calc_arcco_payment <- function(crop,
       available_years <- fsaEffectiveRefPrices %>%
         dplyr::filter(.data$crop == .env$crop) %>%
         pull(.data$program_year)
-      
+
       if(length(available_years) > 0) {
         most_recent_year <- max(available_years)
         if(!quiet) warning(paste0("No statutory reference price found for ", crop, " in ", target_year, ". Using most recent available year: ", most_recent_year))
-        
+
         srp = fsaEffectiveRefPrices %>%
           dplyr::filter(.data$crop == .env$crop, .data$program_year == .env$most_recent_year)
       }
@@ -147,12 +149,12 @@ calc_arcco_payment <- function(crop,
           available_years <- fsaEffectiveRefPrices %>%
             dplyr::filter(.data$crop == .env$crop) %>%
             pull(.data$program_year)
-          
+
           if(length(available_years) > 0) {
             most_recent_year <- max(available_years)
             most_recent_marketing_year <- paste0(most_recent_year, "-", most_recent_year + 1)
             if(!quiet) warning(paste0("No effective reference price found for ", crop, " in ", marketing_year, ". Using most recent available year: ", most_recent_marketing_year))
-            
+
             erp = fsaEffectiveRefPrices %>%
               dplyr::filter(.data$crop == .env$crop, .data$marketing_year == .env$most_recent_marketing_year)
           }

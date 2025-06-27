@@ -1,4 +1,9 @@
 
+library(dplyr)
+library(tictoc)
+
+devtools::load_all()
+
 data("fsaArcCoBenchmarks")
 data("fsaMyaPrice")
 data("fsaPlcYields")
@@ -47,7 +52,7 @@ erp   <- distinct(fsaEffectiveRefPrices %>%
                           marketing_year, program_year))
 data <- left_join(data, erp)
 
-# add calculated effective reference prices
+# add calculated effective reference prices (as a check)
 data$erp_calc <- unlist(lapply(1:nrow(data), function(i) {
   tryCatch({
     # Extract MYA prices for this row
@@ -57,10 +62,6 @@ data$erp_calc <- unlist(lapply(1:nrow(data), function(i) {
                     data$final_mya_price_lag5[i],
                     data$final_mya_price_lag6[i])
 
-    # Skip if missing data
-    if(any(is.na(mya_prices)) || is.na(data$statutory_reference_price[i])) {
-      return(NA)
-    }
 
     # Calculate ERP
     rfsa:::calc_effective_reference_price(mya_prices = mya_prices,
@@ -74,9 +75,7 @@ data$erp_calc <- unlist(lapply(1:nrow(data), function(i) {
 data$erp_calc_check <- as.numeric(data$erp_calc == data$effective_reference_price)
 summary(data$erp_calc_check)
 
-# add calculated benchmark revenues (vectorized with lapply)
-cat("Calculating Olympic average benchmark prices for", nrow(data), "records...\n")
-
+# add calculated benchmark price (vectorized with lapply)
 data$oa_bench_mark_price_calc <- unlist(lapply(1:nrow(data), function(i) {
   tryCatch({
     # Extract historical benchmark prices for this row
@@ -86,13 +85,9 @@ data$oa_bench_mark_price_calc <- unlist(lapply(1:nrow(data), function(i) {
                           data$annual_benchmark_price_lag4[i],
                           data$annual_benchmark_price_lag5[i])
 
-    # Skip if missing data
-    if(any(is.na(historical_prices)) || is.na(data$crop[i]) || is.na(data$program_year[i])) {
-      return(NA)
-    }
 
     # Calculate Olympic average benchmark price
-    result <- get_arcco_benchmarks(crop = data$crop[i],
+    result <- rfsa:::get_arcco_benchmarks(crop = data$crop[i],
                                   program_year = data$program_year[i],
                                   benchmark_type = "price",
                                   erp = max(data$effective_reference_price[i],data$statutory_reference_price[i], na.rm = T),
@@ -113,14 +108,22 @@ missing_table <- table(data$program_year, is.na(data$oa_bench_mark_price_calc), 
 colnames(missing_table) <- c("Complete", "Missing")
 print(missing_table)
 
-# accuracy check
+# accuracy check on benchmark price
 data$oa_bench_mark_price_check <- as.numeric(data$oa_bench_mark_price_calc == data$oa_bench_mark_price)
 summary(data$oa_bench_mark_price_check)
 
 
+
+# aggregate to the state year level
+data <- data %>%
+  group_by(state_name, crop, yield_type, program_year,crop_type, rma_type_code, rma_crop_code, marketing_year) %>%
+  select(-fips, -contains("calc"),-contains("check"), -county_name) %>%
+  summarise_all(funs(mean(., na.rm = TRUE)))
+
+
 # calculate plc payment per base acres (vectorized with lapply)
 cat("Calculating PLC payments for", nrow(data), "records...\n")
-
+tic()
 data$plc_payment <- unlist(lapply(1:nrow(data), function(i) {
   tryCatch({
     # Extract historic MYA prices for this row
@@ -133,12 +136,12 @@ data$plc_payment <- unlist(lapply(1:nrow(data), function(i) {
 
 
     # Calculate PLC payment
-    result <- calc_plc_payment(crop = data$crop[i],
+    result <- rfsa::calc_plc_payment(crop = data$crop[i],
                               crop_type = data$crop_type[i],
                               program_year = data$program_year[i],
                               base_acres = 1,
                               mya_price = data$current_mya_price[i],
-                              historic_mya_prices = historic_mya_prices,
+                              historic_mya_prices = historical_prices,
                               srp = data$statutory_reference_price[i],
                               erp = NULL,
                               always_use_erp = FALSE,
@@ -154,6 +157,7 @@ data$plc_payment <- unlist(lapply(1:nrow(data), function(i) {
     return(NA)
   })
 }))
+toc()
 
 # Tabulate missing values by program year
 missing_plc_table <- table(data$program_year, is.na(data$plc_payment), useNA = "ifany")
@@ -161,37 +165,43 @@ colnames(missing_plc_table) <- c("Complete", "Missing")
 print(missing_plc_table)
 
 # calculate arc-co payment per base acres (vectorized with lapply)
-# cat("Calculating ARC-CO payments for", nrow(data), "records...\n")
-#
-# data$arcco_payment <- unlist(lapply(1:nrow(data), function(i) {
-#   tryCatch({
-#     # Extract historic MYA prices for this row
-#     historical_prices <- c(data$annual_benchmark_price_lag1[i],
-#                            data$annual_benchmark_price_lag2[i],
-#                            data$annual_benchmark_price_lag3[i],
-#                            data$annual_benchmark_price_lag4[i],
-#                            data$annual_benchmark_price_lag5[i])
-#
-#
-#     # Calculate ARC-CO payment
-#     result <- calc_arcco_payment(crop = data$crop[i],
-#                                 crop_type = data$crop_type[i],
-#                                 program_year = data$program_year[i],
-#                                 base_acres = 1,
-#                                 mya_price = data$current_mya_price[i],
-#                                 srp = data$statutory_reference_price[i],
-#                                 erp = NULL,
-#                                 nmlr = data$current_national_loan_rate[i],
-#                                 historic_mya_prices = historical_prices,
-#                                 fips = data$fips[i],
-#                                 quiet = TRUE)
-#
-#     return(result)
-#   }, error = function(e) {
-#     # Return NA on any error
-#     return(NA)
-#   })
-# }))
+cat("Calculating ARC-CO payments for", nrow(data), "records...\n")
+tic()
+data$arcco_payment <- unlist(lapply(1:nrow(data), function(i) {
+  tryCatch({
+    # Extract historic MYA prices for this row
+    historical_prices <- c(data$annual_benchmark_price_lag1[i],
+                           data$annual_benchmark_price_lag2[i],
+                           data$annual_benchmark_price_lag3[i],
+                           data$annual_benchmark_price_lag4[i],
+                           data$annual_benchmark_price_lag5[i])
+
+
+    # Calculate ARC-CO payment
+    result <- calc_arcco_payment(crop = data$crop[i],
+                                crop_type = data$crop_type[i],
+                                program_year = data$program_year[i],
+                                base_acres = 1,
+                                mya_price = data$current_mya_price[i],
+                                srp = data$statutory_reference_price[i],
+                                oa_benchmark_price = 5,
+                                oa_benchmark_yield = data$oa_bench_mark_yield[i],
+                                erp = NULL,
+                                nmlr = data$current_national_loan_rate[i],
+                                historic_mya_prices = historical_prices,
+                                fips = data$fips[i],
+                                quiet = TRUE)
+
+    return(result)
+  }, error = function(e) {
+    # Return NA on any error
+    return(NA)
+  })
+}))
+toc()
+
+
+
 #
 # # Tabulate missing values by program year for ARC-CO
 # missing_arcco_table <- table(data$program_year, is.na(data$arcco_payment), useNA = "ifany")

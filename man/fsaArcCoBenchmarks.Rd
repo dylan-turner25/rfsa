@@ -12,6 +12,7 @@ A data frame with the following variables:
 \item{arc_co_payment_rate}{Final ARC-CO payment rate per unit}
 \item{benchmark_revenue}{Benchmark revenue calculated using Olympic average yields and prices}
 \item{county_name}{Name of the county}
+\item{county_yield_type}{Type of county yield used (e.g., "county yield or 70\% of T-yield", "trend adjusted county yield or 80\% of T-yield")}
 \item{crop}{Name of the commodity}
 \item{crop_type}{Crop subtype if applicable (e.g., "long grain")}
 \item{fips}{5-digit FIPS code for county identification}
