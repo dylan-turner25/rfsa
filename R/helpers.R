@@ -493,11 +493,6 @@ get_arcco_benchmarks <- function(crop, program_year, benchmark_type = "yield", c
 #'
 #' @importFrom utils data
 #' @keywords internal
-crop = "corn"
-program_year = 2024
-mya_price = 5.00
-nmlr = 4.50
-quiet = FALSE
 get_arcco_actual_revenue <- function(crop, program_year, mya_price, nmlr, crop_type = NULL, yield_type = NULL, state = NULL, county = NULL, fips = NULL, quiet = FALSE) {
   # Validate inputs
   if(is.null(mya_price) || !is.numeric(mya_price)) {
