@@ -283,7 +283,7 @@ get_arcco_benchmarks <- function(crop, program_year, benchmark_type = "yield", c
                   .data$program_year == ifelse(.env$program_year <= 2014, 2014, .env$program_year) )
 
   # filter by crop_type if provided
-  if(!is.null(crop_type) & !is.na(crop_type)){
+  if(!is.null(crop_type) && length(crop_type) > 0 && !is.na(crop_type)){
     arcco_data <- arcco_data %>%
       dplyr::filter(.data$crop_type == .env$crop_type)
   }
@@ -507,10 +507,11 @@ get_arcco_actual_revenue <- function(crop, program_year, mya_price, nmlr, crop_t
   # filter on crop and marketing year
   arcco_data = fsaArcCoBenchmarks %>%
     dplyr::filter(.data$crop == .env$crop,
-                  .data$program_year == ifelse(.env$program_year <= 2014, 2014, .env$program_year) )
+                  .data$program_year == ifelse(.env$program_year <= 2014, 2014, .env$program_year),
+                  .data$actual_yield != "NaN", !is.na(.data$actual_yield))
 
   # filter by crop_type if provided
-  if(!is.null(crop_type) & !is.na(crop_type)){
+  if(!is.null(crop_type) && length(crop_type) > 0 && !is.na(crop_type)){
     arcco_data <- arcco_data %>%
       dplyr::filter(.data$crop_type == .env$crop_type)
   }
@@ -562,14 +563,14 @@ get_arcco_actual_revenue <- function(crop, program_year, mya_price, nmlr, crop_t
     } else {
       # Only state provided - filter by state name and average
       arcco_data <- arcco_data %>% dplyr::filter(.data$state == state_name) %>%
-        summarize(actual_yield = mean(.data$actual_yield, na.rm = TRUE))
+        summarize(actual_yield = mean(as.numeric(.data$actual_yield), na.rm = TRUE))
       if(!quiet) warning("No county supplied. Using state average actual yield for ARC-CO revenue calculations.")
     }
   } else {
     # No location filtering - use national average
     if(!quiet) warning("No location parameters supplied. Using national average actual yield for ARC-CO revenue calculations.")
     arcco_data <- arcco_data %>%
-      summarize(actual_yield = mean(.data$actual_yield, na.rm = TRUE))
+      summarize(actual_yield = mean(as.numeric(.data$actual_yield), na.rm = TRUE))
   }
 
   # Check if we have multiple values and need to warn about averaging across types
@@ -585,7 +586,7 @@ get_arcco_actual_revenue <- function(crop, program_year, mya_price, nmlr, crop_t
     }
     # Take the average when multiple rows exist
     arcco_data <- arcco_data %>%
-      summarize(actual_yield = mean(.data$actual_yield, na.rm = TRUE))
+      summarize(actual_yield = mean(as.numeric(.data$actual_yield), na.rm = TRUE))
   }
 
   # Get the actual yield and ensure it's numeric

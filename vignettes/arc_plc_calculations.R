@@ -290,13 +290,26 @@ original_payments <- sapply(1:10, function(i) {
 # colnames(missing_arcco_table) <- c("Complete", "Missing")
 # print(missing_arcco_table)
 
-calc_plc_payment(crop = "corn",
-                 program_year = 2024,
+data("fsaMyaPrice")
+data("fsaArcCoBenchmarks")
+
+crop = "corn"
+program_year = 2023
+srp =
+plc_historic_prices <- fsaMyaPrice %>%
+  filter(.data$crop == .env$crop,
+         .data$marketing_year == paste0(.env$program_year,"-",.env$program_year + 1)) %>%
+  select(contains("lag"))
+
+arc_historic_prices <- fsaMyaPrice
+
+calc_plc_payment(crop = crop,
+                 program_year = program_year,
                  srp = 5,
-                 historic_mya_prices = c(3,5,4,6,7))
+                 historic_mya_prices = plc_historic_prices)
 
 calc_arcco_payment(crop = "corn",
-                   program_year = 2024,
+                   program_year = program_year,
                    srp = 4,
-                   historic_mya_prices = c(3,5,6,5,7))
+                   historic_mya_prices = arc_historic_prices)
 
