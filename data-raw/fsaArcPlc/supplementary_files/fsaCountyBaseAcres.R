@@ -1,3 +1,15 @@
+# Load required packages and functions
+library(dplyr)
+library(readxl)
+library(janitor)
+library(stringr)
+library(purrr)
+library(fipio)
+library(usethis)
+
+# Source helper functions
+source("R/helpers.R")
+
 # list all files in the raw data files folder
 files <- list.files("./data-raw/fsaArcPlc/input_data/fsaCountyBaseAcres",
                     full.names = T)
@@ -36,7 +48,21 @@ for(y in 2021:2023){
   # clean names using janitor
   temp <- janitor::clean_names(temp)
 
-  names(temp) <- c("program_year","state","county","crop","base_acres")
+  # The actual column names after janitor::clean_names are different
+  # Based on the raw data: "Program Year", "Admin State", "Admin County", "Crop Base Name", "Crop Base Acres"
+  # After clean_names: "program_year", "admin_state", "admin_county", "crop_base_name", "crop_base_acres"
+  temp <- temp %>%
+    rename(
+      state = admin_state,
+      county = admin_county,
+      crop = crop_base_name,
+      base_acres = crop_base_acres
+    ) %>%
+    # Standardize case to match 2014-2015 data (ALL CAPS)
+    mutate(
+      state = str_to_upper(state),
+      county = str_to_upper(county)
+    )
 
   assign(paste0("data_", y), temp)
 
@@ -75,44 +101,73 @@ library(stringr)
 library(purrr)
 library(fipio)
 
+# Use usmap package for more reliable FIPS lookup
+library(usmap)
+
+# Create FIPS lookup using built-in county data
+fips_reference <- usmap::us_map(regions = "counties") %>%
+  select(fips, full, county) %>%
+  distinct() %>%
+  mutate(
+    state_name = str_to_upper(full),
+    county_name = str_to_upper(str_remove(county, " County| Parish| Borough| Census Area"))
+  ) %>%
+  select(state_name, county_name, fips)
+
 unique_fips <- county_base_acres %>%
   filter(!is.na(state)) %>%
   distinct(state, county) %>%
   mutate(
-    fips = pmap_chr(
-      list(state, county),
-      function(st, ct) {
-        # derive candidate names
-        parts <- str_split(ct, "-", simplify = TRUE)
-        variants <- unique(c(
-          ct,
-          parts[1],
-          str_remove_all(str_to_lower(parts[1]), "west|south|north|east"),
-          parts[2]
-        ))
-        variants <- variants[!is.na(variants) & variants != ""]
-        # attempt lookup and take first non-NA
-        out <- variants %>%
-          map_chr(~ as_fips(st, .x)) %>%
-          na.omit()
-        if (length(out)) return(out[1]) else return(NA_character_)
-      }
-    ),
-    # uppercase for consistency
-    state  = str_to_upper(state),
-    county = str_to_upper(county),
-    # manual overrides for known mismatches
+    # Standardize state and county names before lookup
+    state_clean = str_to_upper(str_trim(state)),
+    county_clean = str_to_upper(str_trim(county))
+  ) %>%
+  # Join with reference table
+  left_join(fips_reference, by = c("state_clean" = "state_name", "county_clean" = "county_name")) %>%
+  # For unmatched records, add manual fixes for common issues
+  mutate(
     fips = case_when(
-      state == "ILLINOIS" & county == "DEWITT" ~ "19045",
-      state == "MAINE"     & county %in% c("FORT KENT", "HOULTON") ~ "23003",
-      TRUE ~ fips
-    )
+      # Use matched FIPS if available
+      !is.na(fips) ~ fips,
+      # Manual overrides for known mismatches
+      state_clean == "ILLINOIS" & county_clean == "DEWITT" ~ "19045", 
+      state_clean == "MAINE" & county_clean %in% c("FORT KENT", "HOULTON") ~ "23003",
+      # Add more common county name variations
+      state_clean == "ALASKA" & county_clean == "ALEUTIANS EAST" ~ "02013",
+      state_clean == "ALASKA" & county_clean == "ALEUTIANS WEST" ~ "02016",
+      TRUE ~ fips  # Keep the original matched value or NA
+    ),
+    # Keep cleaned versions for consistency  
+    state = state_clean,
+    county = county_clean
   ) %>%
   select(state, county, fips) %>%
   distinct()
 
 # merge the fips codes back into the main data frame
-county_base_acres <- dplyr::left_join(county_base_acres, unique_fips)
+cat("Before merge - sample county_base_acres (2023):\n")
+print(head(county_base_acres[county_base_acres$program_year == 2023, c("state", "county")], 3))
+
+cat("Sample unique_fips:\n")
+print(head(unique_fips, 3))
+
+cat("Merging FIPS codes...\n")
+county_base_acres <- dplyr::left_join(county_base_acres, unique_fips, by = c("state", "county"))
+
+cat("After merge - sample county_base_acres (2023):\n")
+print(head(county_base_acres[county_base_acres$program_year == 2023, c("state", "county", "fips")], 3))
+
+# Check merge success
+merge_success <- county_base_acres %>%
+  filter(program_year %in% 2021:2023) %>%
+  summarise(
+    total_records = n(),
+    with_fips = sum(!is.na(fips)),
+    success_rate = round(100 * with_fips / total_records, 1)
+  )
+
+cat("Merge success for 2021-2023:\n")
+print(merge_success)
 
 # convert to a tibble before exporting
 fsaCountyBaseAcres <- dplyr::as_tibble(county_base_acres)

@@ -1,5 +1,5 @@
 
-library(dplyr)
+library(tidyverse)
 library(tictoc)
 
 devtools::load_all()
@@ -9,7 +9,8 @@ data("fsaMyaPrice")
 data("fsaPlcYields")
 data("fsaEffectiveRefPrices")
 data("fsaArcCoPrice")
-
+data("fsaCountyBaseAcres")
+data("fsaEnrolledCountyBaseAcres")
 
 # start with arc co benchmarks
 data <- fsaArcCoBenchmarks %>%
@@ -112,14 +113,91 @@ print(missing_table)
 data$oa_bench_mark_price_check <- as.numeric(data$oa_bench_mark_price_calc == data$oa_bench_mark_price)
 summary(data$oa_bench_mark_price_check)
 
+# # merge in total base acres (current year)
+# base <- fsaCountyBaseAcres %>%
+#   group_by(fips, program_year, crop, crop_type) %>%
+#   summarize(base_acres = sum(base_acres), .groups = "drop")
+#
+# data <- left_join(data, base)
+#
+# # merge in enrolled base acres (current year)
+# enrolled_base <- fsaEnrolledCountyBaseAcres %>%
+#   select(fips, program_year, crop, crop_type, contains("enrolled"))
+#
+# data <- left_join(data, enrolled_base)
+#
+# # create pivoted base acres by year (all years as columns)
+# # First check data quality
+# base_acres_summary <- fsaCountyBaseAcres %>%
+#   group_by(program_year) %>%
+#   summarise(
+#     total_records = n(),
+#     valid_fips = sum(!is.na(fips)),
+#     na_fips = sum(is.na(fips)),
+#     .groups = "drop"
+#   )
+#
+# cat("Base acres data quality by year:\n")
+# print(base_acres_summary)
+#
+# # Filter out records with missing FIPS before pivot
+# base_acres_wide <- fsaCountyBaseAcres %>%
+#   group_by(fips, program_year, crop, crop_type) %>%
+#   summarize(base_acres = sum(base_acres), .groups = "drop") %>%
+#   pivot_wider(
+#     names_from = program_year,
+#     values_from = base_acres,
+#     names_prefix = "base_acres_",
+#     values_fill = 0
+#   )
+#
+# data <- left_join(data, base_acres_wide)
+#
+# # Report on join success
+# cat("Base acres wide join summary:\n")
+# cat("Records in data:", nrow(data), "\n")
+# cat("Records with base_acres_2023 > 0:", sum(data$base_acres_2023 > 0, na.rm = TRUE), "\n")
+#
+# # create pivoted enrolled base acres by year (all years as columns)
+# # Check enrolled base data quality
+# enrolled_summary <- fsaEnrolledCountyBaseAcres %>%
+#   group_by(program_year) %>%
+#   summarise(
+#     total_records = n(),
+#     valid_fips = sum(!is.na(fips)),
+#     na_fips = sum(is.na(fips)),
+#     .groups = "drop"
+#   )
+#
+# cat("Enrolled base acres data quality by year:\n")
+# print(enrolled_summary)
+#
+# # Get enrolled columns and filter out missing FIPS
+# enrolled_cols <- fsaEnrolledCountyBaseAcres %>%
+#   select(contains("enrolled")) %>%
+#   colnames()
+#
+# enrolled_base_wide <- fsaEnrolledCountyBaseAcres %>%
+#   select(fips, program_year, crop, crop_type, all_of(enrolled_cols)) %>%
+#   pivot_wider(
+#     names_from = program_year,
+#     values_from = all_of(enrolled_cols),
+#     names_sep = "_",
+#     values_fill = list(.default = 0)
+#   )
+#
+# data <- left_join(data, enrolled_base_wide)
+
+
+
 
 
 # aggregate to the state year level
-data <- data %>%
-  group_by(state_name, crop, yield_type, program_year,crop_type, rma_type_code, rma_crop_code, marketing_year) %>%
-  select(-fips, -contains("calc"),-contains("check"), -county_name) %>%
-  summarise_all(funs(mean(., na.rm = TRUE)))
-
+# data <- data %>%
+#   group_by(state_name, crop, yield_type, program_year,crop_type, rma_type_code, rma_crop_code, marketing_year) %>%
+#   select(-fips, -contains("calc"),-contains("check"), -county_name) %>%
+#   summarise_all(funs(mean(., na.rm = TRUE)))
+#
 
 # calculate plc payment per base acres (vectorized with lapply)
 cat("Calculating PLC payments for", nrow(data), "records...\n")
@@ -159,46 +237,50 @@ data$plc_payment <- unlist(lapply(1:nrow(data), function(i) {
 }))
 toc()
 
+
+# average payment per acre by crop
+plc_payment_per_acre <- data %>%
+  group_by(program_year, crop, crop_type) %>%
+  summarise(plc_payment = mean(plc_payment, na.rm = T))
+
+
 # Tabulate missing values by program year
 missing_plc_table <- table(data$program_year, is.na(data$plc_payment), useNA = "ifany")
 colnames(missing_plc_table) <- c("Complete", "Missing")
 print(missing_plc_table)
 
-# calculate arc-co payment per base acres (vectorized with lapply)
-cat("Calculating ARC-CO payments for", nrow(data), "records...\n")
-tic()
-data$arcco_payment <- unlist(lapply(1:nrow(data), function(i) {
+
+
+
+# Calculate using original method for comparison
+original_payments <- sapply(1:10, function(i) {
   tryCatch({
-    # Extract historic MYA prices for this row
+
     historical_prices <- c(data$annual_benchmark_price_lag1[i],
-                           data$annual_benchmark_price_lag2[i],
-                           data$annual_benchmark_price_lag3[i],
-                           data$annual_benchmark_price_lag4[i],
-                           data$annual_benchmark_price_lag5[i])
+                          data$annual_benchmark_price_lag2[i],
+                          data$annual_benchmark_price_lag3[i],
+                          data$annual_benchmark_price_lag4[i],
+                          data$annual_benchmark_price_lag5[i])
+
+    calc_arcco_payment(crop = data$crop[i],
+                      crop_type = data$crop_type[i],
+                      program_year = data$program_year[i],
+                      base_acres = 1,
+                      mya_price = data$current_mya_price[i],
+                      srp = data$statutory_reference_price[i]*1,
+                      oa_benchmark_price = NULL,
+                      oa_benchmark_yield = data$oa_bench_mark_yield[i],
+                      erp = NULL,
+                      nmlr = data$current_national_loan_rate[i],
+                      historic_mya_prices = historical_prices,
+                      fips = data$fips[i],
+                      quiet = TRUE)
+
+  }, error = function(e) NA)
+})
 
 
-    # Calculate ARC-CO payment
-    result <- calc_arcco_payment(crop = data$crop[i],
-                                crop_type = data$crop_type[i],
-                                program_year = data$program_year[i],
-                                base_acres = 1,
-                                mya_price = data$current_mya_price[i],
-                                srp = data$statutory_reference_price[i],
-                                oa_benchmark_price = 5,
-                                oa_benchmark_yield = data$oa_bench_mark_yield[i],
-                                erp = NULL,
-                                nmlr = data$current_national_loan_rate[i],
-                                historic_mya_prices = historical_prices,
-                                fips = data$fips[i],
-                                quiet = TRUE)
 
-    return(result)
-  }, error = function(e) {
-    # Return NA on any error
-    return(NA)
-  })
-}))
-toc()
 
 
 

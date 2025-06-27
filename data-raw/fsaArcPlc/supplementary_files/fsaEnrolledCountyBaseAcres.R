@@ -70,6 +70,15 @@ enrolled_county_base_acres <- enrolled_county_base_acres %>%
                 county = county_name,
                 fips = st_cty)
 
+# pivot wider to create separate columns for each program type
+enrolled_county_base_acres <- enrolled_county_base_acres %>%
+  tidyr::pivot_wider(
+    names_from = program,
+    values_from = enrolled_base,
+    names_prefix = "enrolled_base_",
+    values_fill = 0
+  )
+
 # convert to a tibble before exporting
 fsaEnrolledCountyBaseAcres <- dplyr::as_tibble(enrolled_county_base_acres)
 
