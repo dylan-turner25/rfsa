@@ -290,5 +290,13 @@ original_payments <- sapply(1:10, function(i) {
 # colnames(missing_arcco_table) <- c("Complete", "Missing")
 # print(missing_arcco_table)
 
+calc_plc_payment(crop = "corn",
+                 program_year = 2024,
+                 srp = 5,
+                 historic_mya_prices = c(3,5,4,6,7))
 
+calc_arcco_payment(crop = "corn",
+                   program_year = 2024,
+                   srp = 4,
+                   historic_mya_prices = c(3,5,6,5,7))
 
