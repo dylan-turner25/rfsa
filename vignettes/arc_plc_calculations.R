@@ -292,24 +292,144 @@ original_payments <- sapply(1:10, function(i) {
 
 data("fsaMyaPrice")
 data("fsaArcCoBenchmarks")
+data("fsaEffectiveRefPrices")
 
-crop = "corn"
-program_year = 2023
-srp =
-plc_historic_prices <- fsaMyaPrice %>%
+results <- data.frame(crop = NULL, program_year = NULL,
+                      arc_payment = NULL, plc_payment = NULL,
+                      arc_payment_obbb = NULL, plc_payment_obbb = NULL)
+
+for(c in c("wheat", "oats", "corn",
+            "soybeans", "barley", "canola")){
+  for(py in 2014:2023){
+
+# define crop
+crop = c
+
+# define program year
+program_year = py
+srp = unique(fsaEffectiveRefPrices %>%
+  filter(.data$crop == .env$crop) %>%
+  pull(statutory_reference_price))
+
+# define historic prices
+if(py <= 2018){
+  plc_historic_prices <- t(data.frame(fsaMyaPrice %>%
+                                        filter(.data$crop == .env$crop,
+                                               .data$marketing_year == paste0(.env$program_year,"-",.env$program_year + 1)) %>%
+                                        select(contains("lag")) %>% select(-contains("lag6"))))[,1]
+} else {
+plc_historic_prices <- t(data.frame(fsaMyaPrice %>%
   filter(.data$crop == .env$crop,
          .data$marketing_year == paste0(.env$program_year,"-",.env$program_year + 1)) %>%
-  select(contains("lag"))
+  select(contains("lag")) %>% select(-contains("lag1"))))[,1]
+}
+arc_historic_prices <- t(data.frame(fsaArcCoPrice %>%
+  filter(.data$crop == .env$crop,
+         .data$program_year == .env$program_year) %>%
+  select(contains("lag"))))[,1]
 
-arc_historic_prices <- fsaMyaPrice
-
-calc_plc_payment(crop = crop,
+# calculate plc payment
+plc_payment <- calc_plc_payment(crop = crop,
                  program_year = program_year,
-                 srp = 5,
+                 srp = srp,
                  historic_mya_prices = plc_historic_prices)
 
-calc_arcco_payment(crop = "corn",
+# calculate arc_payment
+arc_payment <- calc_arcco_payment(crop = "corn",
                    program_year = program_year,
-                   srp = 4,
+                   srp = srp,
                    historic_mya_prices = arc_historic_prices)
+
+# apply policy change
+new_srps <- list("wheat" = 6.35,
+                      "oats" = 2.65,
+                      "rice" = .1690,  # medium and long grain (temperate japonica handled separately)
+                      "cotton" = 0.42,
+                      "corn" = 4.10,
+                      "grain sorghum" = 4.40,
+                      "dry peas" = .131,
+                      "peanuts" = .315,
+                      "soybeans" = 10.00,
+                      "barley" = 5.45,
+                      "chickpeas_small" = .2265,
+                      "chickpeas_large" = .2565,
+                      "lentils" = .2375,
+                      "flaxseed" = 13.10,
+                      "canola" = .2375,
+                      "rapeseed" = .2375,
+                      "safflower" = .2375,
+                      "mustard" = .2375,
+                      "sunflower" = .2375,
+                      "sesame" = .2375,
+                      "crambe" = .2375
+                      )
+
+
+srp = new_srps[c][[1]]
+
+
+# calculate plc payment
+plc_payment_obbb <- calc_plc_payment(crop = crop,
+                                program_year = program_year,
+                                srp = srp,
+                                historic_mya_prices = plc_historic_prices)
+
+# calculate arc_payment
+arc_payment_obbb <- calc_arcco_payment(crop = "corn",
+                                  program_year = program_year,
+                                  srp = srp,
+                                  payment_trigger_level = .9,
+                                  max_payment_level = .125,
+                                  historic_mya_prices = arc_historic_prices)
+
+
+results <- rbind.data.frame(results, data.frame(crop = crop,
+                                                program_year = program_year,
+                                                arc_payment = arc_payment,
+                                                plc_payment = plc_payment,
+                                                arc_payment_obbb = arc_payment_obbb,
+                                                plc_payment_obbb = plc_payment_obbb))
+  }
+}
+
+results$arc_diff <- results$arc_payment_obbb - results$arc_payment
+results$plc_diff <- results$plc_payment_obbb - results$plc_payment
+
+# merge in total base acres
+data("fsaArcPlcBaseAcres")
+ba <- fsaArcPlcBaseAcres %>%
+  select(covered_commodity, program_year, total, plc_total, arc_co_total, arc_ic_total) %>%
+  rename(crop = covered_commodity,
+         base_total = total,
+         base_plc = plc_total,
+         base_arcco = arc_co_total,
+         base_arcic = arc_ic_total)
+
+results <- left_join(results, ba)
+
+# calculate total payments
+results$arc_payment_tot <- results$arc_payment*results$base_arcco
+results$plc_payment_tot <- results$plc_payment*results$base_plc
+
+
+# add arc plc total payments
+payments <- rfsa::get_fsa_payments(year = 2014:2023, program = c("ARC-CO","ARC-IC","PLC")) %>%
+  select(-year_type, -program_name) %>%
+  rename(program_year = year) %>%
+  pivot_wider(names_from = program_abb, values_from = payment_amount) %>%
+  replace(is.na(.), 0)
+
+results <- left_join(results, payments)
+
+
+
+results$arc_co_payment_per_acre = results$`ARC-CO`/results$base_arcco
+results$plc_payment_per_acre = results$PLC/results$base_plc
+
+# average over time
+avg <- results %>% group_by(crop) %>% summarize_all(mean)
+
+
+
+
 
