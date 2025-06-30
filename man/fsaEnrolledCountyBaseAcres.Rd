@@ -11,8 +11,8 @@ A data frame with the following variables:
 \item{state}{character. Full name of the state.}
 \item{county}{character. Name of the county.}
 \item{crop}{character. Name of the covered commodity.}
-\item{program}{character. Program type: "ARCCO" for ARC-CO or "PLC" for Price Loss Coverage.}
-\item{enrolled_base}{numeric. Base acres enrolled in the specified program for the commodity in the county.}
+\item{enrolled_base_ARCCO}{numeric. Base acres enrolled in ARCCO for the commodity in the county.}
+\item{enrolled_base_PLC}{numeric. Base acres enrolled in PLC for the commodity in the county.}
 \item{program_year}{integer. Program year (e.g., 2019, 2020, 2021, 2022, 2023, 2024).}
 \item{crop_type}{character. Crop subtype classification (e.g., "med/short grain", "long grain").}
 \item{rma_type_code}{character. RMA crop type code for insurance classification.}

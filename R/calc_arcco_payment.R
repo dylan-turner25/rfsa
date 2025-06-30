@@ -21,6 +21,72 @@ fips = 1001
 quiet = FALSE
 
 
+#' Calculate ARC-CO Payment
+#'
+#' This function calculates the Agriculture Risk Coverage County Option (ARC-CO) 
+#' payment for a specified crop, program year, and location. ARC-CO provides 
+#' revenue-based protection at the county level.
+#'
+#' @param crop Character. The crop name (e.g., "corn", "soybeans", "wheat").
+#' @param crop_type Character or NULL. Specific crop type if applicable (default: NULL).
+#' @param program_year Numeric. The program year for which to calculate the payment.
+#' @param base_acres Numeric or NULL. Number of base acres. If NULL, defaults to 1 (default: NULL).
+#' @param mya_price Numeric or NULL. Marketing Year Average price. If NULL, retrieved from data (default: NULL).
+#' @param srp Numeric or NULL. Statutory Reference Price. If NULL, retrieved from data (default: NULL).
+#' @param erp Numeric or NULL. Effective Reference Price. If NULL, calculated or retrieved from data (default: NULL).
+#' @param nmlr Numeric or NULL. National Marketing Loan Rate. If NULL, retrieved from data (default: NULL).
+#' @param oa_benchmark_yield Numeric or NULL. Olympic Average benchmark yield. If NULL, calculated using get_arcco_benchmarks() (default: NULL).
+#' @param oa_benchmark_price Numeric or NULL. Olympic Average benchmark price. If NULL, calculated using get_arcco_benchmarks() (default: NULL).
+#' @param actual_revenue Numeric or NULL. Actual revenue for the county. If NULL, calculated using get_arcco_actual_revenue() (default: NULL).
+#' @param historical_yields Numeric vector or NULL. Historical yields for yield calculation (default: NULL).
+#' @param historic_mya_prices Numeric vector or NULL. Vector of 5 historic MYA prices for ERP calculation (default: NULL).
+#' @param yield_type Character or NULL. Type of yield data to use (default: NULL).
+#' @param cov_lvl Numeric. Coverage level as a decimal (default: 0.85 for 85%).
+#' @param payment_trigger_level Numeric. Payment trigger level as a decimal (default: 0.86 for 86%).
+#' @param max_payment_level Numeric. Maximum payment level as a decimal (default: 0.1 for 10%).
+#' @param state Character or NULL. State name for location-specific data (default: NULL).
+#' @param county Character or NULL. County name for location-specific data (default: NULL).
+#' @param fips Numeric or NULL. FIPS code for location identification (default: NULL).
+#' @param quiet Logical. If TRUE, suppresses warning messages (default: FALSE).
+#'
+#' @return Numeric. The calculated ARC-CO payment amount in dollars.
+#'
+#' @details
+#' The ARC-CO payment is calculated using the following formula:
+#' \itemize{
+#'   \item Benchmark Revenue = Olympic Average Benchmark Price × Olympic Average Benchmark Yield
+#'   \item If Actual Revenue ≥ (Payment Trigger Level × Benchmark Revenue): Payment Rate = 0
+#'   \item If Actual Revenue ≤ (Payment Trigger Level - Max Payment Level) × Benchmark Revenue: Payment Rate = Max Payment Level × Benchmark Revenue
+#'   \item Otherwise: Payment Rate = (Payment Trigger Level × Benchmark Revenue) - Actual Revenue
+#'   \item ARC-CO Payment = Coverage Level × Base Acres × Payment Rate
+#' }
+#'
+#' The function automatically retrieves missing data from internal datasets including:
+#' MYA prices, statutory and effective reference prices, national marketing loan rates,
+#' and calculates benchmark yields and prices using Olympic averages.
+#'
+#' @examples
+#' \dontrun{
+#' # Calculate ARC-CO payment for corn in 2023
+#' payment <- calc_arcco_payment(
+#'   crop = "corn",
+#'   program_year = 2023,
+#'   base_acres = 100,
+#'   fips = 17001
+#' )
+#'
+#' # Calculate with custom parameters
+#' payment <- calc_arcco_payment(
+#'   crop = "soybeans",
+#'   program_year = 2023,
+#'   base_acres = 250,
+#'   cov_lvl = 0.80,
+#'   state = "Iowa",
+#'   county = "Story"
+#' )
+#' }
+#'
+#' @export
 calc_arcco_payment <- function(crop,
                              crop_type = NULL,
                              program_year,

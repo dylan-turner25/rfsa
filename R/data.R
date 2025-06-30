@@ -291,8 +291,8 @@
 #'   \item{state}{character. Full name of the state.}
 #'   \item{county}{character. Name of the county.}
 #'   \item{crop}{character. Name of the covered commodity.}
-#'   \item{program}{character. Program type: "ARCCO" for ARC-CO or "PLC" for Price Loss Coverage.}
-#'   \item{enrolled_base}{numeric. Base acres enrolled in the specified program for the commodity in the county.}
+#'   \item{enrolled_base_ARCCO}{numeric. Base acres enrolled in ARCCO for the commodity in the county.}
+#'   \item{enrolled_base_PLC}{numeric. Base acres enrolled in PLC for the commodity in the county.}
 #'   \item{program_year}{integer. Program year (e.g., 2019, 2020, 2021, 2022, 2023, 2024).}
 #'   \item{crop_type}{character. Crop subtype classification (e.g., "med/short grain", "long grain").}
 #'   \item{rma_type_code}{character. RMA crop type code for insurance classification.}
@@ -335,20 +335,20 @@
 #'
 #' @details
 #' This dataset combines PLC yield data from multiple sources and formats:
-#' 
+#'
 #' **Data sources by year:**
 #' - **2018 and earlier**: Counter-cyclical Payment (CCP) yields in wide format
 #' - **2019 onwards**: PLC yields in long format with additional enrolled base information
-#' 
+#'
 #' **Key features:**
 #' - County-level geographic detail with FIPS codes
-#' - Standardized crop names with separated crop types  
+#' - Standardized crop names with separated crop types
 #' - Consistent units and measurement standards
 #' - Integration with other ARC/PLC datasets via common identifiers
-#' 
+#'
 #' PLC yields are used to calculate potential PLC payments by multiplying the yield
 #' by base acres and the PLC payment rate (reference price minus MYA price, when positive).
-#' 
+#'
 #' To view code used to generate this data set, see `./data-raw/fsaArcPlc/supplementary_files/fsaPlcYields.R`
 #'
 #' @usage data(fsaPlcYields)
