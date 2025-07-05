@@ -258,6 +258,1101 @@ test_that("calc_plc_payment can recreate 2019 values in fsa file",{
 
 })
 
+
+test_that("calc_plc_payment can recreate 2020 values in fsa file",{
+
+  # Taken from: https://www.fsa.usda.gov/sites/default/files/documents/2020_PLC.xls
+
+  wheat <- calc_plc_payment(
+    crop = "wheat",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(wheat, 0.45)
+
+  barley <- calc_plc_payment(
+    crop = "barley",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(barley, 0.20)
+
+  oats <- calc_plc_payment(
+    crop = "oats",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+  expect_equal(oats, 0)
+
+  peanuts <- calc_plc_payment(
+    crop = "peanuts",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+  expect_equal(peanuts, 0.0575)
+
+  corn <- calc_plc_payment(
+    crop = "corn",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+  expect_equal(corn, 0)
+
+  grain_sorghum <- calc_plc_payment(
+    crop = "grain sorghum",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+  expect_equal(grain_sorghum, 0)
+
+  soybeans <- calc_plc_payment(
+    crop = "soybeans",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(soybeans, 0)
+
+  drypeas <- calc_plc_payment(
+    crop = "dry peas",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(drypeas, 0.0116)
+
+  lentils <- calc_plc_payment(
+    crop = "lentils",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(lentils, 0.0413)
+
+  canola <- calc_plc_payment(
+    crop = "canola",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(canola, 0.0175)
+
+  chickpeas_large <- calc_plc_payment(
+    crop = "chickpeas",
+    crop_type = "large",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(chickpeas_large, 0.0147)
+
+  chickpeas_small <- calc_plc_payment(
+    crop = "chickpeas",
+    crop_type = "small",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(chickpeas_small, 0.0006)
+
+  sunflower <- calc_plc_payment(
+    crop = "sunflower",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(sunflower, 0)
+
+  flax <- calc_plc_payment(
+    crop = "flaxseed",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(flax, 0.1840)
+
+  mustard <- calc_plc_payment(
+    crop = "mustard",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(mustard, 0)
+
+  rapeseed <- calc_plc_payment(
+    crop = "rapeseed",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(rapeseed, 0)
+
+  safflower <- calc_plc_payment(
+    crop = "safflower",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(safflower, 0)
+
+  crambe <- calc_plc_payment(
+    crop = "crambe",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(crambe, 0)
+
+  sesame <- calc_plc_payment(
+    crop = "sesame",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(sesame, 0)
+
+  cotton <- calc_plc_payment(
+    crop = "cotton",
+    crop_type = "seed",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1
+  )
+
+  expect_equal(cotton, 0.0277)
+
+  rice_long <- calc_plc_payment(
+    crop = "rice",
+    crop_type = "long grain",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(rice_long, 0.014)
+
+  rice_medium <- calc_plc_payment(
+    crop = "rice",
+    crop_type = "short/medium grain",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(rice_medium, 0.009)
+
+  rice_temp <- calc_plc_payment(
+    crop = "rice",
+    crop_type = "temperate japonica",
+    program_year = 2020,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(rice_temp, 0.0)
+
+})
+
+
+test_that("calc_plc_payment can recreate 2014 values in fsa file",{
+
+  # Taken from: FSA data
+
+  wheat <- calc_plc_payment(
+    crop = "wheat",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(wheat, 0)
+
+  barley <- calc_plc_payment(
+    crop = "barley",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(barley, 0)
+
+  oats <- calc_plc_payment(
+    crop = "oats",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+  expect_equal(oats, 0)
+
+  peanuts <- calc_plc_payment(
+    crop = "peanuts",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+  expect_equal(peanuts, 0.0475)
+
+  corn <- calc_plc_payment(
+    crop = "corn",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+  expect_equal(corn, 0)
+
+  grain_sorghum <- calc_plc_payment(
+    crop = "grain sorghum",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+  expect_equal(grain_sorghum, 0)
+
+  soybeans <- calc_plc_payment(
+    crop = "soybeans",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(soybeans, 0)
+
+  drypeas <- calc_plc_payment(
+    crop = "dry peas",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(drypeas, 0)
+
+  lentils <- calc_plc_payment(
+    crop = "lentils",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(lentils, 0)
+
+  canola <- calc_plc_payment(
+    crop = "canola",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(canola, 0.0325)
+
+  chickpeas_large <- calc_plc_payment(
+    crop = "chickpeas",
+    crop_type = "large",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(chickpeas_large, 0)
+
+  chickpeas_small <- calc_plc_payment(
+    crop = "chickpeas",
+    crop_type = "small",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(chickpeas_small, 0)
+
+  sunflower <- calc_plc_payment(
+    crop = "sunflower",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(sunflower, 0)
+
+  flax <- calc_plc_payment(
+    crop = "flaxseed",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(flax, 0)
+
+  mustard <- calc_plc_payment(
+    crop = "mustard",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(mustard, 0)
+
+  rapeseed <- calc_plc_payment(
+    crop = "rapeseed",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(rapeseed, 0)
+
+  safflower <- calc_plc_payment(
+    crop = "safflower",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(safflower, 0)
+
+  crambe <- calc_plc_payment(
+    crop = "crambe",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(crambe, 0)
+
+  sesame <- calc_plc_payment(
+    crop = "sesame",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(sesame, 0)
+
+  rice_long <- calc_plc_payment(
+    crop = "rice",
+    crop_type = "long grain",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(rice_long, 0.021)
+
+  rice_medium <- calc_plc_payment(
+    crop = "rice",
+    crop_type = "short/medium grain",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(rice_medium, 0)
+
+  rice_temp <- calc_plc_payment(
+    crop = "rice",
+    crop_type = "temperate japonica",
+    program_year = 2014,
+    base_acres = 1,
+    plc_yield = 1,
+    cov_lvl = 1,
+    quiet = TRUE
+  )
+
+  expect_equal(rice_temp, 0)
+
+})
+
+
+test_that("calc_plc_payment can recreate 2015 values in fsa file",{
+
+  wheat <- calc_plc_payment(crop = "wheat", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(wheat, 0.61)
+
+  barley <- calc_plc_payment(crop = "barley", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(barley, 0)
+
+  oats <- calc_plc_payment(crop = "oats", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(oats, 0.28)
+
+  peanuts <- calc_plc_payment(crop = "peanuts", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(peanuts, 0.0745)
+
+  corn <- calc_plc_payment(crop = "corn", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(corn, 0.09)
+
+  grain_sorghum <- calc_plc_payment(crop = "grain sorghum", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(grain_sorghum, 0.64)
+
+  soybeans <- calc_plc_payment(crop = "soybeans", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(soybeans, 0)
+
+  drypeas <- calc_plc_payment(crop = "dry peas", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(drypeas, 0)
+
+  lentils <- calc_plc_payment(crop = "lentils", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(lentils, 0)
+
+  canola <- calc_plc_payment(crop = "canola", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(canola, 0.0455)
+
+  chickpeas_large <- calc_plc_payment(crop = "chickpeas", crop_type = "large", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_large, 0)
+
+  chickpeas_small <- calc_plc_payment(crop = "chickpeas", crop_type = "small", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_small, 0)
+
+  sunflower <- calc_plc_payment(crop = "sunflower", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sunflower, 0.0055)
+
+  flax <- calc_plc_payment(crop = "flaxseed", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(flax, 2.334)
+
+  mustard <- calc_plc_payment(crop = "mustard", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(mustard, 0)
+
+  rapeseed <- calc_plc_payment(crop = "rapeseed", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rapeseed, 0)
+
+  safflower <- calc_plc_payment(crop = "safflower", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(safflower, 0)
+
+  crambe <- calc_plc_payment(crop = "crambe", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(crambe, 0)
+
+  sesame <- calc_plc_payment(crop = "sesame", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sesame, 0)
+
+  rice_long <- calc_plc_payment(crop = "rice", crop_type = "long grain", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_long, 0.029)
+
+  rice_medium <- calc_plc_payment(crop = "rice", crop_type = "short/medium grain", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_medium, 0.028)
+
+  rice_temp <- calc_plc_payment(crop = "rice", crop_type = "temperate japonica", program_year = 2015, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_temp, 0)
+
+})
+
+
+test_that("calc_plc_payment can recreate 2016 values in fsa file",{
+
+  wheat <- calc_plc_payment(crop = "wheat", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(wheat, 1.61)
+
+  barley <- calc_plc_payment(crop = "barley", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(barley, 0)
+
+  oats <- calc_plc_payment(crop = "oats", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(oats, 0.34)
+
+  peanuts <- calc_plc_payment(crop = "peanuts", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(peanuts, 0.0705)
+
+  corn <- calc_plc_payment(crop = "corn", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(corn, 0.34)
+
+  grain_sorghum <- calc_plc_payment(crop = "grain sorghum", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(grain_sorghum, 1.16)
+
+  soybeans <- calc_plc_payment(crop = "soybeans", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(soybeans, 0)
+
+  drypeas <- calc_plc_payment(crop = "dry peas", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(drypeas, 0)
+
+  lentils <- calc_plc_payment(crop = "lentils", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(lentils, 0)
+
+  canola <- calc_plc_payment(crop = "canola", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(canola, 0.0355)
+
+  chickpeas_large <- calc_plc_payment(crop = "chickpeas", crop_type = "large", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_large, 0)
+
+  chickpeas_small <- calc_plc_payment(crop = "chickpeas", crop_type = "small", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_small, 0)
+
+  sunflower <- calc_plc_payment(crop = "sunflower", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sunflower, 0.0275)
+
+  flax <- calc_plc_payment(crop = "flaxseed", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(flax, 3.284)
+
+  mustard <- calc_plc_payment(crop = "mustard", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(mustard, 0)
+
+  rapeseed <- calc_plc_payment(crop = "rapeseed", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rapeseed, 0)
+
+  safflower <- calc_plc_payment(crop = "safflower", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(safflower, 0)
+
+  crambe <- calc_plc_payment(crop = "crambe", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(crambe, 0)
+
+  sesame <- calc_plc_payment(crop = "sesame", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sesame, 0)
+
+  rice_long <- calc_plc_payment(crop = "rice", crop_type = "long grain", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_long, 0.0436)
+
+  rice_medium <- calc_plc_payment(crop = "rice", crop_type = "short/medium grain", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_medium, 0.039)
+
+  rice_temp <- calc_plc_payment(crop = "rice", crop_type = "temperate japonica", program_year = 2016, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_temp, 0.02)
+
+})
+
+
+test_that("calc_plc_payment can recreate 2017 values in fsa file",{
+
+  wheat <- calc_plc_payment(crop = "wheat", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(wheat, 0.78)
+
+  barley <- calc_plc_payment(crop = "barley", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(barley, 0.48)
+
+  oats <- calc_plc_payment(crop = "oats", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(oats, 0)
+
+  peanuts <- calc_plc_payment(crop = "peanuts", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(peanuts, 0.0385)
+
+  corn <- calc_plc_payment(crop = "corn", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(corn, 0.34)
+
+  grain_sorghum <- calc_plc_payment(crop = "grain sorghum", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(grain_sorghum, 0.73)
+
+  soybeans <- calc_plc_payment(crop = "soybeans", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(soybeans, 0)
+
+  drypeas <- calc_plc_payment(crop = "dry peas", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(drypeas, 0)
+
+  lentils <- calc_plc_payment(crop = "lentils", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(lentils, 0)
+
+  canola <- calc_plc_payment(crop = "canola", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(canola, 0.0265)
+
+  chickpeas_large <- calc_plc_payment(crop = "chickpeas", crop_type = "large", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_large, 0)
+
+  chickpeas_small <- calc_plc_payment(crop = "chickpeas", crop_type = "small", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_small, 0)
+
+  sunflower <- calc_plc_payment(crop = "sunflower", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sunflower, 0.0295)
+
+  flax <- calc_plc_payment(crop = "flaxseed", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(flax, 1.754)
+
+  mustard <- calc_plc_payment(crop = "mustard", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(mustard, 0)
+
+  rapeseed <- calc_plc_payment(crop = "rapeseed", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rapeseed, 0.0095)
+
+  safflower <- calc_plc_payment(crop = "safflower", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(safflower, 0.0155)
+
+  crambe <- calc_plc_payment(crop = "crambe", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(crambe, 0)
+
+  sesame <- calc_plc_payment(crop = "sesame", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sesame, 0)
+
+  rice_long <- calc_plc_payment(crop = "rice", crop_type = "long grain", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_long, 0.025)
+
+  rice_medium <- calc_plc_payment(crop = "rice", crop_type = "short/medium grain", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_medium, 0.023)
+
+  rice_temp <- calc_plc_payment(crop = "rice", crop_type = "temperate japonica", program_year = 2017, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_temp, 0)
+
+})
+
+
+test_that("calc_plc_payment can recreate 2018 values in fsa file",{
+
+  wheat <- calc_plc_payment(crop = "wheat", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(wheat, 0.34)
+
+  barley <- calc_plc_payment(crop = "barley", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(barley, 0.33)
+
+  oats <- calc_plc_payment(crop = "oats", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(oats, 0)
+
+  peanuts <- calc_plc_payment(crop = "peanuts", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(peanuts, 0.0525)
+
+  corn <- calc_plc_payment(crop = "corn", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(corn, 0.09)
+
+  grain_sorghum <- calc_plc_payment(crop = "grain sorghum", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(grain_sorghum, 0.69)
+
+  soybeans <- calc_plc_payment(crop = "soybeans", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(soybeans, 0)
+
+  drypeas <- calc_plc_payment(crop = "dry peas", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(drypeas, 0.005)
+
+  lentils <- calc_plc_payment(crop = "lentils", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(lentils, 0.0227)
+
+  canola <- calc_plc_payment(crop = "canola", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(canola, 0.0435)
+
+  chickpeas_large <- calc_plc_payment(crop = "chickpeas", crop_type = "large", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_large, 0.0064)
+
+  chickpeas_small <- calc_plc_payment(crop = "chickpeas", crop_type = "small", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_small, 0)
+
+  sunflower <- calc_plc_payment(crop = "sunflower", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sunflower, 0.0275)
+
+  flax <- calc_plc_payment(crop = "flaxseed", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(flax, 1.394)
+
+  mustard <- calc_plc_payment(crop = "mustard", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(mustard, 0)
+
+  rapeseed <- calc_plc_payment(crop = "rapeseed", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rapeseed, 0.0165)
+
+  safflower <- calc_plc_payment(crop = "safflower", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(safflower, 0)
+
+  crambe <- calc_plc_payment(crop = "crambe", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(crambe, 0)
+
+  sesame <- calc_plc_payment(crop = "sesame", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sesame, 0)
+
+  cotton <- calc_plc_payment(crop = "cotton", crop_type = "seed", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(cotton, 0.0217)
+
+  rice_long <- calc_plc_payment(crop = "rice", crop_type = "long grain", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_long, 0.032)
+
+  rice_medium <- calc_plc_payment(crop = "rice", crop_type = "short/medium grain", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_medium, 0.017)
+
+  rice_temp <- calc_plc_payment(crop = "rice", crop_type = "temperate japonica", program_year = 2018, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_temp, 0)
+
+})
+
+
+test_that("calc_plc_payment can recreate 2021 values in fsa file",{
+
+  wheat <- calc_plc_payment(crop = "wheat", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(wheat, 0)
+
+  barley <- calc_plc_payment(crop = "barley", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(barley, 0)
+
+  oats <- calc_plc_payment(crop = "oats", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(oats, 0)
+
+  peanuts <- calc_plc_payment(crop = "peanuts", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(peanuts, 0.0255)
+
+  corn <- calc_plc_payment(crop = "corn", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(corn, 0)
+
+  grain_sorghum <- calc_plc_payment(crop = "grain sorghum", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(grain_sorghum, 0)
+
+  soybeans <- calc_plc_payment(crop = "soybeans", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(soybeans, 0)
+
+  drypeas <- calc_plc_payment(crop = "dry peas", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(drypeas, 0)
+
+  lentils <- calc_plc_payment(crop = "lentils", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(lentils, 0)
+
+  canola <- calc_plc_payment(crop = "canola", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(canola, 0)
+
+  chickpeas_large <- calc_plc_payment(crop = "chickpeas", crop_type = "large", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_large, 0)
+
+  chickpeas_small <- calc_plc_payment(crop = "chickpeas", crop_type = "small", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_small, 0)
+
+  sunflower <- calc_plc_payment(crop = "sunflower", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sunflower, 0)
+
+  flax <- calc_plc_payment(crop = "flaxseed", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(flax, 0)
+
+  mustard <- calc_plc_payment(crop = "mustard", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(mustard, 0)
+
+  rapeseed <- calc_plc_payment(crop = "rapeseed", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rapeseed, 0)
+
+  safflower <- calc_plc_payment(crop = "safflower", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(safflower, 0)
+
+  crambe <- calc_plc_payment(crop = "crambe", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(crambe, 0)
+
+  sesame <- calc_plc_payment(crop = "sesame", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sesame, 0)
+
+  cotton <- calc_plc_payment(crop = "cotton", crop_type = "seed", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(cotton, 0)
+
+  rice_long <- calc_plc_payment(crop = "rice", crop_type = "long grain", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_long, 0.002)
+
+  rice_medium <- calc_plc_payment(crop = "rice", crop_type = "short/medium grain", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_medium, 0)
+
+  rice_temp <- calc_plc_payment(crop = "rice", crop_type = "temperate japonica", program_year = 2021, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_temp, 0)
+
+})
+
+
+test_that("calc_plc_payment can recreate 2022 values in fsa file",{
+
+  wheat <- calc_plc_payment(crop = "wheat", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(wheat, 0)
+
+  barley <- calc_plc_payment(crop = "barley", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(barley, 0)
+
+  oats <- calc_plc_payment(crop = "oats", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(oats, 0)
+
+  peanuts <- calc_plc_payment(crop = "peanuts", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(peanuts, 0)
+
+  corn <- calc_plc_payment(crop = "corn", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(corn, 0)
+
+  grain_sorghum <- calc_plc_payment(crop = "grain sorghum", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(grain_sorghum, 0)
+
+  soybeans <- calc_plc_payment(crop = "soybeans", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(soybeans, 0)
+
+  drypeas <- calc_plc_payment(crop = "dry peas", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(drypeas, 0)
+
+  lentils <- calc_plc_payment(crop = "lentils", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(lentils, 0)
+
+  canola <- calc_plc_payment(crop = "canola", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(canola, 0)
+
+  chickpeas_large <- calc_plc_payment(crop = "chickpeas", crop_type = "large", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_large, 0)
+
+  chickpeas_small <- calc_plc_payment(crop = "chickpeas", crop_type = "small", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_small, 0)
+
+  sunflower <- calc_plc_payment(crop = "sunflower", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sunflower, 0)
+
+  flax <- calc_plc_payment(crop = "flaxseed", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(flax, 0)
+
+  mustard <- calc_plc_payment(crop = "mustard", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(mustard, 0)
+
+  rapeseed <- calc_plc_payment(crop = "rapeseed", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rapeseed, 0)
+
+  safflower <- calc_plc_payment(crop = "safflower", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(safflower, 0)
+
+  crambe <- calc_plc_payment(crop = "crambe", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(crambe, 0)
+
+  sesame <- calc_plc_payment(crop = "sesame", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sesame, 0)
+
+  cotton <- calc_plc_payment(crop = "cotton", crop_type = "seed", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(cotton, 0)
+
+  rice_long <- calc_plc_payment(crop = "rice", crop_type = "long grain", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_long, 0)
+
+  rice_medium <- calc_plc_payment(crop = "rice", crop_type = "short/medium grain", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_medium, 0)
+
+  rice_temp <- calc_plc_payment(crop = "rice", crop_type = "temperate japonica", program_year = 2022, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_temp, 0)
+
+})
+
+
+test_that("calc_plc_payment can recreate 2023 values in fsa file",{
+
+  wheat <- calc_plc_payment(crop = "wheat", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(wheat, 0)
+
+  barley <- calc_plc_payment(crop = "barley", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(barley, 0)
+
+  oats <- calc_plc_payment(crop = "oats", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(oats, 0)
+
+  peanuts <- calc_plc_payment(crop = "peanuts", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(peanuts, 0)
+
+  corn <- calc_plc_payment(crop = "corn", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(corn, 0)
+
+  grain_sorghum <- calc_plc_payment(crop = "grain sorghum", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(grain_sorghum, 0)
+
+  soybeans <- calc_plc_payment(crop = "soybeans", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(soybeans, 0)
+
+  drypeas <- calc_plc_payment(crop = "dry peas", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(drypeas, 0)
+
+  lentils <- calc_plc_payment(crop = "lentils", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(lentils, 0)
+
+  canola <- calc_plc_payment(crop = "canola", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(canola, 0)
+
+  chickpeas_large <- calc_plc_payment(crop = "chickpeas", crop_type = "large", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_large, 0)
+
+  chickpeas_small <- calc_plc_payment(crop = "chickpeas", crop_type = "small", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_small, 0)
+
+  sunflower <- calc_plc_payment(crop = "sunflower", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sunflower, 0.0035)
+
+  flax <- calc_plc_payment(crop = "flaxseed", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(flax, 0)
+
+  mustard <- calc_plc_payment(crop = "mustard", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(mustard, 0)
+
+  rapeseed <- calc_plc_payment(crop = "rapeseed", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rapeseed, 0.0115)
+
+  safflower <- calc_plc_payment(crop = "safflower", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(safflower, 0)
+
+  crambe <- calc_plc_payment(crop = "crambe", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(crambe, 0)
+
+  sesame <- calc_plc_payment(crop = "sesame", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sesame, 0)
+
+  cotton <- calc_plc_payment(crop = "cotton", crop_type = "seed", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(cotton, 0)
+
+  rice_long <- calc_plc_payment(crop = "rice", crop_type = "long grain", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_long, 0)
+
+  rice_medium <- calc_plc_payment(crop = "rice", crop_type = "short/medium grain", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_medium, 0)
+
+  rice_temp <- calc_plc_payment(crop = "rice", crop_type = "temperate japonica", program_year = 2023, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_temp, 0)
+
+})
+
+
+test_that("calc_plc_payment can recreate 2024 values in fsa file",{
+
+  wheat <- calc_plc_payment(crop = "wheat", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(wheat, 0)
+
+  barley <- calc_plc_payment(crop = "barley", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(barley, 0)
+
+  oats <- calc_plc_payment(crop = "oats", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(oats, 0)
+
+  peanuts <- calc_plc_payment(crop = "peanuts", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(peanuts, 0.0075)
+
+  corn <- calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(corn, 0)
+
+  grain_sorghum <- calc_plc_payment(crop = "grain sorghum", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(grain_sorghum, 0)
+
+  soybeans <- calc_plc_payment(crop = "soybeans", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(soybeans, 0)
+
+  drypeas <- calc_plc_payment(crop = "dry peas", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(drypeas, 0)
+
+  lentils <- calc_plc_payment(crop = "lentils", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(lentils, 0)
+
+  canola <- calc_plc_payment(crop = "canola", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(canola, 0)
+
+  chickpeas_large <- calc_plc_payment(crop = "chickpeas", crop_type = "large", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_large, 0)
+
+  chickpeas_small <- calc_plc_payment(crop = "chickpeas", crop_type = "small", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(chickpeas_small, 0)
+
+  sunflower <- calc_plc_payment(crop = "sunflower", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sunflower, 0.003)
+
+  flax <- calc_plc_payment(crop = "flaxseed", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(flax, 0)
+
+  mustard <- calc_plc_payment(crop = "mustard", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(mustard, 0)
+
+  rapeseed <- calc_plc_payment(crop = "rapeseed", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rapeseed, 0.0425)
+
+  safflower <- calc_plc_payment(crop = "safflower", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(safflower, 0)
+
+  crambe <- calc_plc_payment(crop = "crambe", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(crambe, 0.015)
+
+  sesame <- calc_plc_payment(crop = "sesame", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(sesame, 0)
+
+  cotton <- calc_plc_payment(crop = "cotton", crop_type = "seed", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(cotton, 0.0237)
+
+  rice_long <- calc_plc_payment(crop = "rice", crop_type = "long grain", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_long, 0)
+
+  rice_medium <- calc_plc_payment(crop = "rice", crop_type = "short/medium grain", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_medium, 0)
+
+  rice_temp <- calc_plc_payment(crop = "rice", crop_type = "temperate japonica", program_year = 2024, base_acres = 1, plc_yield = 1, cov_lvl = 1, quiet = TRUE)
+  expect_equal(rice_temp, 0)
+
+})
+
+
 test_that("calc_plc_payment calculates payment when ERP > MYA price", {
   # Test case where ERP > MYA price > NMLR
   result <- calc_plc_payment(

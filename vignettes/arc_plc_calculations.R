@@ -114,82 +114,81 @@ data$oa_bench_mark_price_check <- as.numeric(data$oa_bench_mark_price_calc == da
 summary(data$oa_bench_mark_price_check)
 
 # # merge in total base acres (current year)
-# base <- fsaCountyBaseAcres %>%
-#   group_by(fips, program_year, crop, crop_type) %>%
-#   summarize(base_acres = sum(base_acres), .groups = "drop")
-#
-# data <- left_join(data, base)
-#
+base <- fsaCountyBaseAcres %>%
+  group_by(fips, program_year, crop, crop_type) %>%
+  summarize(base_acres = sum(base_acres), .groups = "drop")
+
+data <- left_join(data, base)
+
 # # merge in enrolled base acres (current year)
-# enrolled_base <- fsaEnrolledCountyBaseAcres %>%
-#   select(fips, program_year, crop, crop_type, contains("enrolled"))
-#
-# data <- left_join(data, enrolled_base)
-#
+enrolled_base <- fsaEnrolledCountyBaseAcres %>%
+  select(fips, program_year, crop, crop_type, contains("enrolled"))
+
+data <- left_join(data, enrolled_base)
+
 # # create pivoted base acres by year (all years as columns)
-# # First check data quality
-# base_acres_summary <- fsaCountyBaseAcres %>%
-#   group_by(program_year) %>%
-#   summarise(
-#     total_records = n(),
-#     valid_fips = sum(!is.na(fips)),
-#     na_fips = sum(is.na(fips)),
-#     .groups = "drop"
-#   )
-#
-# cat("Base acres data quality by year:\n")
-# print(base_acres_summary)
-#
+# First check data quality
+base_acres_summary <- fsaCountyBaseAcres %>%
+  group_by(program_year) %>%
+  summarise(
+    total_records = n(),
+    valid_fips = sum(!is.na(fips)),
+    na_fips = sum(is.na(fips)),
+    .groups = "drop"
+  )
+
+cat("Base acres data quality by year:\n")
+print(base_acres_summary)
+
 # # Filter out records with missing FIPS before pivot
-# base_acres_wide <- fsaCountyBaseAcres %>%
-#   group_by(fips, program_year, crop, crop_type) %>%
-#   summarize(base_acres = sum(base_acres), .groups = "drop") %>%
-#   pivot_wider(
-#     names_from = program_year,
-#     values_from = base_acres,
-#     names_prefix = "base_acres_",
-#     values_fill = 0
-#   )
-#
-# data <- left_join(data, base_acres_wide)
-#
-# # Report on join success
-# cat("Base acres wide join summary:\n")
-# cat("Records in data:", nrow(data), "\n")
-# cat("Records with base_acres_2023 > 0:", sum(data$base_acres_2023 > 0, na.rm = TRUE), "\n")
-#
-# # create pivoted enrolled base acres by year (all years as columns)
-# # Check enrolled base data quality
-# enrolled_summary <- fsaEnrolledCountyBaseAcres %>%
-#   group_by(program_year) %>%
-#   summarise(
-#     total_records = n(),
-#     valid_fips = sum(!is.na(fips)),
-#     na_fips = sum(is.na(fips)),
-#     .groups = "drop"
-#   )
-#
-# cat("Enrolled base acres data quality by year:\n")
-# print(enrolled_summary)
-#
-# # Get enrolled columns and filter out missing FIPS
-# enrolled_cols <- fsaEnrolledCountyBaseAcres %>%
-#   select(contains("enrolled")) %>%
-#   colnames()
-#
-# enrolled_base_wide <- fsaEnrolledCountyBaseAcres %>%
-#   select(fips, program_year, crop, crop_type, all_of(enrolled_cols)) %>%
-#   pivot_wider(
-#     names_from = program_year,
-#     values_from = all_of(enrolled_cols),
-#     names_sep = "_",
-#     values_fill = list(.default = 0)
-#   )
-#
-# data <- left_join(data, enrolled_base_wide)
+base_acres_wide <- fsaCountyBaseAcres %>%
+  group_by(fips, program_year, crop, crop_type) %>%
+  summarize(base_acres = sum(base_acres), .groups = "drop") %>%
+  pivot_wider(
+    names_from = program_year,
+    values_from = base_acres,
+    names_prefix = "base_acres_",
+    values_fill = 0
+  )
+
+data <- left_join(data, base_acres_wide)
+
+# Report on join success
+cat("Base acres wide join summary:\n")
+cat("Records in data:", nrow(data), "\n")
+cat("Records with base_acres_2023 > 0:", sum(data$base_acres_2023 > 0, na.rm = TRUE), "\n")
+
+# create pivoted enrolled base acres by year (all years as columns)
+# Check enrolled base data quality
+enrolled_summary <- fsaEnrolledCountyBaseAcres %>%
+  group_by(program_year) %>%
+  summarise(
+    total_records = n(),
+    valid_fips = sum(!is.na(fips)),
+    na_fips = sum(is.na(fips)),
+    .groups = "drop"
+  )
+
+cat("Enrolled base acres data quality by year:\n")
+print(enrolled_summary)
+
+# Get enrolled columns and filter out missing FIPS
+enrolled_cols <- fsaEnrolledCountyBaseAcres %>%
+  select(contains("enrolled")) %>%
+  colnames()
 
 
+enrolled_base_wide <- fsaEnrolledCountyBaseAcres %>%
+  select(fips, program_year, crop, crop_type, all_of(enrolled_cols)) %>%
+  pivot_wider(
+    names_from = program_year,
+    values_from = all_of(enrolled_cols),
+    names_sep = "_",
+    values_fill = list(.default = 0),
+    values_fn = sum
+  )
 
+data <- left_join(data, enrolled_base_wide)
 
 
 # aggregate to the state year level
@@ -253,7 +252,8 @@ print(missing_plc_table)
 
 
 # Calculate using original method for comparison
-original_payments <- sapply(1:10, function(i) {
+data$arc_payment <-
+  unlist(lapply(1:nrow(data), function(i) {
   tryCatch({
 
     historical_prices <- c(data$annual_benchmark_price_lag1[i],
@@ -277,14 +277,103 @@ original_payments <- sapply(1:10, function(i) {
                       quiet = TRUE)
 
   }, error = function(e) NA)
-})
+}))
+
+saveRDS(data, "./vignettes/arc_plc_calculations.rds")
+
+
+# apply policy changes from OBBB
+new_srps <- list("wheat" = 6.35,
+                 "oats" = 2.65,
+                 "rice" = .1690,  # medium and long grain (temperate japonica handled separately)
+                 "cotton" = 0.42,
+                 "corn" = 4.10,
+                 "grain sorghum" = 4.40,
+                 "dry peas" = .131,
+                 "peanuts" = .315,
+                 "soybeans" = 10.00,
+                 "barley" = 5.45,
+                 "chickpeas_small" = .2265,
+                 "chickpeas_large" = .2565,
+                 "lentils" = .2375,
+                 "flaxseed" = 13.10,
+                 "canola" = .2375,
+                 "rapeseed" = .2375,
+                 "safflower" = .2375,
+                 "mustard" = .2375,
+                 "sunflower" = .2375,
+                 "sesame" = .2375,
+                 "crambe" = .2375
+)
+
+srp_obbb <- data.frame(crop = names(new_srps), obbb_srps = unlist(new_srps))
+
+# merge new srps with data
+data <- left_join(data, srp_obbb)
+
+# calculate arc and plc payments again using the new obbb parameters
+
+
+
+# check national levels
+year = 2020
+calc_total = sum(data$plc_payment[which(data$program_year == year)]*data$enrolled_base_PLC_2020[which(data$program_year == year)], na.rm = T)/1000000
+act_total = rfsa::get_fsa_payments(year = year, program = "PLC")
+
+national_validation <- data.frame(year = 2014:2025, calc_plc = NA, act_plc = NA, plc_diff = NA, calc_arc = NA, act_arc = NA, arc_diff = NA)
+
+for(y in national_validation$year){
+
+  print(y)
+
+  # plc
+  try({
+  national_validation$calc_plc[which(national_validation$year == y)] = sum(data$plc_payment[which(data$program_year == y)]*data$enrolled_base_PLC_2020[which(data$program_year == y)], na.rm = T)/1000000
+
+  act = rfsa::get_fsa_payments(year = y, program = "PLC", year_type = "program")
+  if(nrow(act) == 0){
+    amount = 0
+  } else {
+    amount = act$payment_amount/1000000
+  }
+  national_validation$act_plc[which(national_validation$year == y)]  = amount
+  national_validation$plc_diff[which(national_validation$year == y)] <- paste0(round((national_validation$calc_plc[which(national_validation$year == y)] - national_validation$act_plc[which(national_validation$year == y)])/national_validation$act_plc[which(national_validation$year == y)],2)*100,"%")
+  })
+
+  # arc
+  try({
+    national_validation$calc_arc[which(national_validation$year == y)] = sum(data$arc_payment[which(data$program_year == y)]*data$enrolled_base_ARCCO_2020[which(data$program_year == y)], na.rm = T)/1000000
+
+    act = rfsa::get_fsa_payments(year = y, program = "ARC-CO", year_type = "program")
+    if(nrow(act) == 0){
+      amount = 0
+    } else {
+      amount = act$payment_amount/1000000
+    }
+    national_validation$act_arc[which(national_validation$year == y)]  = amount
+    national_validation$arc_diff[which(national_validation$year == y)] <- paste0(round((national_validation$calc_arc[which(national_validation$year == y)] - national_validation$act_arc[which(national_validation$year == y)])/national_validation$act_arc[which(national_validation$year == y)],2)*100,"%")
+  })
+
+
+}
+national_validation
 
 
 
 
 
 
-#
+
+
+
+
+
+
+
+
+
+
+
 # # Tabulate missing values by program year for ARC-CO
 # missing_arcco_table <- table(data$program_year, is.na(data$arcco_payment), useNA = "ifany")
 # colnames(missing_arcco_table) <- c("Complete", "Missing")
@@ -366,6 +455,7 @@ new_srps <- list("wheat" = 6.35,
 
 
 srp = new_srps[c][[1]]
+
 
 
 # calculate plc payment

@@ -994,7 +994,10 @@ extract_crop_type <- function(crop_name, rma_code = FALSE) {
 #' @noRd
 #' @keywords internal
 clean_crop_names <- function(crop_name) {
-  cleaned_name <- gsub("[0-9]/", "", crop_name)
+  # Remove footnote patterns: numbers followed by slash, space+slash+numbers, slash+numbers
+  cleaned_name <- gsub("[0-9]+/|\\s*/[0-9]+|/[0-9]+", "", crop_name)
+  # Remove standalone numbers (footnote indicators) at the end
+  cleaned_name <- gsub("\\s+[0-9]+$", "", cleaned_name)
   cleaned_name <- tolower(cleaned_name)
   cleaned_name <- gsub("\\s*\\([^)]*\\)", "", cleaned_name)
   cleaned_name <- gsub("\\blarge\\b|\\bsmall\\b|\\bseed\\b|\\bupland\\b", "", cleaned_name)

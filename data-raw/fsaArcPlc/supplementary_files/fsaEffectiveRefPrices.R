@@ -23,7 +23,12 @@ for(year in 2019:(current_year )){
   colnames(temp) <- temp[commodity_row,]
 
   # remove everything above the commodity_row
-  temp <- temp[-c(1:(commodity_row+1)),]
+  # Check if there's an empty row after commodity row, if so remove it too
+  if (commodity_row + 1 <= nrow(temp) && is.na(temp[commodity_row + 1, 1])) {
+    temp <- temp[-c(1:(commodity_row+1)),]
+  } else {
+    temp <- temp[-c(1:commodity_row),]
+  }
 
   # clean the raw data
   #colnames(temp) <- temp[3,]

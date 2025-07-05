@@ -36,7 +36,7 @@ source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcCoPrice.R")
 source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcPlcPayments.R")
 
 # clean effective reference prices
-source("./data-raw/fsaArcPlc/Suplementary Files/fsaEffectiveRefPrices.R")
+source("./data-raw/fsaArcPlc/supplementary_files/fsaEffectiveRefPrices.R")
 
 # clean arc/plc base acres
 source("./data-raw/fsaArcPlc/Suplementary Files/fsaArcPlcBaseAcres.R") # updated 2/03/2025
