@@ -3,10 +3,10 @@ test_that("calc_plc_payment integrates with real FSA data", {
   # Skip if datasets are not available
 
   skip_on_cran()
-  skip_if_not(file.exists("data/fsaMyaPrice.rda"))
-  skip_if_not(file.exists("data/fsaEffectiveRefPrices.rda"))
-  skip_if_not(file.exists("data/fsaPlcPaymentRate.rda"))
-  skip_if_not(file.exists("data/fsaPlcYields.rda"))
+  # This test requires the FSA datasets to be available
+  # This test requires the FSA datasets to be available
+  # This test requires the FSA datasets to be available
+  # This test requires the FSA datasets to be available
 
   # Test with corn - a crop that should have data
   result_corn <- calc_plc_payment(
@@ -35,7 +35,7 @@ test_that("calc_plc_payment integrates with real FSA data", {
 
 test_that("calc_plc_payment handles crop types correctly with real data", {
   skip_on_cran()
-  skip_if_not(file.exists("data/fsaPlcYields.rda"))
+  # This test requires the FSA datasets to be available
 
   # Test rice with different crop types
   result_rice_long <- calc_plc_payment(
@@ -85,7 +85,7 @@ test_that("calc_plc_payment handles crop types correctly with real data", {
 
 test_that("calc_plc_payment handles location parameters with real data", {
   skip_on_cran()
-  skip_if_not(file.exists("data/fsaPlcYields.rda"))
+  # This test requires the FSA datasets to be available
 
   # Test with Iowa (major corn producing state)
   expect_warning(
@@ -116,7 +116,7 @@ test_that("calc_plc_payment handles location parameters with real data", {
 
 test_that("calc_plc_payment consistency across multiple calls", {
   skip_on_cran()
-  skip_if_not(file.exists("data/fsaMyaPrice.rda"))
+  # This test requires the FSA datasets to be available
 
   # Same parameters should give same results
   params <- list(

@@ -173,7 +173,14 @@ calc_plc_payment <- function(crop,
         dplyr::filter(.data$crop_type == .env$crop_type)
     }
 
+
     srp <- srp %>% pull(statutory_reference_price)
+
+    # special logic for temperate japonica rice
+    if(any(srp == .173) & program_year <= 2018){
+      srp <- ifelse(srp == .173, .161, srp)
+    }
+
 
     if(length(srp) > 1){
       if(!quiet) warning(paste0("No crop type supplied, taking the average statutory reference price across all crop types for ", crop))

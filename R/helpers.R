@@ -75,7 +75,7 @@ get_plc_yield <- function(crop, program_year, crop_type = NULL, state = NULL, co
     # Use fips if provided - clean and validate using clean_fips approach
     fips_clean <- clean_fips(fips = fips)
     plc_yield <- plc_yield %>% dplyr::filter(.data$fips == fips_clean)
-    if(!quiet) warning("No PLC yield supplied. Using counuty average PLC yield for calculations.")
+    if(!quiet) warning("No PLC yield supplied. Using county average PLC yield for calculations.")
   } else if (!is.null(state)) {
     # Validate state input (accepts names, abbreviations, or fips codes)
     state <- valid_state(state)
@@ -124,9 +124,17 @@ get_plc_yield <- function(crop, program_year, crop_type = NULL, state = NULL, co
   # Check if we have multiple yields and need to warn about averaging across crop types
   if(is.null(crop_type) && nrow(plc_yield) > 1 && "plc_yield" %in% names(plc_yield)){
     if(!quiet) warning(paste0("No crop type supplied, taking the average PLC yield across all crop types for ", crop))
+    plc_yield <- plc_yield %>%
+      summarize(plc_yield = mean(.data$plc_yield, na.rm = TRUE))
   }
 
-  return(plc_yield$plc_yield)
+  # Ensure we return a single value
+  if(nrow(plc_yield) > 1) {
+    plc_yield <- plc_yield %>%
+      summarize(plc_yield = mean(.data$plc_yield, na.rm = TRUE))
+  }
+
+  return(plc_yield$plc_yield[1])
 }
 
 #' Get ARC-CO Benchmark Data
@@ -258,10 +266,10 @@ get_arcco_benchmarks <- function(crop, program_year, benchmark_type = "yield", c
         stop("erp must be a single numeric value")
       }
       # Replace any benchmark price below ERP with ERP value
-      prices_below_erp <- adjusted_prices < erp
-      if(any(prices_below_erp)) {
+      prices_below_erp <- !is.na(adjusted_prices) & adjusted_prices < erp
+      if(any(prices_below_erp, na.rm = TRUE)) {
         adjusted_prices[prices_below_erp] <- erp
-        if(!quiet) message("Replaced ", sum(prices_below_erp), " benchmark price(s) below ERP (", erp, ") with ERP value.")
+        if(!quiet) message("Replaced ", sum(prices_below_erp, na.rm = TRUE), " benchmark price(s) below ERP (", erp, ") with ERP value.")
       }
     } else {
       if(!quiet) message("No ERP provided - using raw historical prices for Olympic average calculation.")
@@ -505,10 +513,30 @@ get_arcco_actual_revenue <- function(crop, program_year, mya_price, nmlr, crop_t
   data("fsaArcCoBenchmarks", envir = environment())
 
   # filter on crop and marketing year
+  target_year <- ifelse(program_year <= 2014, 2014, program_year)
   arcco_data = fsaArcCoBenchmarks %>%
     dplyr::filter(.data$crop == .env$crop,
-                  .data$program_year == ifelse(.env$program_year <= 2014, 2014, .env$program_year),
+                  .data$program_year == .env$target_year,
                   .data$actual_yield != "NaN", !is.na(.data$actual_yield))
+  
+  # If no data found for target year, fall back to most recent available year
+  if(nrow(arcco_data) == 0) {
+    available_years <- fsaArcCoBenchmarks %>%
+      dplyr::filter(.data$crop == .env$crop,
+                    .data$actual_yield != "NaN", !is.na(.data$actual_yield)) %>%
+      dplyr::pull(.data$program_year) %>%
+      unique() %>%
+      sort(decreasing = TRUE)
+    
+    if(length(available_years) > 0) {
+      fallback_year <- available_years[1]
+      if(!quiet) warning(paste0("No valid actual yield data for ", crop, " in ", target_year, ". Using data from ", fallback_year, "."))
+      arcco_data = fsaArcCoBenchmarks %>%
+        dplyr::filter(.data$crop == .env$crop,
+                      .data$program_year == .env$fallback_year,
+                      .data$actual_yield != "NaN", !is.na(.data$actual_yield))
+    }
+  }
 
   # filter by crop_type if provided
   if(!is.null(crop_type) && length(crop_type) > 0 && !is.na(crop_type)){
@@ -589,6 +617,11 @@ get_arcco_actual_revenue <- function(crop, program_year, mya_price, nmlr, crop_t
       summarize(actual_yield = mean(as.numeric(.data$actual_yield), na.rm = TRUE))
   }
 
+  # Check if we have any data
+  if(nrow(arcco_data) == 0) {
+    stop(paste("No valid actual yield data found for crop:", crop))
+  }
+  
   # Get the actual yield and ensure it's numeric
   actual_yield <- as.numeric(arcco_data$actual_yield)
 
@@ -1174,6 +1207,249 @@ get_fiscal_year <- function(date){
     return(year + 1)
   }
 
+}
+
+#' Vectorized ARC-CO Benchmarks Calculation (Batch Processing)
+#'
+#' This function calculates ARC-CO benchmark yields or prices for multiple observations
+#' in a vectorized manner, providing significant performance improvements over individual
+#' calls to get_arcco_benchmarks().
+#'
+#' @param crop Character vector. The crop names.
+#' @param program_year Numeric vector. The program years.
+#' @param benchmark_type Character. Either "yield" or "price".
+#' @param crop_type Character vector or NULL. Crop types (optional).
+#' @param yield_type Character vector or NULL. Yield types (optional).
+#' @param historical_data Matrix or NULL. For yield: matrix with 5 columns of historical yields.
+#'   For price: matrix with 5 columns of historical prices.
+#' @param erp Numeric vector or NULL. Effective reference prices (for price calculations).
+#' @param fips Character vector or NULL. FIPS codes for location-specific data.
+#' @param quiet Logical. If TRUE, suppresses messages.
+#'
+#' @return Numeric vector. The calculated benchmark values.
+#'
+#' @keywords internal
+get_arcco_benchmarks_batch <- function(crop, program_year, benchmark_type = "yield",
+                                      crop_type = NULL, yield_type = NULL,
+                                      historical_data = NULL, erp = NULL,
+                                      fips = NULL, quiet = FALSE) {
+  
+  n_rows <- length(crop)
+  
+  # Validate inputs
+  if(!benchmark_type %in% c("yield", "price")) {
+    stop("benchmark_type must be either 'yield' or 'price'")
+  }
+  
+  # Initialize result vector
+  results <- numeric(n_rows)
+  
+  # Handle historical data mode (Olympic averages)
+  if(!is.null(historical_data)) {
+    if(ncol(historical_data) != 5) {
+      stop("historical_data must have exactly 5 columns")
+    }
+    
+    for(i in seq_len(n_rows)) {
+      hist_values <- historical_data[i, ]
+      
+      # Handle NA values - if all NA, return NA
+      if(all(is.na(hist_values))) {
+        results[i] <- NA_real_
+        next
+      }
+      
+      # For price calculations, apply ERP adjustment
+      if(benchmark_type == "price" && !is.null(erp)) {
+        erp_val <- erp[i]
+        if(!is.na(erp_val)) {
+          # Replace any price below ERP with ERP
+          hist_values[!is.na(hist_values) & hist_values < erp_val] <- erp_val
+        }
+      }
+      
+      # Calculate Olympic average (remove highest and lowest)
+      if(sum(!is.na(hist_values)) >= 3) {
+        sorted_values <- sort(hist_values[!is.na(hist_values)])
+        if(length(sorted_values) >= 3) {
+          olympic_avg <- mean(sorted_values[2:(length(sorted_values)-1)])
+          results[i] <- olympic_avg
+        } else {
+          results[i] <- mean(sorted_values, na.rm = TRUE)
+        }
+      } else {
+        results[i] <- mean(hist_values, na.rm = TRUE)
+      }
+    }
+    
+    return(results)
+  }
+  
+  # FSA Data lookup mode - batch process
+  data("fsaArcCoBenchmarks", envir = environment())
+  
+  # Determine column name
+  column_name <- ifelse(benchmark_type == "yield", "oa_bench_mark_yield", "oa_bench_mark_price")
+  
+  # Create lookup data frame for batch processing
+  lookup_df <- data.frame(
+    idx = seq_len(n_rows),
+    crop = crop,
+    program_year = pmax(program_year, 2014), # Default to 2014 for earlier years
+    crop_type = crop_type %||% rep(NA_character_, n_rows),
+    yield_type = yield_type %||% rep(NA_character_, n_rows),
+    fips = fips %||% rep(NA_character_, n_rows),
+    stringsAsFactors = FALSE
+  )
+  
+  # Pre-process ARC-CO data
+  arcco_processed <- fsaArcCoBenchmarks
+  
+  # Batch lookup using joins
+  for(i in seq_len(n_rows)) {
+    row_data <- lookup_df[i, ]
+    
+    # Filter ARC-CO data for this observation
+    filtered_data <- arcco_processed %>%
+      dplyr::filter(.data$crop == row_data$crop,
+                    .data$program_year == row_data$program_year)
+    
+    # Apply optional filters
+    if(!is.na(row_data$crop_type)) {
+      filtered_data <- filtered_data %>%
+        dplyr::filter(.data$crop_type == row_data$crop_type)
+    }
+    
+    if(!is.na(row_data$yield_type)) {
+      filtered_data <- filtered_data %>%
+        dplyr::filter(.data$yield_type == row_data$yield_type)
+    }
+    
+    # Apply location filter
+    if(!is.na(row_data$fips) && row_data$fips != "") {
+      fips_clean <- clean_fips(row_data$fips)
+      filtered_data <- filtered_data %>%
+        dplyr::filter(.data$fips == fips_clean)
+    }
+    
+    # Extract the value
+    if(nrow(filtered_data) > 0) {
+      value <- filtered_data[[column_name]]
+      if(length(value) > 1) {
+        if(!quiet) warning(paste("Multiple", benchmark_type, "values found for", row_data$crop, "- taking average"))
+        results[i] <- mean(value, na.rm = TRUE)
+      } else {
+        results[i] <- value[1]
+      }
+    } else {
+      if(!quiet) warning(paste("No", benchmark_type, "data found for", row_data$crop))
+      results[i] <- NA_real_
+    }
+  }
+  
+  return(results)
+}
+
+#' Vectorized ARC-CO Actual Revenue Calculation (Batch Processing)
+#'
+#' This function calculates ARC-CO actual revenue for multiple observations
+#' in a vectorized manner, providing significant performance improvements.
+#'
+#' @param crop Character vector. The crop names.
+#' @param program_year Numeric vector. The program years.
+#' @param mya_price Numeric vector. Marketing Year Average prices.
+#' @param nmlr Numeric vector. National Marketing Loan Rates.
+#' @param crop_type Character vector or NULL. Crop types (optional).
+#' @param yield_type Character vector or NULL. Yield types (optional).
+#' @param fips Character vector or NULL. FIPS codes for location-specific data.
+#' @param quiet Logical. If TRUE, suppresses messages.
+#'
+#' @return Numeric vector. The calculated actual revenue values.
+#'
+#' @keywords internal
+get_arcco_actual_revenue_batch <- function(crop, program_year, mya_price, nmlr,
+                                          crop_type = NULL, yield_type = NULL,
+                                          fips = NULL, quiet = FALSE) {
+  
+  n_rows <- length(crop)
+  results <- numeric(n_rows)
+  
+  # Load ARC-CO data once
+  data("fsaArcCoBenchmarks", envir = environment())
+  
+  # Vectorize the price comparison (actual yield × max(mya_price, nmlr))
+  price_to_use <- pmax(mya_price, nmlr, na.rm = TRUE)
+  
+  # Batch lookup actual yields
+  lookup_df <- data.frame(
+    idx = seq_len(n_rows),
+    crop = crop,
+    program_year = program_year,
+    crop_type = crop_type %||% rep(NA_character_, n_rows),
+    yield_type = yield_type %||% rep(NA_character_, n_rows),
+    fips = fips %||% rep(NA_character_, n_rows),
+    stringsAsFactors = FALSE
+  )
+  
+  # Process in batches for efficiency
+  for(i in seq_len(n_rows)) {
+    row_data <- lookup_df[i, ]
+    
+    # Apply fallback logic for missing data
+    target_year <- row_data$program_year
+    fallback_years <- target_year - 1
+    
+    actual_yield <- NA_real_
+    
+    # Try current year first
+    for(year_to_try in c(target_year, fallback_years)) {
+      filtered_data <- fsaArcCoBenchmarks %>%
+        dplyr::filter(.data$crop == row_data$crop,
+                      .data$program_year == year_to_try)
+      
+      # Apply optional filters
+      if(!is.na(row_data$crop_type)) {
+        filtered_data <- filtered_data %>%
+          dplyr::filter(.data$crop_type == row_data$crop_type)
+      }
+      
+      if(!is.na(row_data$yield_type)) {
+        filtered_data <- filtered_data %>%
+          dplyr::filter(.data$yield_type == row_data$yield_type)
+      }
+      
+      # Apply location filter
+      if(!is.na(row_data$fips) && row_data$fips != "") {
+        fips_clean <- clean_fips(row_data$fips)
+        filtered_data <- filtered_data %>%
+          dplyr::filter(.data$fips == fips_clean)
+      }
+      
+      # Get actual yield
+      if(nrow(filtered_data) > 0 && "actual_yield" %in% names(filtered_data)) {
+        yield_values <- as.numeric(filtered_data$actual_yield)
+        yield_values <- yield_values[!is.na(yield_values)]
+        
+        if(length(yield_values) > 0) {
+          actual_yield <- mean(yield_values)
+          if(year_to_try != target_year && !quiet) {
+            warning(paste("No valid actual yield data for", row_data$crop, "in", target_year, ". Using data from", year_to_try, "."))
+          }
+          break
+        }
+      }
+    }
+    
+    # Calculate revenue
+    if(!is.na(actual_yield)) {
+      results[i] <- actual_yield * price_to_use[i]
+    } else {
+      if(!quiet) warning(paste("No actual yield data found for", row_data$crop))
+      results[i] <- NA_real_
+    }
+  }
+  
+  return(results)
 }
 
 

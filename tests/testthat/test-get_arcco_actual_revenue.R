@@ -1,5 +1,5 @@
 test_that("get_arcco_actual_revenue basic functionality works", {
-  skip_if_not(file.exists("data/fsaArcCoBenchmarks.rda"))
+  # This test requires the FSA datasets to be available
   
   # Test revenue calculation when MYA price > NMLR (should use MYA price)
   expect_warning(

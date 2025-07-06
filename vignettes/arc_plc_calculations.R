@@ -238,16 +238,16 @@ toc()
 
 
 # average payment per acre by crop
-plc_payment_per_acre <- data %>%
-  group_by(program_year, crop, crop_type) %>%
-  summarise(plc_payment = mean(plc_payment, na.rm = T))
-
-
-# Tabulate missing values by program year
-missing_plc_table <- table(data$program_year, is.na(data$plc_payment), useNA = "ifany")
-colnames(missing_plc_table) <- c("Complete", "Missing")
-print(missing_plc_table)
-
+# plc_payment_per_acre <- data %>%
+#   group_by(program_year, crop, crop_type) %>%
+#   summarise(plc_payment = mean(plc_payment, na.rm = T))
+#
+#
+# # Tabulate missing values by program year
+# missing_plc_table <- table(data$program_year, is.na(data$plc_payment), useNA = "ifany")
+# colnames(missing_plc_table) <- c("Complete", "Missing")
+# print(missing_plc_table)
+#
 
 
 
@@ -279,7 +279,46 @@ data$arc_payment <-
   }, error = function(e) NA)
 }))
 
-saveRDS(data, "./vignettes/arc_plc_calculations.rds")
+#saveRDS(data, "./vignettes/arc_plc_calculations.rds")
+
+
+data <- readRDS("./vignettes/arc_plc_calculations.rds")
+
+
+
+# OPTIMIZED FUNCTION-LEVEL APPROACH
+# This uses the new calc_arcco_payment_optimized function which addresses
+# bottlenecks within the function itself rather than just parallelizing
+
+library(tictoc)
+# Prepare vectorized inputs for optimized function
+historical_prices_matrix <- cbind(
+  data$annual_benchmark_price_lag1,
+  data$annual_benchmark_price_lag2,
+  data$annual_benchmark_price_lag3,
+  data$annual_benchmark_price_lag4,
+  data$annual_benchmark_price_lag5
+)
+
+tic("Optimized calc_arcco_payment_optimized (sample)")
+# Use the new vectorized function:
+data$arc_payment_opt <- calc_arcco_payment_vectorized(
+  crop = data$crop,
+  crop_type = data$crop_type,
+  program_year = data$program_year,
+  base_acres = 1,
+  mya_price = data$current_mya_price,
+  srp = data$statutory_reference_price,
+  oa_benchmark_yield = data$oa_bench_mark_yield,
+  nmlr = data$current_national_loan_rate,
+  historic_mya_prices = historical_prices_matrix,
+  fips = data$fips,
+  quiet = TRUE
+)
+toc()
+
+
+
 
 
 # apply policy changes from OBBB
@@ -312,7 +351,6 @@ srp_obbb <- data.frame(crop = names(new_srps), obbb_srps = unlist(new_srps))
 data <- left_join(data, srp_obbb)
 
 # calculate arc and plc payments again using the new obbb parameters
-
 
 
 # check national levels
@@ -360,7 +398,12 @@ national_validation
 
 
 
-
+# check what percentage of entities are at the 150,000 cap
+arc_co_caps <- get_fsa_payments(year = 2016, program = "ARC-CO", aggregation = "individual") %>%
+  group_by(name_payee) %>%
+  summarise(payment_amount = sum(payment_amount, na.rm = T))
+ arc_co_caps$at_cap <- arc_co_caps$payment_amount == 125000
+summary(arc_co_caps$at_cap)
 
 
 

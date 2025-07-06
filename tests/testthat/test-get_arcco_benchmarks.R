@@ -1,5 +1,5 @@
 test_that("get_arcco_benchmarks basic functionality works", {
-  skip_if_not(file.exists("data/fsaArcCoBenchmarks.rda"))
+  # This test requires the FSA datasets to be available
 
   # Test basic yield retrieval (should use national average and warn)
   expect_warning(

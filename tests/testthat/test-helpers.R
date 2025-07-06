@@ -44,7 +44,7 @@ test_that("calc_effective_reference_price validates inputs", {
 })
 
 test_that("get_plc_yield basic functionality", {
-  skip_if_not(file.exists("data/fsaPlcYields.rda"))
+  # This test requires the FSA datasets to be available
   
   # Test basic yield retrieval (should use national average and warn)
   expect_warning(
@@ -58,7 +58,7 @@ test_that("get_plc_yield basic functionality", {
 })
 
 test_that("get_plc_yield handles crop types", {
-  skip_if_not(file.exists("data/fsaPlcYields.rda"))
+  # This test requires the FSA datasets to be available
   
   # Test with rice crop type
   yield_rice_long <- get_plc_yield("rice", 2024, crop_type = "long grain", quiet = TRUE)
@@ -74,7 +74,7 @@ test_that("get_plc_yield handles crop types", {
 })
 
 test_that("get_plc_yield handles location parameters", {
-  skip_if_not(file.exists("data/fsaPlcYields.rda"))
+  # This test requires the FSA datasets to be available
   
   # Test with FIPS code
   expect_warning(
@@ -100,7 +100,7 @@ test_that("get_plc_yield handles location parameters", {
 })
 
 test_that("get_plc_yield handles historical years", {
-  skip_if_not(file.exists("data/fsaPlcYields.rda"))
+  # This test requires the FSA datasets to be available
   
   # Test that years before 2018 default to 2018
   expect_warning(
@@ -120,7 +120,7 @@ test_that("get_plc_yield handles historical years", {
 })
 
 test_that("get_plc_yield state name conversion", {
-  skip_if_not(file.exists("data/fsaPlcYields.rda"))
+  # This test requires the FSA datasets to be available
   
   # Test state abbreviation conversion
   expect_warning(
