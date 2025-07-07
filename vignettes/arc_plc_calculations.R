@@ -369,15 +369,6 @@ data$arc_payment <- calc_arcco_payment_vectorized(
 )
 
 
-
-
-
-
-
-
-
-
-
 # check national levels
 national_validation <- data.frame(year = 2014:2025, calc_plc = NA, act_plc = NA, plc_diff = NA, calc_arc = NA, act_arc = NA, arc_diff = NA)
 

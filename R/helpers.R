@@ -532,7 +532,7 @@ get_arcco_actual_revenue <- function(crop, program_year, mya_price, nmlr, crop_t
     dplyr::filter(.data$crop == .env$crop,
                   .data$program_year == .env$target_year,
                   .data$actual_yield != "NaN", !is.na(.data$actual_yield))
-  
+
   # If no data found for target year, fall back to most recent available year
   if(nrow(arcco_data) == 0) {
     available_years <- fsaArcCoBenchmarks %>%
@@ -541,7 +541,7 @@ get_arcco_actual_revenue <- function(crop, program_year, mya_price, nmlr, crop_t
       dplyr::pull(.data$program_year) %>%
       unique() %>%
       sort(decreasing = TRUE)
-    
+
     if(length(available_years) > 0) {
       fallback_year <- available_years[1]
       if(!quiet) warning(paste0("No valid actual yield data for ", crop, " in ", target_year, ". Using data from ", fallback_year, "."))
@@ -635,7 +635,7 @@ get_arcco_actual_revenue <- function(crop, program_year, mya_price, nmlr, crop_t
   if(nrow(arcco_data) == 0) {
     stop(paste("No valid actual yield data found for crop:", crop))
   }
-  
+
   # Get the actual yield and ensure it's numeric
   actual_yield <- as.numeric(arcco_data$actual_yield)
 
@@ -778,7 +778,7 @@ valid_state <- function(state) {
 #' @importFrom cli cli_inform
 get_cached_rds <- function(name,
                            repo = "dylan-turner25/rfsa",
-                           tag  = NULL) {
+                           tag  = "v0.1.1") {
   dest_dir <- tools::R_user_dir("rfsa", which = "cache")
   if (!dir.exists(dest_dir)) dir.create(dest_dir, recursive = TRUE)
 
@@ -1261,32 +1261,32 @@ get_arcco_benchmarks_batch <- function(crop, program_year, benchmark_type = "yie
                                       crop_type = NULL, yield_type = NULL,
                                       historical_data = NULL, erp = NULL,
                                       fips = NULL, quiet = FALSE) {
-  
+
   n_rows <- length(crop)
-  
+
   # Validate inputs
   if(!benchmark_type %in% c("yield", "price")) {
     stop("benchmark_type must be either 'yield' or 'price'")
   }
-  
+
   # Initialize result vector
   results <- numeric(n_rows)
-  
+
   # Handle historical data mode (Olympic averages)
   if(!is.null(historical_data)) {
     if(ncol(historical_data) != 5) {
       stop("historical_data must have exactly 5 columns")
     }
-    
+
     for(i in seq_len(n_rows)) {
       hist_values <- historical_data[i, ]
-      
+
       # Handle NA values - if all NA, return NA
       if(all(is.na(hist_values))) {
         results[i] <- NA_real_
         next
       }
-      
+
       # For price calculations, apply ERP adjustment
       if(benchmark_type == "price" && !is.null(erp)) {
         erp_val <- erp[i]
@@ -1295,7 +1295,7 @@ get_arcco_benchmarks_batch <- function(crop, program_year, benchmark_type = "yie
           hist_values[!is.na(hist_values) & hist_values < erp_val] <- erp_val
         }
       }
-      
+
       # Calculate Olympic average (remove highest and lowest)
       if(sum(!is.na(hist_values)) >= 3) {
         sorted_values <- sort(hist_values[!is.na(hist_values)])
@@ -1309,16 +1309,16 @@ get_arcco_benchmarks_batch <- function(crop, program_year, benchmark_type = "yie
         results[i] <- mean(hist_values, na.rm = TRUE)
       }
     }
-    
+
     return(results)
   }
-  
+
   # FSA Data lookup mode - batch process
   data("fsaArcCoBenchmarks", envir = environment())
-  
+
   # Determine column name
   column_name <- ifelse(benchmark_type == "yield", "oa_bench_mark_yield", "oa_bench_mark_price")
-  
+
   # Create lookup data frame for batch processing
   lookup_df <- data.frame(
     idx = seq_len(n_rows),
@@ -1329,37 +1329,37 @@ get_arcco_benchmarks_batch <- function(crop, program_year, benchmark_type = "yie
     fips = fips %||% rep(NA_character_, n_rows),
     stringsAsFactors = FALSE
   )
-  
+
   # Pre-process ARC-CO data
   arcco_processed <- fsaArcCoBenchmarks
-  
+
   # Batch lookup using joins
   for(i in seq_len(n_rows)) {
     row_data <- lookup_df[i, ]
-    
+
     # Filter ARC-CO data for this observation
     filtered_data <- arcco_processed %>%
       dplyr::filter(.data$crop == row_data$crop,
                     .data$program_year == row_data$program_year)
-    
+
     # Apply optional filters
     if(!is.na(row_data$crop_type)) {
       filtered_data <- filtered_data %>%
         dplyr::filter(.data$crop_type == row_data$crop_type)
     }
-    
+
     if(!is.na(row_data$yield_type)) {
       filtered_data <- filtered_data %>%
         dplyr::filter(.data$yield_type == row_data$yield_type)
     }
-    
+
     # Apply location filter
     if(!is.na(row_data$fips) && row_data$fips != "") {
       fips_clean <- clean_fips(row_data$fips)
       filtered_data <- filtered_data %>%
         dplyr::filter(.data$fips == fips_clean)
     }
-    
+
     # Extract the value
     if(nrow(filtered_data) > 0) {
       value <- filtered_data[[column_name]]
@@ -1374,7 +1374,7 @@ get_arcco_benchmarks_batch <- function(crop, program_year, benchmark_type = "yie
       results[i] <- NA_real_
     }
   }
-  
+
   return(results)
 }
 
@@ -1398,16 +1398,16 @@ get_arcco_benchmarks_batch <- function(crop, program_year, benchmark_type = "yie
 get_arcco_actual_revenue_batch <- function(crop, program_year, mya_price, nmlr,
                                           crop_type = NULL, yield_type = NULL,
                                           fips = NULL, quiet = FALSE) {
-  
+
   n_rows <- length(crop)
   results <- numeric(n_rows)
-  
+
   # Load ARC-CO data once
   data("fsaArcCoBenchmarks", envir = environment())
-  
+
   # Vectorize the price comparison (actual yield × max(mya_price, nmlr))
   price_to_use <- pmax(mya_price, nmlr, na.rm = TRUE)
-  
+
   # Batch lookup actual yields
   lookup_df <- data.frame(
     idx = seq_len(n_rows),
@@ -1418,46 +1418,46 @@ get_arcco_actual_revenue_batch <- function(crop, program_year, mya_price, nmlr,
     fips = fips %||% rep(NA_character_, n_rows),
     stringsAsFactors = FALSE
   )
-  
+
   # Process in batches for efficiency
   for(i in seq_len(n_rows)) {
     row_data <- lookup_df[i, ]
-    
+
     # Apply fallback logic for missing data
     target_year <- row_data$program_year
     fallback_years <- target_year - 1
-    
+
     actual_yield <- NA_real_
-    
+
     # Try current year first
     for(year_to_try in c(target_year, fallback_years)) {
       filtered_data <- fsaArcCoBenchmarks %>%
         dplyr::filter(.data$crop == row_data$crop,
                       .data$program_year == year_to_try)
-      
+
       # Apply optional filters
       if(!is.na(row_data$crop_type)) {
         filtered_data <- filtered_data %>%
           dplyr::filter(.data$crop_type == row_data$crop_type)
       }
-      
+
       if(!is.na(row_data$yield_type)) {
         filtered_data <- filtered_data %>%
           dplyr::filter(.data$yield_type == row_data$yield_type)
       }
-      
+
       # Apply location filter
       if(!is.na(row_data$fips) && row_data$fips != "") {
         fips_clean <- clean_fips(row_data$fips)
         filtered_data <- filtered_data %>%
           dplyr::filter(.data$fips == fips_clean)
       }
-      
+
       # Get actual yield
       if(nrow(filtered_data) > 0 && "actual_yield" %in% names(filtered_data)) {
         yield_values <- as.numeric(filtered_data$actual_yield)
         yield_values <- yield_values[!is.na(yield_values)]
-        
+
         if(length(yield_values) > 0) {
           actual_yield <- mean(yield_values)
           if(year_to_try != target_year && !quiet) {
@@ -1467,7 +1467,7 @@ get_arcco_actual_revenue_batch <- function(crop, program_year, mya_price, nmlr,
         }
       }
     }
-    
+
     # Calculate revenue
     if(!is.na(actual_yield)) {
       results[i] <- actual_yield * price_to_use[i]
@@ -1476,7 +1476,7 @@ get_arcco_actual_revenue_batch <- function(crop, program_year, mya_price, nmlr,
       results[i] <- NA_real_
     }
   }
-  
+
   return(results)
 }
 
