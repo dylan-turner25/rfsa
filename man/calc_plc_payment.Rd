@@ -20,6 +20,8 @@ calc_plc_payment(
   state = NULL,
   county = NULL,
   fips = NULL,
+  oa_pct = 0.85,
+  cap = 1.15,
   quiet = FALSE
 )
 }
@@ -65,6 +67,10 @@ Can be state name, abbreviation, or FIPS code.}
 Requires state to also be specified.}
 
 \item{fips}{Character, optional. 5-digit FIPS code for county-specific yields.}
+
+\item{oa_pct}{Numeric. The percentage of the olympic average that is compared against the statutory reference price. Defaults to what is specified under the 2018 Farm Bill (i.e. 0.85).}
+
+\item{cap}{Numeric. The percentage of the srp that the erp is allowed to reach before it is capped. Defaults to what is specified under the 2018 Farm Bill (i.e. 1.15).}
 
 \item{quiet}{Logical. If TRUE, suppresses warning messages and other
 non-error messages (default: FALSE). Useful for batch processing or
@@ -129,6 +135,11 @@ calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100,
 # Calculate ERP from historic MYA prices
 calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100,
                  mya_price = 4.50, historic_mya_prices = c(4.20, 4.30, 4.40, 4.10, 4.35))
+
+# Calculate with custom ERP parameters
+calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100,
+                 historic_mya_prices = c(4.20, 4.30, 4.40, 4.10, 4.35),
+                 oa_pct = 0.90, cap = 1.20)
 }
 
 }

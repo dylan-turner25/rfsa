@@ -32,6 +32,8 @@
 #' @param county Character, optional. County name for county-specific yields.
 #'   Requires state to also be specified.
 #' @param fips Character, optional. 5-digit FIPS code for county-specific yields.
+#' @param oa_pct Numeric. The percentage of the olympic average that is compared against the statutory reference price. Defaults to what is specified under the 2018 Farm Bill (i.e. 0.85).
+#' @param cap Numeric. The percentage of the srp that the erp is allowed to reach before it is capped. Defaults to what is specified under the 2018 Farm Bill (i.e. 1.15).
 #' @param quiet Logical. If TRUE, suppresses warning messages and other
 #'   non-error messages (default: FALSE). Useful for batch processing or
 #'   when warnings are not needed.
@@ -89,6 +91,11 @@
 #' # Calculate ERP from historic MYA prices
 #' calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100,
 #'                  mya_price = 4.50, historic_mya_prices = c(4.20, 4.30, 4.40, 4.10, 4.35))
+#'
+#' # Calculate with custom ERP parameters
+#' calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100,
+#'                  historic_mya_prices = c(4.20, 4.30, 4.40, 4.10, 4.35),
+#'                  oa_pct = 0.90, cap = 1.20)
 #' }
 #'
 #' @seealso
@@ -112,6 +119,8 @@ calc_plc_payment <- function(crop,
                              state = NULL,
                              county = NULL,
                              fips = NULL,
+                             oa_pct = 0.85,
+                             cap = 1.15,
                              quiet = FALSE){
 
   # if base acres is null, default to 1
@@ -198,7 +207,7 @@ calc_plc_payment <- function(crop,
 
     if(calculate_erp){
       # Calculate ERP using helper function with historic MYA prices
-      erp <- calc_effective_reference_price(mya_prices = historic_mya_prices, srp = srp)
+      erp <- calc_effective_reference_price(mya_prices = historic_mya_prices, srp = srp, oa_pct = oa_pct, cap = cap)
     } else {
       data("fsaEffectiveRefPrices", envir = environment())
 

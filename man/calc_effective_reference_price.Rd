@@ -4,12 +4,16 @@
 \alias{calc_effective_reference_price}
 \title{Calculate Effective Reference Price (Internal Function)}
 \usage{
-calc_effective_reference_price(mya_prices, srp)
+calc_effective_reference_price(mya_prices, srp, oa_pct = 0.85, cap = 1.15)
 }
 \arguments{
 \item{mya_prices}{Numeric vector. Five years of MYA prices for Olympic average calculation.}
 
 \item{srp}{Numeric. The statutory reference price for the crop.}
+
+\item{oa_pct}{Numeric. The percentage of the olympic average that is compared against the statuatory reference price. Defaults to what is specified under the 2018 Farm Bill (i.e. 0.85)}
+
+\item{cap}{Numeric. The percentage of the srp that the erp is allowed to reach before it is capped. Defaults to what is specified under the 2018 Farm Bill (i.e. 1.15).}
 }
 \value{
 Numeric. The calculated effective reference price based on the formula:

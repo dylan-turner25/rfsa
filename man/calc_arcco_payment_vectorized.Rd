@@ -25,6 +25,8 @@ calc_arcco_payment_vectorized(
   state = NULL,
   county = NULL,
   fips = NULL,
+  oa_pct = 0.85,
+  cap = 1.15,
   quiet = FALSE
 )
 }
@@ -68,6 +70,10 @@ calc_arcco_payment_vectorized(
 \item{county}{Character vector or NULL. County name for location-specific data.}
 
 \item{fips}{Character vector or NULL. FIPS code for location identification.}
+
+\item{oa_pct}{Numeric. The percentage of the olympic average that is compared against the statutory reference price. Defaults to what is specified under the 2018 Farm Bill (i.e. 0.85).}
+
+\item{cap}{Numeric. The percentage of the srp that the erp is allowed to reach before it is capped. Defaults to what is specified under the 2018 Farm Bill (i.e. 1.15).}
 
 \item{quiet}{Logical. If TRUE, suppresses warning messages (default: FALSE).}
 }

@@ -294,6 +294,8 @@ data <- left_join(data, srp_obbb)
 # calculate new effective reference prices based on new erp parameters
 
 
+# ERP parameters
+
 # PLC parameters
 obbb_cov_lvl = .88
 
@@ -374,11 +376,21 @@ national_validation <- data.frame(year = 2014:2025, calc_plc = NA, act_plc = NA,
 
 for(y in national_validation$year){
 
+  if(y <= 2019){
+    ba_year = 2019
+  } else if (y == 2023) {
+    ba_year = 2024
+  } else {
+    ba_year = y
+  }
+
+
+
   print(y)
 
   # plc
   try({
-  national_validation$calc_plc[which(national_validation$year == y)] = sum(data$plc_payment[which(data$program_year == y)]*data$enrolled_base_PLC_2020[which(data$program_year == y)], na.rm = T)/1000000
+  national_validation$calc_plc[which(national_validation$year == y)] = sum(data$plc_payment[which(data$program_year == y)]*data[which(data$program_year == y),paste0("enrolled_base_PLC_",ba_year)], na.rm = T)/1000000
 
   act = rfsa::get_fsa_payments(year = y, program = "PLC", year_type = "program")
   if(nrow(act) == 0){
@@ -392,7 +404,7 @@ for(y in national_validation$year){
 
   # arc
   try({
-    national_validation$calc_arc[which(national_validation$year == y)] = sum(data$arc_payment[which(data$program_year == y)]*data$enrolled_base_ARCCO_2020[which(data$program_year == y)], na.rm = T)/1000000
+    national_validation$calc_arc[which(national_validation$year == y)] = sum(data$arc_payment[which(data$program_year == y)]*data[which(data$program_year == y),paste0("enrolled_base_ARCCO_",ba_year)], na.rm = T)/1000000
 
     act = rfsa::get_fsa_payments(year = y, program = "ARC-CO", year_type = "program")
     if(nrow(act) == 0){
@@ -408,7 +420,7 @@ for(y in national_validation$year){
 }
 national_validation
 
-
+national_validation[national_validation == "NaN%"] <- "0%"
 
 
 

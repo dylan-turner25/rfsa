@@ -25,6 +25,8 @@ calc_arcco_payment(
   state = NULL,
   county = NULL,
   fips = NULL,
+  oa_pct = 0.85,
+  cap = 1.15,
   quiet = FALSE
 )
 }
@@ -69,6 +71,10 @@ calc_arcco_payment(
 
 \item{fips}{Numeric or NULL. FIPS code for location identification (default: NULL).}
 
+\item{oa_pct}{Numeric. The percentage of the olympic average that is compared against the statutory reference price. Defaults to what is specified under the 2018 Farm Bill (i.e. 0.85).}
+
+\item{cap}{Numeric. The percentage of the srp that the erp is allowed to reach before it is capped. Defaults to what is specified under the 2018 Farm Bill (i.e. 1.15).}
+
 \item{quiet}{Logical. If TRUE, suppresses warning messages (default: FALSE).}
 }
 \value{
@@ -111,6 +117,17 @@ payment <- calc_arcco_payment(
   cov_lvl = 0.80,
   state = "Iowa",
   county = "Story"
+)
+
+# Calculate with custom ERP parameters
+payment <- calc_arcco_payment(
+  crop = "corn",
+  program_year = 2023,
+  base_acres = 100,
+  historic_mya_prices = c(4.20, 4.30, 4.40, 4.10, 4.35),
+  oa_pct = 0.90,
+  cap = 1.20,
+  fips = 17001
 )
 }
 

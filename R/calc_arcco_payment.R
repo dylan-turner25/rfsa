@@ -25,6 +25,8 @@
 #' @param state Character or NULL. State name for location-specific data (default: NULL).
 #' @param county Character or NULL. County name for location-specific data (default: NULL).
 #' @param fips Numeric or NULL. FIPS code for location identification (default: NULL).
+#' @param oa_pct Numeric. The percentage of the olympic average that is compared against the statutory reference price. Defaults to what is specified under the 2018 Farm Bill (i.e. 0.85).
+#' @param cap Numeric. The percentage of the srp that the erp is allowed to reach before it is capped. Defaults to what is specified under the 2018 Farm Bill (i.e. 1.15).
 #' @param quiet Logical. If TRUE, suppresses warning messages (default: FALSE).
 #'
 #' @return Numeric. The calculated ARC-CO payment amount in dollars.
@@ -62,6 +64,17 @@
 #'   state = "Iowa",
 #'   county = "Story"
 #' )
+#'
+#' # Calculate with custom ERP parameters
+#' payment <- calc_arcco_payment(
+#'   crop = "corn",
+#'   program_year = 2023,
+#'   base_acres = 100,
+#'   historic_mya_prices = c(4.20, 4.30, 4.40, 4.10, 4.35),
+#'   oa_pct = 0.90,
+#'   cap = 1.20,
+#'   fips = 17001
+#' )
 #' }
 #'
 #' @export
@@ -85,6 +98,8 @@ calc_arcco_payment <- function(crop,
                              state = NULL,
                              county = NULL,
                              fips = NULL,
+                             oa_pct = 0.85,
+                             cap = 1.15,
                              quiet = FALSE){
 
   # if base acres is null, default to 1
@@ -184,7 +199,7 @@ calc_arcco_payment <- function(crop,
 
     if(calculate_erp){
       # Calculate ERP using helper function with historic MYA prices
-      erp <- calc_effective_reference_price(mya_prices = historic_mya_prices, srp = srp)
+      erp <- calc_effective_reference_price(mya_prices = historic_mya_prices, srp = srp, oa_pct = oa_pct, cap = cap)
     } else {
       data("fsaEffectiveRefPrices", envir = environment())
 
@@ -330,6 +345,8 @@ calc_arcco_payment <- function(crop,
 #' @param state Character vector or NULL. State name for location-specific data.
 #' @param county Character vector or NULL. County name for location-specific data.
 #' @param fips Character vector or NULL. FIPS code for location identification.
+#' @param oa_pct Numeric. The percentage of the olympic average that is compared against the statutory reference price. Defaults to what is specified under the 2018 Farm Bill (i.e. 0.85).
+#' @param cap Numeric. The percentage of the srp that the erp is allowed to reach before it is capped. Defaults to what is specified under the 2018 Farm Bill (i.e. 1.15).
 #' @param quiet Logical. If TRUE, suppresses warning messages (default: FALSE).
 #'
 #' @return Numeric vector. The calculated ARC-CO payment amounts in dollars.
@@ -376,6 +393,8 @@ calc_arcco_payment_vectorized <- function(crop,
                                         state = NULL,
                                         county = NULL,
                                         fips = NULL,
+                                        oa_pct = 0.85,
+                                        cap = 1.15,
                                         quiet = FALSE) {
 
   # Input validation and vectorization setup
@@ -558,7 +577,7 @@ calc_arcco_payment_vectorized <- function(crop,
           # Additional safety check - ensure all values are finite numbers
           if(all(is.finite(hist_prices))) {
             tryCatch({
-              erp[i] <- calc_effective_reference_price(mya_prices = hist_prices, srp = srp[i])
+              erp[i] <- calc_effective_reference_price(mya_prices = hist_prices, srp = srp[i], oa_pct = oa_pct, cap = cap)
             }, error = function(e) {
               # If ERP calculation fails, fall back to database lookup
               if(!quiet) warning(paste0("ERP calculation failed for row ", i, " (", crop[i], "), falling back to database lookup: ", e$message))
