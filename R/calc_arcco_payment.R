@@ -445,74 +445,99 @@ calc_arcco_payment_vectorized <- function(crop,
   data("fsaEffectiveRefPrices", envir = environment())
   data("fsaPlcPaymentRate", envir = environment())
 
-  # MYA price lookup - vectorized
+  # MYA price lookup - truly vectorized
   if (is.null(mya_price)) {
-    mya_price <- numeric(n_rows)
-    for (i in seq_len(n_rows)) {
-      mya_data <- fsaMyaPrice %>%
-        dplyr::filter(.data$crop == .env$crop[i], .data$marketing_year == .env$marketing_year[i])
-
-      if(!is.na(crop_type[i])) {
-        mya_data <- mya_data %>% dplyr::filter(.data$crop_type == .env$crop_type[i])
-      }
-
-      mya_val <- mya_data %>% pull(current_mya_price)
-
-      if(length(mya_val) > 1) {
-        if(!quiet) warning(paste0("No crop type supplied, taking the average MYA price across all crop types for ", crop[i]))
-        mya_price[i] <- mean(mya_val, na.rm = TRUE)
-      } else {
-        mya_price[i] <- mya_val
-      }
-    }
+    # Create lookup data frame
+    lookup_df <- data.frame(
+      row_id = seq_len(n_rows),
+      crop = crop,
+      marketing_year = marketing_year,
+      crop_type = crop_type,
+      stringsAsFactors = FALSE
+    )
+    
+    # Join with MYA price data
+    mya_joined <- lookup_df %>%
+      dplyr::left_join(fsaMyaPrice, by = c("crop", "marketing_year")) %>%
+      dplyr::filter(is.na(.data$crop_type.x) | is.na(.data$crop_type.y) | .data$crop_type.x == .data$crop_type.y) %>%
+      dplyr::group_by(.data$row_id) %>%
+      dplyr::summarise(mya_price = mean(.data$current_mya_price, na.rm = TRUE), .groups = "drop") %>%
+      dplyr::arrange(.data$row_id)
+    
+    mya_price <- mya_joined$mya_price
   } else {
     mya_price <- rep_len(mya_price, n_rows)
   }
 
-  # Statutory reference price lookup - vectorized
+  # Statutory reference price lookup - truly vectorized
   if (is.null(srp)) {
-    srp <- numeric(n_rows)
-    for (i in seq_len(n_rows)) {
-      # First try the exact program year or 2019 for older years
-      target_year <- ifelse(program_year[i] <= 2019, 2019, program_year[i])
-      srp_data <- fsaEffectiveRefPrices %>%
-        dplyr::filter(.data$crop == .env$crop[i], .data$program_year == .env$target_year)
-
-      # If no data found for target year, fall back to most recent available year for this crop
-      if(nrow(srp_data) == 0) {
+    # Create lookup data frame with target years
+    target_years <- ifelse(program_year <= 2019, 2019, program_year)
+    lookup_df <- data.frame(
+      row_id = seq_len(n_rows),
+      crop = crop,
+      target_year = target_years,
+      crop_type = crop_type,
+      program_year = program_year,
+      stringsAsFactors = FALSE
+    )
+    
+    # Join with SRP data
+    srp_joined <- lookup_df %>%
+      dplyr::left_join(fsaEffectiveRefPrices, by = c("crop", "target_year" = "program_year")) %>%
+      dplyr::filter(is.na(.data$crop_type.x) | is.na(.data$crop_type.y) | .data$crop_type.x == .data$crop_type.y) %>%
+      dplyr::mutate(
+        # Apply special logic for temperate japonica rice
+        statutory_reference_price = ifelse(
+          .data$statutory_reference_price == 0.173 & .data$program_year <= 2018, 
+          0.161, 
+          .data$statutory_reference_price
+        )
+      ) %>%
+      dplyr::group_by(.data$row_id) %>%
+      dplyr::summarise(srp = mean(.data$statutory_reference_price, na.rm = TRUE), .groups = "drop") %>%
+      dplyr::arrange(.data$row_id)
+    
+    srp <- srp_joined$srp
+    
+    # Check for missing values and handle fallback
+    if(any(is.na(srp) | is.nan(srp))) {
+      # For missing values, need to use fallback logic (most recent year)
+      missing_rows <- which(is.na(srp) | is.nan(srp))
+      for(i in missing_rows) {
         available_years <- fsaEffectiveRefPrices %>%
           dplyr::filter(.data$crop == .env$crop[i]) %>%
           pull(.data$program_year)
-
+        
         if(length(available_years) > 0) {
           most_recent_year <- max(available_years)
-          if(!quiet) warning(paste0("No statutory reference price found for ", crop[i], " in ", target_year, ". Using most recent available year: ", most_recent_year))
-
+          if(!quiet) warning(paste0("No statutory reference price found for ", crop[i], " in ", target_years[i], ". Using most recent available year: ", most_recent_year))
+          
           srp_data <- fsaEffectiveRefPrices %>%
             dplyr::filter(.data$crop == .env$crop[i], .data$program_year == .env$most_recent_year)
+          
+          if(!is.na(crop_type[i])) {
+            srp_data <- srp_data %>% dplyr::filter(.data$crop_type == .env$crop_type[i])
+          }
+          
+          srp_val <- srp_data %>% pull(statutory_reference_price)
+          
+          # Apply special logic for temperate japonica rice
+          if(any(srp_val == 0.173) & program_year[i] <= 2018) {
+            srp_val <- ifelse(srp_val == 0.173, 0.161, srp_val)
+          }
+          
+          if(length(srp_val) > 1) {
+            if(!quiet) warning(paste0("No crop type supplied, taking the average statutory reference price across all crop types for ", crop[i]))
+            srp[i] <- mean(srp_val, na.rm = TRUE)
+          } else {
+            srp[i] <- srp_val
+          }
         }
-      }
-
-      if(!is.na(crop_type[i])) {
-        srp_data <- srp_data %>% dplyr::filter(.data$crop_type == .env$crop_type[i])
-      }
-
-      srp_val <- srp_data %>% pull(statutory_reference_price)
-
-      # Special logic for temperate japonica rice
-      if(any(srp_val == 0.173) & program_year[i] <= 2018) {
-        srp_val <- ifelse(srp_val == 0.173, 0.161, srp_val)
-      }
-
-      if(length(srp_val) > 1) {
-        if(!quiet) warning(paste0("No crop type supplied, taking the average statutory reference price across all crop types for ", crop[i]))
-        srp[i] <- mean(srp_val, na.rm = TRUE)
-      } else {
-        srp[i] <- srp_val
-      }
-
-      if(length(srp_val) == 0) {
-        stop(paste("No statutory reference price found for crop:", crop[i]))
+        
+        if(is.na(srp[i]) || is.nan(srp[i])) {
+          stop(paste("No statutory reference price found for crop:", crop[i]))
+        }
       }
     }
   } else {
@@ -528,15 +553,100 @@ calc_arcco_payment_vectorized <- function(crop,
         # Calculate ERP using helper function with historic MYA prices
         hist_prices <- if(is.matrix(historic_mya_prices)) historic_mya_prices[i, ] else historic_mya_prices
 
-        # Validate historic_mya_prices input
-        if(length(hist_prices) != 5) {
-          stop("historic_mya_prices must contain exactly 5 values")
-        }
-        if(!is.numeric(hist_prices)) {
-          stop("historic_mya_prices must be numeric")
-        }
+        # Check if we have valid historic prices (no NAs and proper length)
+        if(length(hist_prices) == 5 && is.numeric(hist_prices) && !any(is.na(hist_prices)) && !any(is.infinite(hist_prices))) {
+          # Additional safety check - ensure all values are finite numbers
+          if(all(is.finite(hist_prices))) {
+            tryCatch({
+              erp[i] <- calc_effective_reference_price(mya_prices = hist_prices, srp = srp[i])
+            }, error = function(e) {
+              # If ERP calculation fails, fall back to database lookup
+              if(!quiet) warning(paste0("ERP calculation failed for row ", i, " (", crop[i], "), falling back to database lookup: ", e$message))
+              if(program_year[i] >= 2019) {
+                # First try the exact marketing year
+                erp_data <- fsaEffectiveRefPrices %>%
+                  dplyr::filter(.data$crop == .env$crop[i], .data$marketing_year == .env$marketing_year[i])
 
-        erp[i] <- calc_effective_reference_price(mya_prices = hist_prices, srp = srp[i])
+                # If no data found for marketing year, fall back to most recent available year for this crop
+                if(nrow(erp_data) == 0) {
+                  available_years <- fsaEffectiveRefPrices %>%
+                    dplyr::filter(.data$crop == .env$crop[i]) %>%
+                    pull(.data$program_year)
+
+                  if(length(available_years) > 0) {
+                    most_recent_year <- max(available_years)
+                    most_recent_marketing_year <- paste0(most_recent_year, "-", most_recent_year + 1)
+                    if(!quiet) warning(paste0("No effective reference price found for ", crop[i], " in ", marketing_year[i], ". Using most recent available year: ", most_recent_marketing_year))
+
+                    erp_data <- fsaEffectiveRefPrices %>%
+                      dplyr::filter(.data$crop == .env$crop[i], .data$marketing_year == .env$most_recent_marketing_year)
+                  }
+                }
+
+                if(!is.na(crop_type[i])) {
+                  erp_data <- erp_data %>% dplyr::filter(.data$crop_type == .env$crop_type[i])
+                }
+
+                erp_val <- erp_data %>% pull(effective_reference_price)
+
+                if(length(erp_val) > 1) {
+                  if(!quiet) warning(paste0("No crop type supplied, taking the average effective reference price across all crop types for ", crop[i]))
+                  erp[i] <- mean(erp_val, na.rm = TRUE)
+                } else {
+                  erp[i] <- erp_val
+                }
+
+                if(length(erp_val) == 0) {
+                  stop(paste("No effective reference price found for crop:", crop[i], "and marketing year:", marketing_year[i]))
+                }
+              } else {
+                erp[i] <- srp[i]
+              }
+            })
+          } else {
+            # If historic prices contain non-finite values, fall back to database lookup
+            if(program_year[i] >= 2019) {
+              # First try the exact marketing year
+              erp_data <- fsaEffectiveRefPrices %>%
+                dplyr::filter(.data$crop == .env$crop[i], .data$marketing_year == .env$marketing_year[i])
+
+              # If no data found for marketing year, fall back to most recent available year for this crop
+              if(nrow(erp_data) == 0) {
+                available_years <- fsaEffectiveRefPrices %>%
+                  dplyr::filter(.data$crop == .env$crop[i]) %>%
+                  pull(.data$program_year)
+
+                if(length(available_years) > 0) {
+                  most_recent_year <- max(available_years)
+                  most_recent_marketing_year <- paste0(most_recent_year, "-", most_recent_year + 1)
+                  if(!quiet) warning(paste0("No effective reference price found for ", crop[i], " in ", marketing_year[i], ". Using most recent available year: ", most_recent_marketing_year))
+
+                  erp_data <- fsaEffectiveRefPrices %>%
+                    dplyr::filter(.data$crop == .env$crop[i], .data$marketing_year == .env$most_recent_marketing_year)
+                }
+              }
+
+              if(!is.na(crop_type[i])) {
+                erp_data <- erp_data %>% dplyr::filter(.data$crop_type == .env$crop_type[i])
+              }
+
+              erp_val <- erp_data %>% pull(effective_reference_price)
+
+              if(length(erp_val) > 1) {
+                if(!quiet) warning(paste0("No crop type supplied, taking the average effective reference price across all crop types for ", crop[i]))
+                erp[i] <- mean(erp_val, na.rm = TRUE)
+              } else {
+                erp[i] <- erp_val
+              }
+
+              if(length(erp_val) == 0) {
+                stop(paste("No effective reference price found for crop:", crop[i], "and marketing year:", marketing_year[i]))
+              }
+            } else {
+              erp[i] <- srp[i]
+            }
+          }
+        }
       } else {
         if(program_year[i] >= 2019) {
           # First try the exact marketing year
@@ -584,27 +694,31 @@ calc_arcco_payment_vectorized <- function(crop,
     erp <- rep_len(erp, n_rows)
   }
 
-  # National marketing loan rate lookup - vectorized
+  # National marketing loan rate lookup - truly vectorized
   if (is.null(nmlr)) {
-    nmlr <- numeric(n_rows)
-    for (i in seq_len(n_rows)) {
-      nmlr_data <- fsaPlcPaymentRate %>%
-        dplyr::filter(.data$crop == .env$crop[i], .data$marketing_year == .env$marketing_year[i])
-
-      if(!is.na(crop_type[i])) {
-        nmlr_data <- nmlr_data %>% dplyr::filter(.data$crop_type == .env$crop_type[i])
-      }
-
-      nmlr_val <- nmlr_data %>% pull(current_national_loan_rate)
-
-      if(length(nmlr_val) > 1) {
-        if(!quiet) warning(paste0("No crop type supplied, taking the average national marketing loan rate across all crop types for ", crop[i]))
-        nmlr[i] <- mean(nmlr_val, na.rm = TRUE)
-      } else {
-        nmlr[i] <- nmlr_val
-      }
-
-      if(length(nmlr_val) == 0) {
+    # Create lookup data frame
+    lookup_df <- data.frame(
+      row_id = seq_len(n_rows),
+      crop = crop,
+      marketing_year = marketing_year,
+      crop_type = crop_type,
+      stringsAsFactors = FALSE
+    )
+    
+    # Join with NMLR data
+    nmlr_joined <- lookup_df %>%
+      dplyr::left_join(fsaPlcPaymentRate, by = c("crop", "marketing_year")) %>%
+      dplyr::filter(is.na(.data$crop_type.x) | is.na(.data$crop_type.y) | .data$crop_type.x == .data$crop_type.y) %>%
+      dplyr::group_by(.data$row_id) %>%
+      dplyr::summarise(nmlr = mean(.data$current_national_loan_rate, na.rm = TRUE), .groups = "drop") %>%
+      dplyr::arrange(.data$row_id)
+    
+    nmlr <- nmlr_joined$nmlr
+    
+    # Check for missing values
+    if(any(is.na(nmlr) | is.nan(nmlr))) {
+      missing_rows <- which(is.na(nmlr) | is.nan(nmlr))
+      for(i in missing_rows) {
         stop(paste("No national marketing loan rate found for crop:", crop[i], "and marketing year:", marketing_year[i]))
       }
     }
@@ -612,74 +726,51 @@ calc_arcco_payment_vectorized <- function(crop,
     nmlr <- rep_len(nmlr, n_rows)
   }
 
-  # ARC-CO benchmark yield - vectorized
+  # ARC-CO benchmark yield - truly vectorized using batch function
   if (is.null(oa_benchmark_yield)) {
-    oa_benchmark_yield <- numeric(n_rows)
-    for (i in seq_len(n_rows)) {
-      hist_yields <- if(is.null(historical_yields)) NULL else {
-        if(is.matrix(historical_yields)) historical_yields[i, ] else historical_yields
-      }
-
-      oa_benchmark_yield[i] <- get_arcco_benchmarks(
-        crop = crop[i],
-        program_year = program_year[i],
-        benchmark_type = "yield",
-        crop_type = if(is.na(crop_type[i])) NULL else crop_type[i],
-        yield_type = if(is.na(yield_type[i])) NULL else yield_type[i],
-        historical_yields = hist_yields,
-        state = if(is.na(state[i])) NULL else state[i],
-        county = if(is.na(county[i])) NULL else county[i],
-        fips = if(is.na(fips[i])) NULL else fips[i],
-        quiet = quiet
-      )
-    }
+    oa_benchmark_yield <- get_arcco_benchmarks_batch(
+      crop = crop,
+      program_year = program_year,
+      benchmark_type = "yield",
+      crop_type = crop_type,
+      yield_type = yield_type,
+      historical_data = historical_yields,
+      fips = fips,
+      quiet = quiet
+    )
   } else {
     oa_benchmark_yield <- rep_len(oa_benchmark_yield, n_rows)
   }
 
-  # ARC-CO benchmark price - vectorized
+  # ARC-CO benchmark price - truly vectorized using batch function
   if (is.null(oa_benchmark_price)) {
-    oa_benchmark_price <- numeric(n_rows)
-    for (i in seq_len(n_rows)) {
-      hist_prices <- if(is.null(historic_mya_prices)) NULL else {
-        if(is.matrix(historic_mya_prices)) historic_mya_prices[i, ] else historic_mya_prices
-      }
-
-      oa_benchmark_price[i] <- get_arcco_benchmarks(
-        crop = crop[i],
-        program_year = program_year[i],
-        benchmark_type = "price",
-        crop_type = if(is.na(crop_type[i])) NULL else crop_type[i],
-        yield_type = if(is.na(yield_type[i])) NULL else yield_type[i],
-        historical_prices = hist_prices,
-        erp = erp[i],
-        state = if(is.na(state[i])) NULL else state[i],
-        county = if(is.na(county[i])) NULL else county[i],
-        fips = if(is.na(fips[i])) NULL else fips[i],
-        quiet = quiet
-      )
-    }
+    oa_benchmark_price <- get_arcco_benchmarks_batch(
+      crop = crop,
+      program_year = program_year,
+      benchmark_type = "price",
+      crop_type = crop_type,
+      yield_type = yield_type,
+      historical_data = historic_mya_prices,
+      erp = erp,
+      fips = fips,
+      quiet = quiet
+    )
   } else {
     oa_benchmark_price <- rep_len(oa_benchmark_price, n_rows)
   }
 
-  # ARC-CO actual revenue - vectorized
+  # ARC-CO actual revenue - truly vectorized using batch function
   if (is.null(actual_revenue)) {
-    actual_revenue <- numeric(n_rows)
-    for (i in seq_len(n_rows)) {
-      actual_revenue[i] <- get_arcco_actual_revenue(
-        crop = crop[i],
-        program_year = program_year[i],
-        mya_price = mya_price[i],
-        nmlr = nmlr[i],
-        crop_type = if(is.na(crop_type[i])) NULL else crop_type[i],
-        yield_type = if(is.na(yield_type[i])) NULL else yield_type[i],
-        state = if(is.na(state[i])) NULL else state[i],
-        county = if(is.na(county[i])) NULL else county[i],
-        fips = if(is.na(fips[i])) NULL else fips[i],
-        quiet = quiet
-      )
-    }
+    actual_revenue <- get_arcco_actual_revenue_batch(
+      crop = crop,
+      program_year = program_year,
+      mya_price = mya_price,
+      nmlr = nmlr,
+      crop_type = crop_type,
+      yield_type = yield_type,
+      fips = fips,
+      quiet = quiet
+    )
   } else {
     actual_revenue <- rep_len(actual_revenue, n_rows)
   }

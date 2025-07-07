@@ -1,0 +1,102 @@
+
+> knitr::opts_chunk$set(collapse = TRUE, comment = "#>", 
++     eval = TRUE, error = TRUE)
+
+> library(rfsa)
+
+> payment <- calc_plc_payment(crop = "corn", program_year = 2024, 
++     base_acres = 100, mya_price = 3.5, erp = 4.3, nmlr = 2.5, 
++     plc_yield =  .... [TRUNCATED] 
+
+> print(paste("PLC payment for 100 acres of corn:", 
++     round(payment, 2)))
+[1] "PLC payment for 100 acres of corn: 12240"
+
+> crop <- "corn"
+
+> erp <- 4.3
+
+> mya_price <- 3.5
+
+> nmlr <- 2.5
+
+> plc_yield <- 180
+
+> base_acres <- 100
+
+> coverage_level <- 0.85
+
+> payment_due <- erp > mya_price
+
+> print(paste("Payment due (ERP > MYA)?", payment_due))
+[1] "Payment due (ERP > MYA)? TRUE"
+
+> comparison_price <- max(mya_price, nmlr)
+
+> print(paste("Comparison price (max of MYA and NMLR):", 
++     comparison_price))
+[1] "Comparison price (max of MYA and NMLR): 3.5"
+
+> payment_rate <- erp - comparison_price
+
+> print(paste("Payment rate per bushel:", payment_rate))
+[1] "Payment rate per bushel: 0.8"
+
+> total_payment <- payment_rate * plc_yield * base_acres * 
++     coverage_level
+
+> print(paste("Total PLC payment:", round(total_payment, 
++     2)))
+[1] "Total PLC payment: 12240"
+
+> function_result <- calc_plc_payment(crop = crop, program_year = 2024, 
++     base_acres = base_acres, mya_price = mya_price, erp = erp, 
++     nmlr  .... [TRUNCATED] 
+
+> print(paste("Function result matches:", round(function_result, 
++     2) == round(total_payment, 2)))
+[1] "Function result matches: TRUE"
+
+> no_payment <- calc_plc_payment(crop = "corn", program_year = 2024, 
++     base_acres = 100, mya_price = 4.5, erp = 4.3, nmlr = 2.5, 
++     plc_yield .... [TRUNCATED] 
+
+> print(paste("Payment when ERP <= MYA:", no_payment))
+[1] "Payment when ERP <= MYA: 0"
+
+> low_mya_payment <- calc_plc_payment(crop = "corn", 
++     program_year = 2024, base_acres = 100, mya_price = 2, erp = 4.3, 
++     nmlr = 2.5, plc_yi .... [TRUNCATED] 
+
+> print(paste("Payment when MYA <= NMLR:", round(low_mya_payment, 
++     2)))
+[1] "Payment when MYA <= NMLR: 27540"
+
+> payment_85 <- calc_plc_payment(crop = "corn", program_year = 2024, 
++     base_acres = 100, mya_price = 3.5, erp = 4.3, nmlr = 2.5, 
++     plc_yield .... [TRUNCATED] 
+
+> payment_88 <- calc_plc_payment(crop = "corn", program_year = 2024, 
++     base_acres = 100, mya_price = 3.5, erp = 4.3, nmlr = 2.5, 
++     plc_yield .... [TRUNCATED] 
+
+> print(paste("85% coverage:", round(payment_85, 2)))
+[1] "85% coverage: 12240"
+
+> print(paste("88% coverage:", round(payment_88, 2)))
+[1] "88% coverage: 12672"
+
+> print(paste("Difference:", round(payment_88 - payment_85, 
++     2)))
+[1] "Difference: 432"
+
+> custom_mya <- list(years = c(2019, 2020, 2021, 2022, 
++     2023), price = c(3.6, 3.5, 5.8, 6.8, 4.85))
+
+> custom_payment <- calc_plc_payment(crop = "corn", 
++     program_year = 2024, base_acres = 100, mya_price = custom_mya, 
++     srp = 4.3, nmlr = 2.5 .... [TRUNCATED] 
+
+  When sourcing ‘plc-payment-calculations.R’:
+Error: 'list' object cannot be coerced to type 'double'
+Execution halted

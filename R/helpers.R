@@ -245,7 +245,14 @@ get_arcco_benchmarks <- function(crop, program_year, benchmark_type = "yield", c
     }
     # Calculate Olympic average (remove highest and lowest, average the rest)
     sorted_yields <- sort(historical_yields)
-    olympic_average <- mean(sorted_yields[2:(length(sorted_yields)-1)])
+    if(length(sorted_yields) >= 3) {
+      olympic_average <- mean(sorted_yields[2:(length(sorted_yields)-1)])
+    } else if(length(sorted_yields) > 0) {
+      # If fewer than 3 values, just use the mean of all available values
+      olympic_average <- mean(sorted_yields)
+    } else {
+      stop("No valid historical yields provided for benchmark calculation")
+    }
     if(!quiet) message("Using Olympic average of provided historical yields for benchmark yield calculation.")
     return(olympic_average)
   }
@@ -277,7 +284,14 @@ get_arcco_benchmarks <- function(crop, program_year, benchmark_type = "yield", c
 
     # Calculate Olympic average (remove highest and lowest, average the rest)
     sorted_prices <- sort(adjusted_prices)
-    olympic_average <- mean(sorted_prices[2:(length(sorted_prices)-1)])
+    if(length(sorted_prices) >= 3) {
+      olympic_average <- mean(sorted_prices[2:(length(sorted_prices)-1)])
+    } else if(length(sorted_prices) > 0) {
+      # If fewer than 3 values, just use the mean of all available values
+      olympic_average <- mean(sorted_prices)
+    } else {
+      stop("No valid historical prices provided for benchmark calculation")
+    }
     if(!quiet) message("Using Olympic average of provided historical prices for benchmark price calculation.")
     return(olympic_average)
   }
@@ -676,7 +690,14 @@ calc_effective_reference_price <- function(mya_prices, srp) {
 
   # Calculate Olympic average (remove highest and lowest, average the rest)
   sorted_prices <- sort(mya_prices)
-  olympic_avg <- mean(sorted_prices[2:(length(sorted_prices)-1)])
+  if(length(sorted_prices) >= 3) {
+    olympic_avg <- mean(sorted_prices[2:(length(sorted_prices)-1)])
+  } else if(length(sorted_prices) > 0) {
+    # If fewer than 3 values, just use the mean of all available values
+    olympic_avg <- mean(sorted_prices)
+  } else {
+    stop("No valid MYA prices provided for ERP calculation")
+  }
 
   # Apply ERP formula
   if(0.85 * olympic_avg < srp) {
@@ -722,6 +743,13 @@ list_data_assets <- function(){
   )
 
   return(df$name)
+}
+
+#' Null coalescing operator
+#' @keywords internal
+#' @noRd
+`%||%` <- function(x, y) {
+  if (is.null(x)) y else x
 }
 
 #' A helper function that checks to make sure the specified state is valid
