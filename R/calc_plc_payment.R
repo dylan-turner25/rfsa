@@ -270,15 +270,23 @@ calc_plc_payment <- function(crop,
                                crop_type = crop_type, state = state, county = county, fips = fips, quiet = quiet)
   }
 
+  # reference price
+  rp = erp
+
+  # effective price
+  ep = max(mya_price, nmlr)
+
+  # payment rate
+  plc_payment_rate = max(0,(rp-ep)*plc_yield)
 
   # calculate the payment rate
-  if(erp <= mya_price){
-    plc_payment_rate <- 0
-  } else if (mya_price <= nmlr){
-    plc_payment_rate <- (erp - nmlr)*plc_yield
-  } else {
-    plc_payment_rate <- (erp - mya_price)*plc_yield
-  }
+  #if(erp <= mya_price){
+  #  plc_payment_rate <- 0
+  #} else if (mya_price <= nmlr){
+  #  plc_payment_rate <- (erp - nmlr)*plc_yield
+  #} else {
+  #  plc_payment_rate <- (erp - mya_price)*plc_yield
+  #}
 
   # calculate final plc payment
   plc_payment <- plc_payment_rate * base_acres * cov_lvl

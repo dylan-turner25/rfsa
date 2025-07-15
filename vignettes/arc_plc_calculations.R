@@ -1,6 +1,17 @@
 
-library(tidyverse)
-library(tictoc)
+# Install and load required packages
+required_packages <- c("tidyverse", "tictoc", "ggplot2", "dplyr", "choroplethr", "choroplethrMaps", "maps", "cowplot")
+
+# Function to install packages if not already installed
+install_if_missing <- function(pkg) {
+  if (!require(pkg, character.only = TRUE)) {
+    install.packages(pkg, dependencies = TRUE)
+    library(pkg, character.only = TRUE)
+  }
+}
+
+# Install and load all required packages
+sapply(required_packages, install_if_missing)
 
 devtools::load_all()
 
@@ -430,3 +441,216 @@ national_validation[national_validation == "NaN%"] <- "0%"
 
 
 
+# Filter data to program year 2019 onward for plotting
+plot_data <- data %>%
+  filter(program_year >= 2019)
+
+# Plot 1: PLC Payment Densities
+library(ggplot2)
+
+# Reshape data for PLC payments
+plc_plot_data <- plot_data %>%
+  select(crop, crop_type, plc_payment, plc_payment_obbb) %>%
+  mutate(
+    crop_display = ifelse(is.na(crop_type) | crop_type == "",
+                         str_to_title(crop),
+                         paste0(str_to_title(crop), "-", str_to_title(crop_type)))
+  ) %>%
+  pivot_longer(cols = c(plc_payment, plc_payment_obbb),
+               names_to = "payment_type",
+               values_to = "payment_amount") %>%
+  filter(!is.na(payment_amount), is.finite(payment_amount)) %>%
+  mutate(payment_type = case_when(
+    payment_type == "plc_payment" ~ "Current PLC",
+    payment_type == "plc_payment_obbb" ~ "OBBB PLC"
+  ))
+
+# Calculate statistics for PLC payments
+plc_stats <- plc_plot_data %>%
+  group_by(crop_display, payment_type) %>%
+  summarise(
+    mean_val = mean(payment_amount, na.rm = TRUE),
+    median_val = median(payment_amount, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Create PLC density plot with statistics
+plc_density_plot <- ggplot(plc_plot_data, aes(x = payment_amount, fill = payment_type)) +
+  geom_density(alpha = 0.7) +
+  geom_vline(data = plc_stats, aes(xintercept = mean_val, color = payment_type),
+             linetype = "dashed", size = 0.8) +
+  geom_vline(data = plc_stats, aes(xintercept = median_val, color = payment_type),
+             linetype = "solid", size = 0.8) +
+  facet_wrap(~ crop_display, scales = "free") +
+  labs(title = "PLC distribution of county level payments per base acre, 2019-2024",
+       subtitle = "Dashed lines = Mean, Solid lines = Median",
+       x = "Payment per Base Acre",
+       y = "Density",
+       fill = "Payment Type",
+       color = "Payment Type") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Current PLC" = "#00583D", "OBBB PLC" = "#FFC425")) +
+  scale_color_manual(values = c("Current PLC" = "#00583D", "OBBB PLC" = "#FFC425"))
+
+print(plc_density_plot)
+
+# Plot 2: ARC-CO Payment Densities
+# Reshape data for ARC payments
+arc_plot_data <- plot_data %>%
+  select(crop, crop_type, arc_payment, arc_payment_obbb) %>%
+  mutate(
+    crop_display = ifelse(is.na(crop_type) | crop_type == "",
+                         str_to_title(crop),
+                         paste0(str_to_title(crop), "-", str_to_title(crop_type)))
+  ) %>%
+  pivot_longer(cols = c(arc_payment, arc_payment_obbb),
+               names_to = "payment_type",
+               values_to = "payment_amount") %>%
+  filter(!is.na(payment_amount), is.finite(payment_amount)) %>%
+  mutate(payment_type = case_when(
+    payment_type == "arc_payment" ~ "Current ARC-CO",
+    payment_type == "arc_payment_obbb" ~ "OBBB ARC-CO"
+  ))
+
+# Calculate statistics for ARC payments
+arc_stats <- arc_plot_data %>%
+  group_by(crop_display, payment_type) %>%
+  summarise(
+    mean_val = mean(payment_amount, na.rm = TRUE),
+    median_val = median(payment_amount, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Create ARC-CO density plot with statistics
+arc_density_plot <- ggplot(arc_plot_data, aes(x = payment_amount, fill = payment_type)) +
+  geom_density(alpha = 0.7) +
+  geom_vline(data = arc_stats, aes(xintercept = mean_val, color = payment_type),
+             linetype = "dashed", size = 0.8) +
+  geom_vline(data = arc_stats, aes(xintercept = median_val, color = payment_type),
+             linetype = "solid", size = 0.8) +
+  facet_wrap(~ crop_display, scales = "free") +
+  labs(title = "ARC-CO distribution of county level payments per base acre, 2019-2024",
+       subtitle = "Dashed lines = Mean, Solid lines = Median",
+       x = "Payment per Base Acre",
+       y = "Density",
+       fill = "Payment Type",
+       color = "Payment Type") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Current ARC-CO" = "#00583D", "OBBB ARC-CO" = "#FFC425")) +
+  scale_color_manual(values = c("Current ARC-CO" = "#00583D", "OBBB ARC-CO" = "#FFC425"))
+
+print(arc_density_plot)
+
+# Load cowplot for plot arrangement
+library(cowplot)
+
+# Plot 3: Separate ARC-CO and PLC Payment Densities by Program Year for a Single Crop
+# Filter data for a specific crop (change crop name here)
+selected_crop <- "wheat"  # Change this to any crop name
+
+for(selected_crop in unique(data$crop)){
+single_crop_data <- data %>%
+  filter(crop == selected_crop, program_year >= 2019)
+
+# Create crop display name for titles
+crop_title <- str_to_title(selected_crop)
+
+# Prepare ARC-CO data
+arc_year_data <- single_crop_data %>%
+  select(program_year, crop_type, arc_payment, arc_payment_obbb) %>%
+  mutate(
+    crop_display = ifelse(is.na(crop_type) | crop_type == "",
+                         crop_title,
+                         paste0(crop_title, "-", str_to_title(crop_type)))
+  ) %>%
+  pivot_longer(cols = c(arc_payment, arc_payment_obbb),
+               names_to = "payment_type",
+               values_to = "payment_amount") %>%
+  filter(!is.na(payment_amount), is.finite(payment_amount)) %>%
+  mutate(payment_type = case_when(
+    payment_type == "arc_payment" ~ "Current ARC-CO",
+    payment_type == "arc_payment_obbb" ~ "OBBB ARC-CO"
+  ))
+
+# Calculate statistics for ARC-CO plot
+arc_year_stats <- arc_year_data %>%
+  group_by(program_year, crop_display, payment_type) %>%
+  summarise(
+    mean_val = mean(payment_amount, na.rm = TRUE),
+    median_val = median(payment_amount, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Create ARC-CO density plot by program year
+arc_year_plot <- ggplot(arc_year_data, aes(x = payment_amount, fill = payment_type)) +
+  geom_density(alpha = 0.7) +
+  geom_vline(data = arc_year_stats, aes(xintercept = mean_val, color = payment_type),
+             linetype = "dashed", size = 0.8) +
+  geom_vline(data = arc_year_stats, aes(xintercept = median_val, color = payment_type),
+             linetype = "solid", size = 0.8) +
+  facet_wrap(~ program_year, scales = "free_y", nrow = 1) +
+  labs(title = paste0("ARC-CO Payment Densities by Program Year: ", crop_title),
+       subtitle = "Dashed lines = Mean, Solid lines = Median",
+       x = "Payment per Base Acre",
+       y = "Density",
+       fill = "Payment Type",
+       color = "Payment Type") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Current ARC-CO" = "#00583D", "OBBB ARC-CO" = "#FFC425")) +
+  scale_color_manual(values = c("Current ARC-CO" = "#00583D", "OBBB ARC-CO" = "#FFC425"))
+
+# Prepare PLC data
+plc_year_data <- single_crop_data %>%
+  select(program_year, crop_type, plc_payment, plc_payment_obbb) %>%
+  mutate(
+    crop_display = ifelse(is.na(crop_type) | crop_type == "",
+                         crop_title,
+                         paste0(crop_title, "-", str_to_title(crop_type)))
+  ) %>%
+  pivot_longer(cols = c(plc_payment, plc_payment_obbb),
+               names_to = "payment_type",
+               values_to = "payment_amount") %>%
+  filter(!is.na(payment_amount), is.finite(payment_amount)) %>%
+  mutate(payment_type = case_when(
+    payment_type == "plc_payment" ~ "Current PLC",
+    payment_type == "plc_payment_obbb" ~ "OBBB PLC"
+  ))
+
+# Calculate statistics for PLC plot
+plc_year_stats <- plc_year_data %>%
+  group_by(program_year, crop_display, payment_type) %>%
+  summarise(
+    mean_val = mean(payment_amount, na.rm = TRUE),
+    median_val = median(payment_amount, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Create PLC density plot by program year
+plc_year_plot <- ggplot(plc_year_data, aes(x = payment_amount, fill = payment_type)) +
+  geom_density(alpha = 0.7) +
+  geom_vline(data = plc_year_stats, aes(xintercept = mean_val, color = payment_type),
+             linetype = "dashed", size = 0.8) +
+  geom_vline(data = plc_year_stats, aes(xintercept = median_val, color = payment_type),
+             linetype = "solid", size = 0.8) +
+  facet_wrap(~ program_year, scales = "free_y", nrow = 1) +
+  labs(title = paste0("PLC Payment Densities by Program Year: ", crop_title),
+       subtitle = "Dashed lines = Mean, Solid lines = Median",
+       x = "Payment per Base Acre",
+       y = "Density",
+       fill = "Payment Type",
+       color = "Payment Type") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Current PLC" = "#00583D", "OBBB PLC" = "#FFC425")) +
+  scale_color_manual(values = c("Current PLC" = "#00583D", "OBBB PLC" = "#FFC425"))
+
+# Combine plots using cowplot
+combined_year_plots <- plot_grid(
+  arc_year_plot,
+  plc_year_plot,
+  ncol = 1,
+  nrow = 2,
+  align = "v"
+)
+
+print(combined_year_plots)
+}
