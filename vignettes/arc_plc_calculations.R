@@ -299,16 +299,89 @@ srp_obbb <- data.frame(crop = names(new_srps), obbb_srps = unlist(new_srps))
 # merge new srps with data
 data <- left_join(data, srp_obbb)
 
+# add chick peas explicitly by type
+data$obbb_srps[which(data$crop == "chickpeas" & data$crop_type == "small")] <- .2265
+data$obbb_srps[which(data$crop == "chickpeas" & data$crop_type == "large")] <- .2565
+
+# add temperate japonica rice
+data$obbb_srps[which(data$crop == "rice" & data$crop_type == "temperate japonica")] <- .1730
+
+# compare
+View(distinct(data %>% select(crop, crop_type, obbb_srps, statutory_reference_price)))
+
+
+new_loan_rates <- new_loan_rates <- list("wheat" = 3.72, # per bushel [cite: 547]
+                             "oats" = 2.20, # per bushel [cite: 550]
+                             "rice" = .770, # per hundredweight, applies to long and medium grain [cite: 554, 555]
+                             "cotton" = 0.55, # per pound, upland cotton [cite: 551]
+                             "corn" = 2.42, # per bushel [cite: 547]
+                             "grain sorghum" = 2.42, # per bushel [cite: 548]
+                             "dry peas" = .687, # per hundredweight [cite: 566]
+                             "peanuts" = .195, # per ton [cite: 578]
+                             "soybeans" = 6.82, # per bushel [cite: 557]
+                             "barley" = 2.75, # per bushel [cite: 549]
+                             "chickpeas_small" = .1100, # per hundredweight [cite: 570]
+                             "chickpeas_large" = .1540, # per hundredweight [cite: 571]
+                             "lentils" = .1430, # per hundredweight [cite: 568]
+                             "flaxseed" = .1110, # per hundredweight (as other oilseed) [cite: 558, 562]
+                             "canola" = .1110, # per hundredweight (as other oilseed) [cite: 558, 561]
+                             "rapeseed" = .1110, # per hundredweight (as other oilseed) [cite: 558, 560]
+                             "safflower" = .1110, # per hundredweight (as other oilseed) [cite: 558, 561]
+                             "mustard" = .1110, # per hundredweight (as other oilseed) [cite: 558, 565]
+                             "sunflower" = .1110, # per hundredweight (as other oilseed) [cite: 558, 559]
+                             "sesame" = .1110, # per hundredweight (as other oilseed) [cite: 558, 565]
+                             "crambe" = .1110 # per hundredweight (as other oilseed) [cite: 558, 565]
+)
+
+nmlr_obbb <- data.frame(crop = names(new_loan_rates), obbb_nmlr = unlist(new_loan_rates))
+
+
+# merge new srps with data
+data <- left_join(data, nmlr_obbb)
+
+# add chick peas explicitly by type
+data$obbb_nmlr[which(data$crop == "chickpeas" & data$crop_type == "small")] <- .11
+data$obbb_nmlr[which(data$crop == "chickpeas" & data$crop_type == "large")] <- .1540
+
+# add temperate japonica rice
+data$obbb_nmlr[which(data$crop == "rice" & data$crop_type == "temperate japonica")] <- data$current_national_loan_rate[which(data$crop == "rice" & data$crop_type == "temperate japonica")]
+
+
+
+# compare
+View(distinct(data %>% select(program_year, crop, crop_type, obbb_nmlr, current_national_loan_rate)))
+
+
+
+
+
+
+
 # calculate arc and plc payments again using the new obbb parameters
 
 
 # calculate new effective reference prices based on new erp parameters
+# add calculated effective reference prices (as a check)
+data$obbb_erp <- unlist(lapply(1:nrow(data), function(i) {
+  tryCatch({
+    # Extract MYA prices for this row
+    mya_prices <- c(data$final_mya_price_lag2[i],
+                    data$final_mya_price_lag3[i],
+                    data$final_mya_price_lag4[i],
+                    data$final_mya_price_lag5[i],
+                    data$final_mya_price_lag6[i])
 
 
-# ERP parameters
-
-# PLC parameters
-obbb_cov_lvl = .88
+    # Calculate ERP
+    rfsa:::calc_effective_reference_price(mya_prices = mya_prices,
+                                          srp = data$statutory_reference_price[i],
+                                          oa_pct = .88,
+                                          cap = 1.13)
+  }, error = function(e) {
+    # Return NA on any error
+    return(NA)
+  })
+}))
 
 
 # calculate plc payment per base acres
@@ -334,10 +407,12 @@ data$plc_payment_obbb <- unlist(lapply(1:nrow(data), function(i) {
                                      srp = data$obbb_srps[i],
                                      erp = NULL,
                                      always_use_erp = FALSE,
-                                     nmlr = data$current_national_loan_rate[i],
+                                     nmlr = data$obbb_nmlr[i],
                                      plc_yield = data$plc_yield[i],
-                                     cov_lvl = obbb_cov_lvl,
+                                     cov_lvl = .85,
                                      fips = data$fips[i],
+                                     oa_pct = .88,
+                                     cap = 1.13,
                                      quiet = TRUE)
 
     return(result)
@@ -367,19 +442,29 @@ historical_prices_matrix <- cbind(
 )
 
 # Use the new vectorized function:
-data$arc_payment <- calc_arcco_payment_vectorized(
+data$arc_payment_obbb <- calc_arcco_payment_vectorized(
   crop = data$crop,
   crop_type = data$crop_type,
   program_year = data$program_year,
   base_acres = 1,
   mya_price = data$current_mya_price,
-  srp = data$statutory_reference_price,
+  srp = data$obbb_srps,
   oa_benchmark_yield = data$oa_bench_mark_yield,
-  nmlr = data$current_national_loan_rate,
+  nmlr = data$obbb_nmlr,
   historic_mya_prices = historical_prices_matrix,
   fips = data$fips,
-  quiet = TRUE
+  quiet = TRUE,
+  max_payment_level = .1,
+  oa_pct = 0.88,
+  cap = 1.13,
+  payment_trigger_level = 0.9
 )
+
+
+# save the data
+saveRDS(data, "./vignettes/obbb.rds")
+
+
 
 
 # check national levels
