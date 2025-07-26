@@ -376,7 +376,7 @@ data$obbb_erp <- unlist(lapply(1:nrow(data), function(i) {
     rfsa:::calc_effective_reference_price(mya_prices = mya_prices,
                                           srp = data$statutory_reference_price[i],
                                           oa_pct = .88,
-                                          cap = 1.13)
+                                          cap = 1.15)
   }, error = function(e) {
     # Return NA on any error
     return(NA)
@@ -412,7 +412,7 @@ data$plc_payment_obbb <- unlist(lapply(1:nrow(data), function(i) {
                                      cov_lvl = .85,
                                      fips = data$fips[i],
                                      oa_pct = .88,
-                                     cap = 1.13,
+                                     cap = 1.15,
                                      quiet = TRUE)
 
     return(result)
@@ -456,7 +456,7 @@ data$arc_payment_obbb <- calc_arcco_payment_vectorized(
   quiet = TRUE,
   max_payment_level = .1,
   oa_pct = 0.88,
-  cap = 1.13,
+  cap = 1.15,
   payment_trigger_level = 0.9
 )
 
