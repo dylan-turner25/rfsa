@@ -29,6 +29,12 @@ The `rfsa` package provides cleaned and aggregated version of publicly available
 
 Disclaimer: This product uses data provided by the USDA, but is not endorsed by or affiliated with USDA or the Federal Government.
 
+If you find this package to be helpful in your research, consider citing using:
+
+```{r}
+citation("rfsa")
+```
+
 ```{r data_set_table, include=FALSE, cache=FALSE}
   # initialize a dataframe with the columns "dataset","rows","columns","years","description"
   df <- data.frame(dataset = character(),
@@ -203,8 +209,27 @@ payment <- calc_plc_payment(
 print(paste("PLC payment:", round(payment, 2)))
 ```
 
-For further details and examples of the `calc_plc_payment()` function, see the [PLC Payment Calculations vignette](https://github.com/dylan-turner25/rfsa/blob/main/inst/doc/plc-payment-calculations.html).
+<!-- For further details and examples of the `calc_plc_payment()` function, see the [PLC Payment Calculations vignette](https://github.com/dylan-turner25/rfsa/blob/main/inst/doc/plc-payment-calculations.html). -->
 
+## ARC-CO Payment Calculations
+
+The `rfsa` package includes the `calc_arcco_payment()` function for calculating Agriculture Risk Coverage County Option (ARC-CO) payments. Similar to the PLC function, custom values for various prices, yields, and other parameters can be specified, or the function can use default values based on the ARC and PLC data described above. The function requires a minimum of the `crop` and `program_year` arguments to be specified. If no other arguments are specified, the returned value will be the ARC-CO payment for 1 base acre based on county-level data (if location is specified) or national averages.
+
+
+The following example leaves many of the parameters empty, which will generate a handful of warnings letting you know what types of assumptions and average values are used to generate a value. 
+```{r arcco-example}
+# Calculate ARC-CO payment for 1 base acre of corn in 2023 (requires location)
+payment <- calc_arcco_payment(
+  crop = "corn",
+  program_year = 2023,
+  fips = 17001  # Adams County, Illinois
+)
+
+print(paste("ARC-CO payment:", round(payment, 2)))
+```
+
+
+<!-- For large-scale calculations, the package also provides `calc_arcco_payment_vectorized()` which offers significantly improved performance for batch processing multiple records simultaneously. -->
 
 
 # FSA Individual Payment Files

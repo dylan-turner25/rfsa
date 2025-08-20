@@ -10,3 +10,4 @@ README_cache
 ^docs$
 ^\.claude$
 ^\.DS_Store$
+^CITATION\.cff$

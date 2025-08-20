@@ -5,6 +5,7 @@ rfsa: A package for accessing USDA Farm Service Agency data
 - [Installation](#installation)
 - [ARC and PLC Program Data](#arc-and-plc-program-data)
   - [PLC Payment Calculations](#plc-payment-calculations)
+  - [ARC-CO Payment Calculations](#arc-co-payment-calculations)
 - [FSA Individual Payment Files](#fsa-individual-payment-files)
 - [Data Validation Checks](#data-validation-checks)
 - [Example Usage](#example-usage)
@@ -28,6 +29,26 @@ Service Agency.
 
 Disclaimer: This product uses data provided by the USDA, but is not
 endorsed by or affiliated with USDA or the Federal Government.
+
+If you find this package to be helpful in your research, consider citing
+using:
+
+``` r
+citation("rfsa")
+#> To cite rfsa in publications use:
+#> 
+#>   Turner D (2025). rfsa: Data on programs administered by the USDA,
+#>   Farm Service Agency. R package version 0.0.0.9000.
+#> 
+#> A BibTeX entry for LaTeX users is
+#> 
+#>   @Manual{,
+#>     title = {rfsa: Data on programs administered by the USDA, Farm Service Agency},
+#>     author = {Dylan Turner},
+#>     year = {2025},
+#>     version = {0.0.0.9000},
+#>   }
+```
 
 # Installation
 
@@ -78,17 +99,17 @@ progress marketing years).
 
 | Dataset | Description | Rows | Years | Last Updated | Data Download Date | Included Columns |
 |:---|:---|---:|:---|:---|:---|:---|
-| fsaArcCoBenchmarks | ARC-CO Benchmark Data | 163079 | 2014-2023 | 05/05/2025 | 05/05/2025 | fips, state_name, county_name, crop, unit, yield_type, program_year, benchmark_revenue, guarantee_revenue, maximum_payment_rate, actual_yield, national_price, actual_revenue, formula_payment_rate, payment_rate, oa_bench_mark_price, oa_bench_mark_yield, oa_bench_mark_years, arc_co_payment_rate, crop_type, rma_type_code, rma_crop_code |
+| fsaArcCoBenchmarks | ARC-CO Benchmark Data | 163086 | 2014-2025 | 06/26/2025 | 05/05/2025 | fips, state_name, county_name, crop, unit, yield_type, program_year, benchmark_revenue, guarantee_revenue, maximum_payment_rate, actual_yield, national_price, actual_revenue, formula_payment_rate, payment_rate, oa_bench_mark_price, oa_bench_mark_yield, oa_bench_mark_years, county_yield_type, arc_co_payment_rate, crop_type, rma_type_code, rma_crop_code |
 | fsaArcCoPrice | ARC-CO Benchmark and Actual Price Data | 249 | 2014-2024 | 05/05/2025 | 05/05/2025 | crop, marketing_year_dates, publishing_dates_for_final_mya_price, unit, reference_price_combined, annual_benchmark_price_lag5, annual_benchmark_price_lag4, annual_benchmark_price_lag3, annual_benchmark_price_lag2, annual_benchmark_price_lag1, current_arcco_benchmark_price, current_mya_price, current_national_loan_rate, current_arcco_actual_price, marketing_year, program_year, crop_type, rma_type_code, rma_crop_code |
 | fsaArcIcPrice | Commodity-specific ARC-IC benchmark prices, MYA prices, and statutory reference prices. | 227 | 2015-2024 | 05/05/2025 | 05/05/2025 | crop, marketing_year_dates, publishing_dates_for_final_mya_price, unit, reference_price_combined, annual_benchmark_price_lag5, annual_benchmark_price_lag4, annual_benchmark_price_lag3, annual_benchmark_price_lag2, annual_benchmark_price_lag1, current_mya_price, current_national_loan_rate, current_arcic_actual_price, marketing_year, program_year, crop_type, rma_type_code, rma_crop_code |
 | fsaArcPlcBaseAcres | ARC/PLC enrolled base acres by commodity | 225 | 2015-2024 | 05/21/2025 | 05/05/2025 | covered_commodity, plc_covered_commodity_contract_base, plc_plantings_attributed_to_generic_base, arc_co_covered_commodity_contract_base, arc_co_plantings_attributed_to_generic_base, arc_ic_enrolled_base_covered_commodity_contract_base, total, plc_total, arc_co_total, arc_ic_total, program_year, arc_co_all, arc_co_irrigated, arc_co_nonirrigated, crop_type, rma_type_code, rma_crop_code, crop |
 | fsaArcPlcPayments | ARC/PLC Program Payments by Crop and Year | 481 | 2014-2023 | 05/05/2025 | 05/05/2025 | program, crop, program_year, payments, crop_type, rma_type_code, rma_crop_code |
-| fsaCountyBaseAcres | County‐level base acres and average PLC yields by crop | 99308 | 2014-2023 | 06/25/2025 | 05/05/2025 | state, county, state_code, county_code, crop, crop_type, base_acres, avg_plc_yield, program_year, rma_type_code, rma_crop_code, fips |
-| fsaEffectiveRefPrices | Effective Reference Prices for ARC/PLC Commodities | 158 | 2019-2025 | 05/05/2025 | 05/05/2025 | crop, marketing_year_dates, marketing_year, program_year, unit, statutory_reference_price, 115_statutory_reference_price, mya_price_lag5, mya_price_lag4, mya_price_lag3, mya_price_lag2, mya_price_lag1, 85_olympic_average_mya, effective_reference_price, crop_type, rma_type_code, rma_crop_code |
-| fsaEnrolledCountyBaseAcres | County-level enrolled base acres by program and commodity | 139387 | 2019-2025 | 06/25/2025 | 06/24/2025 | fips, state, county, crop, program, enrolled_base, program_year, crop_type, rma_type_code, rma_crop_code |
+| fsaCountyBaseAcres | County‐level base acres and average PLC yields by crop | 99307 | 2014-2023 | 07/26/2025 | 05/05/2025 | state, county, state_code, county_code, crop, crop_type, base_acres, avg_plc_yield, program_year, rma_type_code, rma_crop_code, fips |
+| fsaEffectiveRefPrices | Effective Reference Prices for ARC/PLC Commodities | 161 | 2019-2025 | 07/05/2025 | 05/05/2025 | crop, marketing_year_dates, marketing_year, program_year, unit, statutory_reference_price, 115_statutory_reference_price, mya_price_lag5, mya_price_lag4, mya_price_lag3, mya_price_lag2, mya_price_lag1, 85_olympic_average_mya, effective_reference_price, crop_type, rma_type_code, rma_crop_code |
+| fsaEnrolledCountyBaseAcres | County-level enrolled base acres by program and commodity | 86229 | 2019-2024 | 07/25/2025 | 06/24/2025 | fips, state, county, crop, program_year, crop_type, rma_type_code, rma_crop_code, enrolled_base_ARCCO, enrolled_base_PLC |
 | fsaMyaPrice | FSA Marketing Year Average Prices | 249 | 2014-2024 | 06/16/2025 | 05/05/2025 | crop, marketing_year, marketing_year_dates, publishing_dates_for_final_mya_price, unit, current_mya_price, final_mya_price_lag1, final_mya_price_lag2, final_mya_price_lag3, final_mya_price_lag4, final_mya_price_lag5, final_mya_price_lag6, rma_crop_code, crop_type, rma_type_code |
-| fsaPlcPaymentRate | Price Loss Coverage (PLC) Payment Rates by Crop and Program Year | 249 | 2014-2024 | 05/05/2025 | 05/05/2025 | crop, marketing_year_dates, marketing_year, program_year, publishing_dates_for_final_mya_price, statutory_reference_price, effective_reference_price, combined_reference_price, unit, current_mya_price, current_national_loan_rate, plc_price, plc_payment_rate, max_plc_payment_rate, crop_type, rma_type_code, rma_crop_code |
-| fsaPlcYields | County-level PLC yields by commodity and program year | 152375 | 2018-2025 | 06/25/2025 | 06/24/2025 | fips, state, county, crop, crop_type, plc_yield, plc_yield_units, enrolled_base, program_year, crop_year, rma_crop_code, rma_type_code |
+| fsaPlcPaymentRate | Price Loss Coverage (PLC) Payment Rates by Crop and Program Year | 249 | 2014-2024 | 07/05/2025 | 05/05/2025 | crop, marketing_year_dates, marketing_year, program_year, publishing_dates_for_final_mya_price, statutory_reference_price, effective_reference_price, combined_reference_price, unit, current_mya_price, current_national_loan_rate, plc_price, plc_payment_rate, max_plc_payment_rate, crop_type, rma_type_code, rma_crop_code |
+| fsaPlcYields | County-level PLC yields by commodity and program year | 152375 | 2018-2025 | 07/14/2025 | 06/24/2025 | fips, state, county, crop, crop_type, plc_yield, plc_yield_units, enrolled_base, program_year, crop_year, rma_crop_code, rma_type_code |
 
 ## PLC Payment Calculations
 
@@ -118,9 +139,57 @@ print(paste("PLC payment:", round(payment, 2)))
 #> [1] "PLC payment: 12.63"
 ```
 
-For further details and examples of the `calc_plc_payment()` function,
-see the [PLC Payment Calculations
-vignette](https://github.com/dylan-turner25/rfsa/blob/main/inst/doc/plc-payment-calculations.html).
+<!-- For further details and examples of the `calc_plc_payment()` function, see the [PLC Payment Calculations vignette](https://github.com/dylan-turner25/rfsa/blob/main/inst/doc/plc-payment-calculations.html). -->
+
+## ARC-CO Payment Calculations
+
+The `rfsa` package includes the `calc_arcco_payment()` function for
+calculating Agriculture Risk Coverage County Option (ARC-CO) payments.
+Similar to the PLC function, custom values for various prices, yields,
+and other parameters can be specified, or the function can use default
+values based on the ARC and PLC data described above. The function
+requires a minimum of the `crop` and `program_year` arguments to be
+specified. If no other arguments are specified, the returned value will
+be the ARC-CO payment for 1 base acre based on county-level data (if
+location is specified) or national averages.
+
+The following example leaves many of the parameters empty, which will
+generate a handful of warnings letting you know what types of
+assumptions and average values are used to generate a value.
+
+``` r
+# Calculate ARC-CO payment for 1 base acre of corn in 2023 (requires location)
+payment <- calc_arcco_payment(
+  crop = "corn",
+  program_year = 2023,
+  fips = 17001  # Adams County, Illinois
+)
+#> Warning in calc_arcco_payment(crop = "corn", program_year = 2023, fips =
+#> 17001): No base acres supplied. Defaulting to 1 base acre.
+#> Warning in get_arcco_benchmarks(crop = crop, program_year = program_year, : No
+#> ARC-CO yield supplied. Using county average ARC-CO benchmark yield for
+#> calculations.
+#> Warning in get_arcco_benchmarks(crop = crop, program_year = program_year, : No
+#> crop type or yield type supplied, taking the average ARC-CO benchmark yield
+#> across all types for corn
+#> Warning in get_arcco_benchmarks(crop = crop, program_year = program_year, : No
+#> ARC-CO price supplied. Using county average ARC-CO benchmark price for
+#> calculations.
+#> Warning in get_arcco_benchmarks(crop = crop, program_year = program_year, : No
+#> crop type or yield type supplied, taking the average ARC-CO benchmark price
+#> across all types for corn
+#> Warning in get_arcco_actual_revenue(crop = crop, program_year = program_year, :
+#> No actual yield supplied. Using county actual yield for ARC-CO revenue
+#> calculations.
+#> Warning in get_arcco_actual_revenue(crop = crop, program_year = program_year, :
+#> No crop type or yield type supplied, taking the average actual yield across all
+#> types for corn
+
+print(paste("ARC-CO payment:", round(payment, 2)))
+#> [1] "ARC-CO payment: 0"
+```
+
+<!-- For large-scale calculations, the package also provides `calc_arcco_payment_vectorized()` which offers significantly improved performance for batch processing multiple records simultaneously. -->
 
 # FSA Individual Payment Files
 
@@ -172,64 +241,65 @@ file](https://github.com/dylan-turner25/rfsa/blob/main/data-raw/fsaFarmPayments/
 
 | program_abbreviation | program_full_name |
 |:---|:---|
-| MAL | Market Assistance Loan |
-| FSFL | Farm Storage Facility Loan Program |
-| Other | Other Programs/Vague Accounting Descriptions |
-| Interest-Penalty | Interest Payment |
-| MLP | Milk Loss Program |
-| ERP | Emergency Relief Program |
-| CTAP | Cotton Transition Assistance Program |
-| CGCS | Cotton Ginning Cost Share Program |
-| LIP | Livestock Indemnity Program |
-| ELAP | Emergency Livestock Assistance Program |
+| ACRE | Average Crop Revenue Election |
 | AILFP | American Indian Livestock Feed Program |
-| LCP | Livestock Compensation Program |
-| LFP | Livestock Forage Program |
-| NAP | Non-Insured Crop Disaster Assistance Program |
-| CDP | Crop Disaster Program |
-| TAAF | Trade Adjustment Assistance for Farmers |
-| TAP | Tree Assistance Program |
-| HIP | Hurricane Indemnity Program |
-| TIP | Tree Indemnity Program |
-| DDAPP | Dairy Disaster Assistance Payment Program |
-| SURE | Supplemental Revenue Assistance Program |
-| BCAP | Biomass Crop Assistance Program |
-| DELAP | Dairy Economic Loss Assistance Program |
-| RTCP | Reimbursement Transportation Cost Payment Program for Geographically Disadvantaged Farmers and Ranchers |
-| HSDP | Hawaii Sugar Disaster Program |
-| PLC | Price Loss Coverage |
 | ARC-CO | Agricultural Risk Coverage-County Coverage |
 | ARC-IC | Agricultural Risk Coverage-Individual Coverage |
-| WHIP | Wildfires and Hurricanes Indemnity Program |
-| MFP | Market Facilitation Program |
-| STRP | Seafood Trade Relief Program |
-| QLA | Quality Loss Adjustment Program |
-| ELRP | Emergency Livestock Relief Program |
-| ODMAP | Organic Dairy Marketing Assistance Program |
-| RPP | Rice Production Program |
-| GRP | Grasslands Reserve Program |
-| CRP | Conservation Reserve Program |
-| EFRP | Emergency Forest Restoration Program |
-| ECP | Emergency Conservation Program |
-| CFAP | Coronavirus Food Assistance Program |
+| BCAP | Biomass Crop Assistance Program |
 | CARES-ACT | CARES-ACT |
+| CDP | Crop Disaster Program |
+| CFAP | Coronavirus Food Assistance Program |
+| CGCS | Cotton Ginning Cost Share Program |
 | COVID-Unspecified | COVID-Unspecified |
-| LDP | Loan Defiency Program |
-| ELRRPP | Ewe Lamb Replacement and Retention Payment Program |
-| GO | Graze Out Program |
-| TTPP | Tobacco Transition Payment Program |
-| OCCSP | Organic Certification Cost Share Program |
+| CRP | Conservation Reserve Program |
+| CTAP | Cotton Transition Assistance Program |
 | DCP | Direct and Counter-Cyclical Program |
-| ACRE | Average Crop Revenue Election |
-| MAP | Market Access Program |
+| DDAPP | Dairy Disaster Assistance Payment Program |
+| DELAP | Dairy Economic Loss Assistance Program |
 | DIPP | Dairy Indemnity Payment Program |
-| MILC | Milk Income Loss Contract Program |
 | DMC | Dairy Margin Coverage Program |
-| PATHH | Pandemic Assistance for Timber Harvesters and Haulers |
-| PLIP | Pandemic Livestock Indemnity Program |
-| PARP | Pandemic Assistance Revenue Program |
+| ECP | Emergency Conservation Program |
+| EFRP | Emergency Forest Restoration Program |
+| LAP | Livestock Assistance Program |
+| ELAP | Emergency Assistance for Livestock, Honeybees, and Farm-Raised Fish |
+| ELRP | Emergency Livestock Relief Program |
+| ELRRPP | Ewe Lamb Replacement and Retention Payment Program |
+| ERP | Emergency Relief Program |
+| FSFL | Farm Storage Facility Loan Program |
+| GO | Graze Out Program |
+| GRP | Grasslands Reserve Program |
+| HIP | Hurricane Indemnity Program |
+| HSDP | Hawaii Sugar Disaster Program |
+| Interest-Penalty | Interest Payment |
+| LCP | Livestock Compensation Program |
+| LDP | Loan Defiency Program |
+| LFP | Livestock Forage Program |
+| LIP | Livestock Indemnity Program |
+| MAL | Market Assistance Loan |
+| MAP | Market Access Program |
+| MFP | Market Facilitation Program |
+| MILC | Milk Income Loss Contract Program |
+| MLP | Milk Loss Program |
+| NAP | Non-Insured Crop Disaster Assistance Program |
+| OCCSP | Organic Certification Cost Share Program |
+| ODMAP | Organic Dairy Marketing Assistance Program |
 | OTECP | Organic and Transitional Education and Certification Program |
+| Other | Other Programs |
+| PARP | Pandemic Assistance Revenue Program |
+| PATHH | Pandemic Assistance for Timber Harvesters and Haulers |
+| PLC | Price Loss Coverage |
+| PLIP | Pandemic Livestock Indemnity Program |
+| QLA | Quality Loss Adjustment Program |
+| RPP | Rice Production Program |
+| RTCP | Reimbursement Transportation Cost Payment Program for Geographically Disadvantaged Farmers and Ranchers |
 | SMHPP | Spot Market Hog Pandemic Program |
+| STRP | Seafood Trade Relief Program |
+| SURE | Supplemental Revenue Assistance Program |
+| TAAF | Trade Adjustment Assistance for Farmers |
+| TAP | Tree Assistance Program |
+| TIP | Tree Indemnity Program |
+| TTPP | Tobacco Transition Payment Program |
+| WHIP | Wildfires and Hurricanes Indemnity Program |
 
 # Data Validation Checks
 
@@ -285,7 +355,7 @@ data %>%
         legend.text = element_text(size = 8))
 ```
 
-<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
 
 ## Plot county level payments made through the livestock indemnity program in program year 2023
 
@@ -358,7 +428,7 @@ theme(
 #> generated.
 ```
 
-<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
 
 ## Plot a histogram showing the number of programs individual payee’s recieved payments from in program year 2020
 
@@ -399,4 +469,4 @@ ggplot(data, aes(x = unique_programs)) +
   theme(text = element_text(size = 12))
 ```
 
-<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />

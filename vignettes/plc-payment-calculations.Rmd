@@ -377,33 +377,5 @@ quiet_result <- calc_plc_payment(
 print(paste("Results are identical:", verbose_result == quiet_result))
 ```
 
-## Summary
 
-The `calc_plc_payment()` function provides a comprehensive tool for calculating PLC payments with these key features:
 
-### Key Parameters
-
-- **`crop`**: The crop name (e.g., "corn", "soybeans", "rice")
-- **`crop_type`**: Specific variety for crops with multiple types
-- **`program_year`**: The program year for calculation
-- **`base_acres`**: Number of enrolled acres
-- **`mya_price`, `erp`, `srp`, `nmlr`**: Price parameters (optional, uses FSA data if not provided)
-- **`plc_yield`**: Yield parameter (optional, calculated from location if not provided)
-- **`state`, `county`, `fips`**: Location parameters for yield calculation
-- **`cov_lvl`**: Coverage level (default 0.85)
-- **`quiet`**: Suppress messages for batch processing
-
-### Calculation Logic
-
-1. **If ERP ≤ MYA Price**: Payment = 0
-2. **If MYA Price ≤ NMLR**: Payment = (ERP - NMLR) × PLC Yield × Base Acres × Coverage Level  
-3. **Otherwise**: Payment = (ERP - MYA Price) × PLC Yield × Base Acres × Coverage Level
-
-### Best Practices
-
-- Use `quiet = TRUE` for batch processing to suppress informational messages
-- Specify `crop_type` when working with crops that have multiple varieties
-- Provide custom price data when needed for specialized analyses
-- Use location parameters (`state`, `county`, `fips`) for location-specific yields
-
-For more detailed information, see the function documentation with `?calc_plc_payment`.
