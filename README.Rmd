@@ -29,7 +29,7 @@ The `rfsa` package provides cleaned and aggregated version of publicly available
 
 Disclaimer: This product uses data provided by the USDA, but is not endorsed by or affiliated with USDA or the Federal Government.
 
-If you find this package to be helpful in your research, consider citing using:
+If you find this package to be helpful in your research, consider citing it:
 
 ```{r}
 citation("rfsa")

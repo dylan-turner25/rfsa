@@ -725,25 +725,44 @@ calc_effective_reference_price <- function(mya_prices, srp, oa_pct = 0.85, cap =
 #' }
 #' @importFrom gh gh
 list_data_assets <- function(){
-  # 1. Fetch the release metadata (by tag, or "latest")
-  release <- gh::gh(
-    "/repos/{owner}/{repo}/releases/latest",
-    owner = "dylan-turner25",
-    repo  = "rfsa"
-  )
-
-  # 2. Extract the assets list
-  assets <- release$assets
-
-  # 3. Pull out the bits you care about
-  df <- data.frame(
-    name = vapply(assets, `[[`, "", "name"),
-    url  = vapply(assets, `[[`, "", "browser_download_url"),
-    size = vapply(assets, `[[`, 0,  "size"),
-    stringsAsFactors = FALSE
-  )
-
-  return(df$name)
+  # Define the three release tags
+  release_tags <- c("fiscal", "payment", "program")
+  
+  all_assets <- list()
+  
+  # Fetch assets from each release
+  for(tag in release_tags) {
+    tryCatch({
+      # Fetch the release metadata by tag
+      release <- gh::gh(
+        "/repos/{owner}/{repo}/releases/tags/{tag}",
+        owner = "dylan-turner25",
+        repo  = "rfsa",
+        tag   = tag
+      )
+      
+      # Extract the assets list
+      assets <- release$assets
+      
+      # Pull out the asset information
+      if(length(assets) > 0) {
+        df <- data.frame(
+          name = vapply(assets, `[[`, "", "name"),
+          url  = vapply(assets, `[[`, "", "browser_download_url"),
+          size = vapply(assets, `[[`, 0,  "size"),
+          stringsAsFactors = FALSE
+        )
+        all_assets[[tag]] <- df$name
+      }
+    }, error = function(e) {
+      warning(paste("Could not fetch assets from release:", tag, "-", e$message))
+    })
+  }
+  
+  # Combine all asset names
+  all_names <- unlist(all_assets, use.names = FALSE)
+  
+  return(all_names)
 }
 
 #' Null coalescing operator
@@ -779,7 +798,21 @@ valid_state <- function(state) {
 #' @importFrom cli cli_inform
 get_cached_rds <- function(name,
                            repo = "dylan-turner25/rfsa",
-                           tag  = "v0.1.2") {
+                           tag  = NULL) {
+  
+  # Determine tag based on file name if not provided
+  if(is.null(tag)) {
+    if(grepl("^fiscal_", name)) {
+      tag <- "fiscal"
+    } else if(grepl("^payment_", name)) {
+      tag <- "payment"
+    } else if(grepl("^program_", name)) {
+      tag <- "program"
+    } else {
+      # Fallback to program for unknown patterns
+      tag <- "program"
+    }
+  }
   dest_dir <- tools::R_user_dir("rfsa", which = "cache")
   if (!dir.exists(dest_dir)) dir.create(dest_dir, recursive = TRUE)
 

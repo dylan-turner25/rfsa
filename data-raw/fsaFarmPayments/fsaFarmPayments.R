@@ -35,26 +35,76 @@ source("./data-raw/fsaFarmPayments/supplementary_files/split_payment_files.R")
 
 
 
-# upload cleaned files as a data release
+# Delete empty RDS files (309B, 0 observations) before upload
+empty_files <- list.files("data-raw/fsaFarmPayments/output_data", "\\.rds$",
+                         full.names = TRUE, recursive = TRUE)
+empty_files <- empty_files[file.size(empty_files) == 309]
+
+if(length(empty_files) > 0) {
+  cat("Deleting", length(empty_files), "empty RDS files (309B)...\n")
+  file.remove(empty_files)
+  cat("Empty files deleted successfully.\n")
+} else {
+  cat("No empty files found.\n")
+}
+
+# Create three separate releases for the different file types
 piggyback::pb_new_release(
   repo = "dylan-turner25/rfsa",
-  tag  = "v0.1.2",
-  name = "First data release",
-  body = "This release contains all individual year-program files."
+  tag  = "fiscal",
+  name = "Fiscal Year Files",
+  body = "This release contains all fiscal year files."
 )
 
-#upload your .rds files into that release
-rds_files <- list.files("data-raw/fsaFarmPayments/output_data", "\\.rds$",
-                        full.names = TRUE, recursive = TRUE)
+piggyback::pb_new_release(
+  repo = "dylan-turner25/rfsa",
+  tag  = "payment",
+  name = "Payment Year Files",
+  body = "This release contains all payment year files."
+)
+
+piggyback::pb_new_release(
+  repo = "dylan-turner25/rfsa",
+  tag  = "program",
+  name = "Program Year Files",
+  body = "This release contains all program year files."
+)
+
+# Get file lists for each category
+fiscal_files <- list.files("data-raw/fsaFarmPayments/output_data/fiscal_year_files", "\\.rds$",
+                          full.names = TRUE, recursive = TRUE)
+
+payment_files <- list.files("data-raw/fsaFarmPayments/output_data/payment_year_files", "\\.rds$",
+                           full.names = TRUE, recursive = TRUE)
+
+program_files <- list.files("data-raw/fsaFarmPayments/output_data/program_year_files", "\\.rds$",
+                           full.names = TRUE, recursive = TRUE)
 
 
-#rds_files <- rds_files[grepl("Other|ELAP", rds_files)]
 
 options(piggyback.verbose = F)
+
+# Upload fiscal year files
 piggyback::pb_upload(
-  rds_files,
+  fiscal_files,
   repo = "dylan-turner25/rfsa",
-  tag  = "v0.1.2",
+  tag  = "fiscal",
+  overwrite = F
+)
+
+# Upload payment year files
+piggyback::pb_upload(
+  payment_files,
+  repo = "dylan-turner25/rfsa",
+  tag  = "payment",
+  overwrite = F
+)
+
+# Upload program year files
+piggyback::pb_upload(
+  program_files,
+  repo = "dylan-turner25/rfsa",
+  tag  = "program",
   overwrite = F
 )
 
