@@ -779,7 +779,7 @@ valid_state <- function(state) {
 #' @importFrom cli cli_inform
 get_cached_rds <- function(name,
                            repo = "dylan-turner25/rfsa",
-                           tag  = "v0.1.1") {
+                           tag  = "v0.1.2") {
   dest_dir <- tools::R_user_dir("rfsa", which = "cache")
   if (!dir.exists(dest_dir)) dir.create(dest_dir, recursive = TRUE)
 
