@@ -356,3 +356,53 @@
 "fsaPlcYields"
 
 
+#' FSA County-Level Crop Acreage Data
+#'
+#' A comprehensive dataset containing county-level planted acreage data for agricultural crops
+#' across the United States, collected and published by the USDA Farm Service Agency (FSA).
+#' This dataset includes detailed acreage information by crop type, intended use, and irrigation
+#' practice, along with failed, prevented, and volunteer acreage data.
+#'
+#' @format A tibble with 3,223,740 rows and 25 variables:
+#' \describe{
+#'   \item{state_cd}{numeric. Two-digit state FSA code.}
+#'   \item{county_cd}{numeric. Three-digit county FSA code.}
+#'   \item{crop_cd}{numeric. FSA crop code identifying the commodity.}
+#'   \item{state}{character. Full name of the state.}
+#'   \item{county}{character. Name of the county.}
+#'   \item{fips}{numeric. Five-digit combined state+county FIPS code.}
+#'   \item{crop}{character. Name of the crop or commodity.}
+#'   \item{fsa_crop_type}{character. FSA-specific crop type classification (e.g., "HARD RED WINTER", "SOFT RED WINTER").}
+#'   \item{intended_use}{character. Intended use of the crop (e.g., "Grain", "Cover Only", "Grain/Graze", "Seed").}
+#'   \item{irrigation_practice}{character. Irrigation practice indicator ("Y" for irrigated, "N" for non-irrigated).}
+#'   \item{planted_acres}{numeric. Total acres planted for the crop in the county.}
+#'   \item{volunteer_acres}{numeric. Acres of volunteer crop (self-seeded from previous season).}
+#'   \item{failed_acres}{numeric. Acres that were planted but failed to produce a crop.}
+#'   \item{prevented_acres}{numeric. Acres where planting was prevented due to weather or other conditions.}
+#'   \item{not_planted_acres}{numeric. Base acres that were not planted.}
+#'   \item{planted_and_failed_acres}{numeric. Total of planted plus failed acres.}
+#'   \item{crop_yr}{numeric. Crop year (harvest year), ranging from 2013 to 2025.}
+#'   \item{release_date}{Date. Date when the acreage data was released by FSA.}
+#'   \item{release_month}{numeric. Month when the data was released.}
+#'   \item{release_yr}{numeric. Year when the data was released.}
+#'   \item{release_day}{numeric. Day of the month when the data was released.}
+#'   \item{current_release}{logical. Indicates if this is the most current release for the crop year.}
+#'   \item{crop_type}{character. Standardized crop type classification (e.g., "hard red winter", "long grain"). May be NA for crops without subtypes.}
+#'   \item{rma_type_code}{character. RMA (Risk Management Agency) crop type code for cross-agency alignment. May be NA.}
+#'   \item{rma_crop_code}{numeric. RMA crop code for commodity identification.}
+#' }
+#'
+#' @details
+#' This dataset contains planted acreage data for 325 different crops across all US counties
+#' from 2013 to 2025. The data is filtered to include only the most current release for each
+#' crop year. Acreage data is collected from FSA administrative records and represents actual
+#' planted acres reported by farmers participating in FSA programs.
+#'
+#'
+#' To view code used to generate this dataset, see `./data-raw/fsaCropAcreage/fsaCropAcreageCode.R` at \url{https://github.com/dylan-turner25/rfsa}
+#'
+#' @usage data(fsaCropAcreage)
+#' @source \url{https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/electronic-reading-room/frequently-requested/crop-acreage-data}
+"fsaCropAcreage"
+
+

@@ -199,7 +199,7 @@ fsaCropAcreage$current_release <- F
 fsaCropAcreage$current_release[which(fsaCropAcreage$release_date %in% dates$max_date)] <- T
 
 
-#fsaCropAcreage <- fsaCropAcreage %>% filter(current_release == T)
+fsaCropAcreage <- fsaCropAcreage %>% filter(current_release == T)
 
 # rename crop type fsa_crop_type
 colnames(fsaCropAcreage)[which(colnames(fsaCropAcreage) == "crop_type" )] <- "fsa_crop_type"
@@ -230,8 +230,10 @@ fsaCropAcreage <- dplyr::as_tibble(fsaCropAcreage)
 saveRDS(fsaCropAcreage, file = "./fsaCropAcreageData.rds")
 
 # also export as parquet file
-arrow::write_parquet(fsaCropAcreage, "./fsaCropAcreageData.parquet")
+#arrow::write_parquet(fsaCropAcreage, "./fsaCropAcreageData.parquet")
 
+# use the county level file in the package data folder
+usethis::use_data(fsaCropAcreage, overwrite = TRUE)
 
 
 
