@@ -10,3 +10,8 @@ README_cache
 /doc/
 /Meta/
 .claude
+data-raw/fsaCropAcreage/Cleaned_Data
+data-raw/fsaCropAcreage/FSA Acreage Documentation
+data-raw/fsaCropAcreage/Raw_Data
+data-raw/fsaCropAcreage/fsaCropAcreageData.rds
+data-raw/fsaCropAcreage/fsaCropAcreageData.parquet
