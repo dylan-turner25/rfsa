@@ -15,3 +15,4 @@ data-raw/fsaCropAcreage/FSA Acreage Documentation
 data-raw/fsaCropAcreage/Raw_Data
 data-raw/fsaCropAcreage/fsaCropAcreageData.rds
 data-raw/fsaCropAcreage/fsaCropAcreageData.parquet
+data-raw/fsaCropAcreage/fsaCropAcreageCC.rds

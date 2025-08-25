@@ -145,6 +145,8 @@ for(i in unique(acreage_urls$date)){
   }
 
 
+# prepare a version that comtains just the covered commodities -----------------------------------------
+
 # combine into a single fsaCropAcreage dataset
 fsaCropAcreage <- NULL
 fsaCropAcreage <- list.files(paste0("./Cleaned_Data"),
@@ -153,6 +155,10 @@ fsaCropAcreage <- list.files(paste0("./Cleaned_Data"),
   map(readRDS) %>%
   bind_rows()
 
+
+# get a vector of covered commodities
+data("fsaPlcYields")
+covered_commodities <- unique(fsaPlcYields$crop)
 
 # apply any final cleaning operations
 
@@ -201,39 +207,142 @@ fsaCropAcreage$current_release[which(fsaCropAcreage$release_date %in% dates$max_
 
 fsaCropAcreage <- fsaCropAcreage %>% filter(current_release == T)
 
+
+## handle crop and type names  ------------------------------------------------------------------------
 # rename crop type fsa_crop_type
 colnames(fsaCropAcreage)[which(colnames(fsaCropAcreage) == "crop_type" )] <- "fsa_crop_type"
 
-# extract crop type from crop name
-fsaCropAcreage$crop_type <- unlist(lapply(fsaCropAcreage$crop, extract_crop_type))
+# extract crop types that are embedded in the crop names
+# First check if there's a delimiter, then extract the part after it
+fsaCropAcreage$fsa_crop_type2 <- ifelse(grepl("[,-]", fsaCropAcreage$crop),
+                                        trimws(gsub("^[^,-]*[,-]", "", fsaCropAcreage$crop)),
+                                        NA_character_)
+# Clean the crop column to remove everything after comma or hyphen
+fsaCropAcreage$crop <- trimws(gsub("[,-].*$", "", fsaCropAcreage$crop))
 
-# extract crop type from fsa_crop_type
-fsaCropAcreage$crop_type2 <- unlist(lapply(fsaCropAcreage$fsa_crop_type, extract_crop_type))
-fsaCropAcreage$crop_type[which(is.na(fsaCropAcreage$crop_type))] <- fsaCropAcreage$crop_type2[which(is.na(fsaCropAcreage$crop_type))]
-fsaCropAcreage <- fsaCropAcreage %>% select(-crop_type2)
+# If fsa_crop_type is NA, use fsa_crop_type2
+fsaCropAcreage$fsa_crop_type <- ifelse(is.na(fsaCropAcreage$fsa_crop_type),
+                                       fsaCropAcreage$fsa_crop_type2,
+                                       fsaCropAcreage$fsa_crop_type)
+
+# remove fsa_crop_type2
+fsaCropAcreage <- fsaCropAcreage %>% select(-fsa_crop_type2)
+
+# final cleaning
+fsaCropAcreage$fsa_crop_type <- tolower(trimws(fsaCropAcreage$fsa_crop_type))
+
+# crop names to lower
+fsaCropAcreage$crop <- tolower(trimws(fsaCropAcreage$crop))
+
+# manual adjustments
+# Rice
+rice_sweet_idx <- fsaCropAcreage$crop == "rice  sweet"
+fsaCropAcreage$crop[rice_sweet_idx] <- "rice"
+fsaCropAcreage$fsa_crop_type[rice_sweet_idx] <- "sweet"
+
+idx <- fsaCropAcreage$fsa_crop_type %in% c("medium grain", "short grain")
+fsaCropAcreage$crop[idx] <- "rice"
+fsaCropAcreage$fsa_crop_type[idx] <- "short/medium grain"
+
+idx <- fsaCropAcreage$fsa_crop_type %in% c("temporate japonica")
+fsaCropAcreage$crop[idx] <- "rice"
+fsaCropAcreage$fsa_crop_type[idx] <- "temperate japonica"
+
+# calculates the percentage of rice acres that aren't long grain, short/medium grain, or temperate japonica
+idx <- !(fsaCropAcreage$fsa_crop_type %in% c("long grain", "short/medium grain", "temperate japonica")) & fsaCropAcreage$crop == "rice"
+sum(fsaCropAcreage$planted_acres[idx], na.rm = TRUE) / sum(fsaCropAcreage$planted_acres[fsaCropAcreage$crop == "rice"], na.rm = TRUE)
+
+# drop these rows (less than 1% of rice acres)
+fsaCropAcreage <- fsaCropAcreage[!idx, ]
+
+# Cotton
+cotton_els_idx <- fsaCropAcreage$crop == "cotton  els"
+fsaCropAcreage$crop[cotton_els_idx] <- "cotton"
+fsaCropAcreage$fsa_crop_type[cotton_els_idx] <- "extra long staple"
+fsaCropAcreage$fsa_crop_type <- gsub("els","extra long staple",fsaCropAcreage$fsa_crop_type)
+
+idx <- fsaCropAcreage$crop == "cotton  upland"
+fsaCropAcreage$crop[idx] <- "cotton"
+fsaCropAcreage$fsa_crop_type[idx] <- "upland"
+
+#View(distinct(fsaCropAcreage %>% filter(grepl("cotton",crop)) %>% select(crop, fsa_crop_type,intended_use)))
+
+# chickpeas
+# if fsa_crop_type contains "garbanzo" set crop to "chickpeas"
+idx <- grepl("garbanzo", fsaCropAcreage$fsa_crop_type)
+fsaCropAcreage$crop[idx] <- "chickpeas"
+# if crop is "chickpeas" and fsa_crop_type contains "small" set fsa_crop_type to "small"
+fsaCropAcreage$fsa_crop_type[idx & grepl("small|sm", fsaCropAcreage$fsa_crop_type)] <- "small"
+# if crop is "chickpeas" and fsa_crop_type contains "large" set fsa_crop_type to "large"
+fsaCropAcreage$fsa_crop_type[idx & grepl("large|lg", fsaCropAcreage$fsa_crop_type)] <- "large"
+fsaCropAcreage$fsa_crop_type[idx & grepl("green", fsaCropAcreage$fsa_crop_type)] <- "small"
+
+# dry peas
+# if crop is "peas" and intended use contains "Dry Edible" set crop to "dry peas"
+idx <- grepl("peas", fsaCropAcreage$crop) & grepl("dry edible", fsaCropAcreage$intended_use, ignore.case = TRUE)
+fsaCropAcreage$crop[idx] <- "dry peas"
+
+# grain sorghum
+idx <- grepl("sorghum", fsaCropAcreage$crop) & grepl("grain", fsaCropAcreage$intended_use, ignore.case = TRUE)
+fsaCropAcreage$crop[idx] <- "grain sorghum"
+
+# flax
+idx <- grepl("flax", fsaCropAcreage$crop) & grepl("seed", fsaCropAcreage$intended_use, ignore.case = TRUE)
+fsaCropAcreage$crop[idx] <- "flaxseed"
+
+# sunflower
+idx <- grepl("sunflower", fsaCropAcreage$crop)
+fsaCropAcreage$crop[idx] <- "sunflower"
+
+# cleaning invalid NA values
+fsaCropAcreage$intended_use <- gsub("Blank",NA,fsaCropAcreage$intended_use)
+fsaCropAcreage$fsa_crop_type <- gsub("null",NA,fsaCropAcreage$fsa_crop_type)
+
+# filter to covered commodities only
+fsaCropAcreage <- fsaCropAcreage %>% filter(crop %in% covered_commodities)
+
+# for commodities where type doesn't matter, set type to NA
+fsaCropAcreage$fsa_crop_type[which(!fsaCropAcreage$crop %in% c("rice","chickpeas","cotton"))] <- NA
 
 
-# add rma crop codes where applicable
-fsaCropAcreage$rma_type_code <- unlist(lapply(fsaCropAcreage$crop, extract_crop_type, rma_code = TRUE))
+View(distinct(fsaCropAcreage  %>% select(crop, fsa_crop_type)) )
 
-# clean crop names
-fsaCropAcreage$crop <- unlist(lapply(fsaCropAcreage$crop, clean_crop_names2))
+# filter to neccesary columns and apply some more cleaning opperations
+fsaCropAcreage <- fsaCropAcreage %>%
+  select(fips,state,county,crop,fsa_crop_type,irrigation_practice,
+         planted_acres,volunteer_acres,failed_acres,prevented_acres,
+         not_planted_acres,planted_and_failed_acres,
+         crop_yr) %>%
+  mutate(county = str_to_title(county),
+         state = str_to_title(state)) %>%
+  rename(crop_type = fsa_crop_type) %>%
+  group_by(fips,state,county,crop,crop_type,irrigation_practice,crop_yr) %>%
+  summarize(across(c(planted_acres,volunteer_acres,failed_acres,prevented_acres,
+                     not_planted_acres,planted_and_failed_acres), ~ sum(.x, na.rm = TRUE)),
+            .groups = "drop")
+
+
+
+# handle crop and type codes  ------------------------------------------------------------------------
 
 # add rma crop codes
 fsaCropAcreage$rma_crop_code <- unlist(lapply(fsaCropAcreage$crop, assign_rma_cc))
 
+# add rma type codes where applicable
+fsaCropAcreage$rma_type_code <- unlist(lapply(paste(fsaCropAcreage$crop,fsaCropAcreage$crop_type), extract_crop_type, rma_code = TRUE))
+
+# export the final fsaCropAcreage for covered commodities dataset -----------------------------------------
+
+View(distinct(fsaCropAcreage %>% select(crop, crop_type, rma_crop_code, rma_type_code)))
 
 # convert the data to a tibble
-fsaCropAcreage <- dplyr::as_tibble(fsaCropAcreage)
+fsaCropAcreageCC <- dplyr::as_tibble(fsaCropAcreage)
 
 # use the aggregated file in the package data folder
-saveRDS(fsaCropAcreage, file = "./fsaCropAcreageData.rds")
-
-# also export as parquet file
-#arrow::write_parquet(fsaCropAcreage, "./fsaCropAcreageData.parquet")
+saveRDS(fsaCropAcreageCC, file = "./fsaCropAcreageCC.rds")
 
 # use the county level file in the package data folder
-usethis::use_data(fsaCropAcreage, overwrite = TRUE)
+usethis::use_data(fsaCropAcreageCC, overwrite = TRUE)
 
 
 

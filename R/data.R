@@ -406,3 +406,37 @@
 "fsaCropAcreage"
 
 
+#' FSA County-Level Crop Acreage Data - Covered Commodities Only
+#'
+#' A subset of the comprehensive FSA crop acreage dataset containing county-level planted
+#' acreage data specifically for covered commodities that are eligible for FSA programs
+#' such as Agriculture Risk Coverage (ARC) and Price Loss Coverage (PLC). The dataset
+#' has been cleaned for easy merging with other FSA datasets that contain data on covered commodities.
+#'
+#' @format A tibble with 15 variables:
+#' \describe{
+#'   \item{fips}{character. Five-digit combined state+county FIPS code.}
+#'   \item{state}{character. Full name of the state.}
+#'   \item{county}{character. Name of the county.}
+#'   \item{crop}{character. Name of the covered commodity (e.g., "corn", "soybeans", "wheat", "rice", "cotton").}
+#'   \item{crop_type}{character. Crop subtype classification where applicable (e.g., "long grain", "short/medium grain", "temperate japonica" for rice; "upland", "extra long staple" for cotton; "large", "small" for chickpeas). NA for crops without relevant subtypes.}
+#'   \item{irrigation_practice}{character. Irrigation practice indicator ("Y" for irrigated, "N" for non-irrigated).}
+#'   \item{planted_acres}{numeric. Total acres planted for the crop in the county.}
+#'   \item{volunteer_acres}{numeric. Acres of volunteer crop (self-seeded from previous season).}
+#'   \item{failed_acres}{numeric. Acres that were planted but failed to produce a crop.}
+#'   \item{prevented_acres}{numeric. Acres where planting was prevented due to weather or other conditions.}
+#'   \item{not_planted_acres}{numeric. Base acres that were not planted.}
+#'   \item{planted_and_failed_acres}{numeric. Total of planted plus failed acres.}
+#'   \item{crop_yr}{numeric. Crop year.}
+#'   \item{rma_crop_code}{numeric. RMA (Risk Management Agency) crop code for commodity identification and cross-agency alignment.}
+#'   \item{rma_type_code}{character. RMA crop type code for insurance classification. May be NA for crops without subtypes.}
+#' }
+#'
+#' @details
+#' To view code used to generate this dataset, see `./data-raw/fsaCropAcreage/fsaCropAcreageCode.R`
+#'
+#' @usage data(fsaCropAcreageCC)
+#' @source \url{https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/electronic-reading-room/frequently-requested/crop-acreage-data}
+"fsaCropAcreageCC"
+
+
