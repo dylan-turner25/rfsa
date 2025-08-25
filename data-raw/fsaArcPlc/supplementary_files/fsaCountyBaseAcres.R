@@ -87,6 +87,7 @@ county_base_acres$rma_type_code <- unlist(lapply(paste0(county_base_acres$crop,"
 
 # clean crop names
 county_base_acres$crop <- unlist(lapply(county_base_acres$crop, clean_crop_names2))
+unique(county_base_acres$crop)
 
 # add rma crop codes
 county_base_acres$rma_crop_code <- unlist(lapply(county_base_acres$crop, assign_rma_cc))
@@ -130,14 +131,14 @@ unique_fips <- county_base_acres %>%
       # Use matched FIPS if available
       !is.na(fips) ~ fips,
       # Manual overrides for known mismatches
-      state_clean == "ILLINOIS" & county_clean == "DEWITT" ~ "19045", 
+      state_clean == "ILLINOIS" & county_clean == "DEWITT" ~ "19045",
       state_clean == "MAINE" & county_clean %in% c("FORT KENT", "HOULTON") ~ "23003",
       # Add more common county name variations
       state_clean == "ALASKA" & county_clean == "ALEUTIANS EAST" ~ "02013",
       state_clean == "ALASKA" & county_clean == "ALEUTIANS WEST" ~ "02016",
       TRUE ~ fips  # Keep the original matched value or NA
     ),
-    # Keep cleaned versions for consistency  
+    # Keep cleaned versions for consistency
     state = state_clean,
     county = county_clean
   ) %>%
@@ -168,6 +169,10 @@ merge_success <- county_base_acres %>%
 
 cat("Merge success for 2021-2023:\n")
 print(merge_success)
+
+
+View(distinct(county_base_acres %>% select(crop, crop_type, program_year)))
+
 
 # convert to a tibble before exporting
 fsaCountyBaseAcres <- dplyr::as_tibble(county_base_acres)

@@ -727,9 +727,9 @@ calc_effective_reference_price <- function(mya_prices, srp, oa_pct = 0.85, cap =
 list_data_assets <- function(){
   # Define the three release tags
   release_tags <- c("fiscal", "payment", "program")
-  
+
   all_assets <- list()
-  
+
   # Fetch assets from each release
   for(tag in release_tags) {
     tryCatch({
@@ -740,10 +740,10 @@ list_data_assets <- function(){
         repo  = "rfsa",
         tag   = tag
       )
-      
+
       # Extract the assets list
       assets <- release$assets
-      
+
       # Pull out the asset information
       if(length(assets) > 0) {
         df <- data.frame(
@@ -758,10 +758,10 @@ list_data_assets <- function(){
       warning(paste("Could not fetch assets from release:", tag, "-", e$message))
     })
   }
-  
+
   # Combine all asset names
   all_names <- unlist(all_assets, use.names = FALSE)
-  
+
   return(all_names)
 }
 
@@ -799,7 +799,7 @@ valid_state <- function(state) {
 get_cached_rds <- function(name,
                            repo = "dylan-turner25/rfsa",
                            tag  = NULL) {
-  
+
   # Determine tag based on file name if not provided
   if(is.null(tag)) {
     if(grepl("^fiscal_", name)) {
@@ -1067,9 +1067,9 @@ extract_crop_type <- function(crop_name, rma_code = FALSE) {
   # chickpeas
   if (grepl("chickpea", tolower(crop_name))) {
     if (rma_code) return(NA_character_)
-    if (grepl("large", tolower(crop_name))) {
+    if (grepl("large|lg", tolower(crop_name))) {
       return("large")
-    } else if (grepl("small", tolower(crop_name))) {
+    } else if (grepl("small|sm", tolower(crop_name))) {
       return("small")
     }
   }
@@ -1147,9 +1147,11 @@ clean_crop_names2 <- function(crop_name) {
   # Remove specific rice type patterns that might remain
   cleaned_name <- gsub("\\s+(med/.*|long\\s+grain|temperate\\s+japonica)$", "", cleaned_name)
 
-  # Handle "beans- chickpeas" -> "chickpeas" (this specific case before hyphen removal)
-  if(grepl("beans.*chickpea", cleaned_name)) {
+  # Handle specific "beans- chickpeas" case before general hyphen removal
+  if(grepl("^beans-\\s*chickpeas", cleaned_name)) {
     cleaned_name <- "chickpeas"
+  } else if (cleaned_name == "peas"){
+    cleaned_name <- "dry peas"
   } else {
     # Remove hyphen-separated type information (e.g., "rice-med grain" -> "rice")
     cleaned_name <- gsub("-.*$", "", cleaned_name)
@@ -1159,16 +1161,20 @@ clean_crop_names2 <- function(crop_name) {
   lookup <- c(
     "barly" = "barley",
     "pnuts" = "peanuts",
-    "snflr" = "sunflowers",
+    "snflr" = "sunflower",
     "sflwr" = "safflower",
-    "sorgh" = "sorghum",
+    "sorgh" = "grain sorghum",
     "soybn" = "soybeans",
     "canol" = "canola",
     "sesme" = "sesame",
     "lenti" = "lentils",
     "mustd" = "mustard",
     "rape" = "rapeseed",
-    "cramb" = "crambe"
+    "cramb" = "crambe",
+    "flax" = "flaxseed",
+    "sorghum" = "grain sorghum",
+    "sunflowers" = "sunflower",
+    "generic" = "unassigned generic base"
   )
 
   for (abbr in names(lookup)) {
