@@ -236,7 +236,7 @@ arc_co_benchmarks$rma_crop_code <- unlist(lapply(arc_co_benchmarks$crop, assign_
 
 # drop if actual yield is na
 arc_co_benchmarks <- distinct(arc_co_benchmarks %>%
-  filter(!is.na(actual_yield)) %>%
+ # filter(!is.na(actual_yield)) %>%
   select(-county_yield, -county_yield))
 
 
