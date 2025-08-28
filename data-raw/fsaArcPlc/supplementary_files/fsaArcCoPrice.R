@@ -5,7 +5,7 @@ files <- list.files("./data-raw/fsaArcPlc/input_data/fsaArcCoPrice",
 arc_co_prices <- NULL
 
 # load the files and bind them into one data frame
-for(year in 2014:(current_year - 1)){
+for(year in 2014:(current_year)){
   # get file path corresponding to year
   file <- files[grepl(year,files)]
 
