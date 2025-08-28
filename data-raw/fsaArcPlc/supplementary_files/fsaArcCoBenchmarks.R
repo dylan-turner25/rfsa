@@ -66,7 +66,7 @@ arc_co_benchmarks <- arc_co_benchmarks %>%
          oa_bench_mark_yield = bench_mark)
 
 # add column for oa benchmark years
-arc_co_benchmarks$oa_bench_mark_years <- paste0(as.numeric(arc_co_benchmarks$year) - 5, "-", as.numeric(arc_co_benchmarks$year) - 1)
+arc_co_benchmarks$oa_bench_mark_years <- paste0(as.numeric(arc_co_benchmarks$program_year) - 5, "-", as.numeric(arc_co_benchmarks$program_year) - 1)
 
 # rename ST_Cty to fips
 colnames(arc_co_benchmarks)[which(colnames(arc_co_benchmarks) == "ST_Cty")] <- "fips"
@@ -239,6 +239,19 @@ arc_co_benchmarks <- distinct(arc_co_benchmarks %>%
  # filter(!is.na(actual_yield)) %>%
   select(-county_yield, -county_yield))
 
+# convert variables to numeric
+arc_co_benchmarks <- arc_co_benchmarks %>%
+  mutate(across(c("actual_yield","national_price","actual_revenue","formula_payment_rate"), as.numeric))
+
+# aggregate to remove missing values for duplicate rows
+arc_co_benchmarks <- arc_co_benchmarks %>%
+  group_by(fips, state_name, county_name, crop, unit, yield_type, program_year,
+           oa_bench_mark_years, rma_crop_code, rma_type_code, crop_type, county_yield_type) %>%
+  summarise(across(where(is.numeric), ~ mean(.x, na.rm = TRUE)), .groups = "drop")
+
+# replace all NaN with NA
+arc_co_benchmarks <- arc_co_benchmarks %>%
+  mutate(across(where(is.numeric), ~ ifelse(is.nan(.x), NA, .x)))
 
 # convert  data to a tibble before exporting
 fsaArcCoBenchmarks <- dplyr::as_tibble(arc_co_benchmarks)
