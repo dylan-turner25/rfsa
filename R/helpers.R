@@ -10,29 +10,29 @@
 #' @param program_year Numeric. The program year to filter for (e.g., 2024).
 #' @param crop_type Character, optional. The crop type to filter for (e.g., "long grain", "large").
 #' @param state Character, optional. State identifier that can be:
-#'   \\itemize{
-#'     \\item State abbreviation (e.g., "IA", "IL")
-#'     \\item Full state name (e.g., "Iowa", "Illinois")
-#'     \\item State FIPS code (e.g., "19", "17")
+#'   \itemize{
+#'     \item State abbreviation (e.g., "IA", "IL")
+#'     \item Full state name (e.g., "Iowa", "Illinois")
+#'     \item State FIPS code (e.g., "19", "17")
 #'   }
 #' @param county Character, optional. County name (requires state to also be specified).
 #' @param fips Character, optional. 5-digit FIPS code for specific county-level data.
 #' @param quiet Logical. If TRUE, suppresses warning messages (default: FALSE).
 #'
 #' @return Numeric. The PLC yield value. Returns:
-#'   \\itemize{
-#'     \\item County-specific yield if fips or state+county provided
-#'     \\item State average yield if only state provided (with message)
-#'     \\item National average yield if no location specified (with message)
+#'   \itemize{
+#'     \item County-specific yield if fips or state+county provided
+#'     \item State average yield if only state provided (with message)
+#'     \item National average yield if no location specified (with message)
 #'   }
 #'
 #' @details
 #' The function follows this priority order for location filtering:
-#' \\enumerate{
-#'   \\item If \\code{fips} is provided, uses it directly after validation
-#'   \\item If \\code{state} and \\code{county} are provided, filters by both
-#'   \\item If only \\code{state} is provided, calculates state average
-#'   \\item If no location parameters, calculates national average
+#' \enumerate{
+#'   \item If \code{fips} is provided, uses it directly after validation
+#'   \item If \code{state} and \code{county} are provided, filters by both
+#'   \item If only \code{state} is provided, calculates state average
+#'   \item If no location parameters, calculates national average
 #' }
 #'
 #' State abbreviations are automatically converted to full state names since the
@@ -161,20 +161,20 @@ get_plc_yield <- function(crop, program_year, crop_type = NULL, state = NULL, co
 #'   any annual benchmark price below this ERP value will be replaced with the ERP before
 #'   calculating the Olympic average. If NULL, the function will look up ERP from FSA data.
 #' @param state Character, optional. State identifier that can be:
-#'   \\itemize{
-#'     \\item State abbreviation (e.g., "IA", "IL")
-#'     \\item Full state name (e.g., "Iowa", "Illinois")
-#'     \\item State FIPS code (e.g., "19", "17")
+#'   \itemize{
+#'     \item State abbreviation (e.g., "IA", "IL")
+#'     \item Full state name (e.g., "Iowa", "Illinois")
+#'     \item State FIPS code (e.g., "19", "17")
 #'   }
 #' @param county Character, optional. County name (requires state to also be specified).
 #' @param fips Character, optional. 5-digit FIPS code for specific county-level data.
 #' @param quiet Logical. If TRUE, suppresses warning messages (default: FALSE).
 #'
 #' @return Numeric. The ARC-CO benchmark value (yield or price). Returns:
-#'   \\itemize{
-#'     \\item County-specific value if fips or state+county provided
-#'     \\item State average value if only state provided (with message)
-#'     \\item National average value if no location specified (with message)
+#'   \itemize{
+#'     \item County-specific value if fips or state+county provided
+#'     \item State average value if only state provided (with message)
+#'     \item National average value if no location specified (with message)
 #'   }
 #'
 #' @details
@@ -187,11 +187,11 @@ get_plc_yield <- function(crop, program_year, crop_type = NULL, state = NULL, co
 #'
 #' **FSA Data Lookup Mode**: When no historical data is provided, the function follows this
 #' priority order for location filtering:
-#' \\enumerate{
-#'   \\item If \\code{fips} is provided, uses it directly after validation
-#'   \\item If \\code{state} and \\code{county} are provided, filters by both
-#'   \\item If only \\code{state} is provided, calculates state average
-#'   \\item If no location parameters, calculates national average
+#' \enumerate{
+#'   \item If \code{fips} is provided, uses it directly after validation
+#'   \item If \code{state} and \code{county} are provided, filters by both
+#'   \item If only \code{state} is provided, calculates state average
+#'   \item If no location parameters, calculates national average
 #' }
 #'
 #' For benchmark price calculations, if the FSA benchmark price is below the ERP, it will be
@@ -482,10 +482,10 @@ get_arcco_benchmarks <- function(crop, program_year, benchmark_type = "yield", c
 #' @param crop_type Character, optional. The crop type to filter for (e.g., "long grain", "large").
 #' @param yield_type Character, optional. The yield type to filter for from the yield_type column.
 #' @param state Character, optional. State identifier that can be:
-#'   \\itemize{
-#'     \\item State abbreviation (e.g., "IA", "IL")
-#'     \\item Full state name (e.g., "Iowa", "Illinois")
-#'     \\item State FIPS code (e.g., "19", "17")
+#'   \itemize{
+#'     \item State abbreviation (e.g., "IA", "IL")
+#'     \item Full state name (e.g., "Iowa", "Illinois")
+#'     \item State FIPS code (e.g., "19", "17")
 #'   }
 #' @param county Character, optional. County name (requires state to also be specified).
 #' @param fips Character, optional. 5-digit FIPS code for specific county-level data.
@@ -495,10 +495,10 @@ get_arcco_benchmarks <- function(crop, program_year, benchmark_type = "yield", c
 #'
 #' @details
 #' The function follows this calculation:
-#' \\enumerate{
-#'   \\item Retrieves actual_yield from fsaArcCoBenchmarks dataset
-#'   \\item If MYA price >= NMLR: revenue = actual_yield × mya_price
-#'   \\item If MYA price < NMLR: revenue = actual_yield × nmlr
+#' \enumerate{
+#'   \item Retrieves actual_yield from fsaArcCoBenchmarks dataset
+#'   \item If MYA price >= NMLR: revenue = actual_yield × mya_price
+#'   \item If MYA price < NMLR: revenue = actual_yield × nmlr
 #' }
 #'
 #' Location filtering follows the same priority order as other ARC-CO functions.
@@ -657,10 +657,10 @@ get_arcco_actual_revenue <- function(crop, program_year, mya_price, nmlr, crop_t
 #' @param oa_pct Numeric. The percentage of the olympic average that is compared against the statuatory reference price. Defaults to what is specified under the 2018 Farm Bill (i.e. 0.85)
 #' @param cap Numeric. The percentage of the srp that the erp is allowed to reach before it is capped. Defaults to what is specified under the 2018 Farm Bill (i.e. 1.15).
 #' @return Numeric. The calculated effective reference price based on the formula:
-#'   \\itemize{
-#'     \\item If 85% of Olympic average < SRP, then ERP = SRP
-#'     \\item If 85% of Olympic average >= 115% of SRP, then ERP = 115% of SRP
-#'     \\item Otherwise, ERP = 85% of Olympic average
+#'   \itemize{
+#'     \item If 85% of Olympic average < SRP, then ERP = SRP
+#'     \item If 85% of Olympic average >= 115% of SRP, then ERP = 115% of SRP
+#'     \item Otherwise, ERP = 85% of Olympic average
 #'   }
 #'
 #' @details

@@ -22,10 +22,10 @@ get_plc_yield(
 \item{crop_type}{Character, optional. The crop type to filter for (e.g., "long grain", "large").}
 
 \item{state}{Character, optional. State identifier that can be:
-\\itemize{
-\\item State abbreviation (e.g., "IA", "IL")
-\\item Full state name (e.g., "Iowa", "Illinois")
-\\item State FIPS code (e.g., "19", "17")
+\itemize{
+\item State abbreviation (e.g., "IA", "IL")
+\item Full state name (e.g., "Iowa", "Illinois")
+\item State FIPS code (e.g., "19", "17")
 }}
 
 \item{county}{Character, optional. County name (requires state to also be specified).}
@@ -36,10 +36,10 @@ get_plc_yield(
 }
 \value{
 Numeric. The PLC yield value. Returns:
-\\itemize{
-\\item County-specific yield if fips or state+county provided
-\\item State average yield if only state provided (with message)
-\\item National average yield if no location specified (with message)
+\itemize{
+\item County-specific yield if fips or state+county provided
+\item State average yield if only state provided (with message)
+\item National average yield if no location specified (with message)
 }
 }
 \description{
@@ -50,11 +50,11 @@ and county specifications.
 }
 \details{
 The function follows this priority order for location filtering:
-\\enumerate{
-\\item If \\code{fips} is provided, uses it directly after validation
-\\item If \\code{state} and \\code{county} are provided, filters by both
-\\item If only \\code{state} is provided, calculates state average
-\\item If no location parameters, calculates national average
+\enumerate{
+\item If \code{fips} is provided, uses it directly after validation
+\item If \code{state} and \code{county} are provided, filters by both
+\item If only \code{state} is provided, calculates state average
+\item If no location parameters, calculates national average
 }
 
 State abbreviations are automatically converted to full state names since the

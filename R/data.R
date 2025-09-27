@@ -129,7 +129,6 @@
 #' \describe{
 #'   \item{actual_revenue}{Actual county-level revenue for the program year}
 #'   \item{actual_yield}{County yield for the program year}
-#'   \item{arc_co_payment_rate}{Final ARC-CO payment rate per unit}
 #'   \item{benchmark_revenue}{Benchmark revenue calculated using Olympic average yields and prices}
 #'   \item{county_name}{Name of the county}
 #'   \item{county_yield_type}{Type of county yield used (e.g., "county yield or 70% of T-yield", "trend adjusted county yield or 80% of T-yield")}

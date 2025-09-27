@@ -31,10 +31,10 @@ get_arcco_actual_revenue(
 \item{yield_type}{Character, optional. The yield type to filter for from the yield_type column.}
 
 \item{state}{Character, optional. State identifier that can be:
-\\itemize{
-\\item State abbreviation (e.g., "IA", "IL")
-\\item Full state name (e.g., "Iowa", "Illinois")
-\\item State FIPS code (e.g., "19", "17")
+\itemize{
+\item State abbreviation (e.g., "IA", "IL")
+\item Full state name (e.g., "Iowa", "Illinois")
+\item State FIPS code (e.g., "19", "17")
 }}
 
 \item{county}{Character, optional. County name (requires state to also be specified).}
@@ -53,10 +53,10 @@ national marketing loan rate (NMLR).
 }
 \details{
 The function follows this calculation:
-\\enumerate{
-\\item Retrieves actual_yield from fsaArcCoBenchmarks dataset
-\\item If MYA price >= NMLR: revenue = actual_yield × mya_price
-\\item If MYA price < NMLR: revenue = actual_yield × nmlr
+\enumerate{
+\item Retrieves actual_yield from fsaArcCoBenchmarks dataset
+\item If MYA price >= NMLR: revenue = actual_yield × mya_price
+\item If MYA price < NMLR: revenue = actual_yield × nmlr
 }
 
 Location filtering follows the same priority order as other ARC-CO functions.

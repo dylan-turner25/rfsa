@@ -1,0 +1,148 @@
+* using log directory ‘/Users/dylanturner/Library/CloudStorage/Dropbox/rfsa/..Rcheck’
+* using R version 4.5.1 (2025-06-13)
+* using platform: aarch64-apple-darwin24.4.0
+* R was compiled by
+    Apple clang version 17.0.0 (clang-1700.0.13.3)
+    GNU Fortran (Homebrew GCC 15.1.0) 15.1.0
+* running under: macOS Sequoia 15.6.1
+* using session charset: UTF-8
+* using options ‘--no-tests --no-manual --no-build-vignettes’
+* checking for file ‘./DESCRIPTION’ ... OK
+* this is package ‘rfsa’ version ‘0.0.0.9000’
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... OK
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ... WARNING
+Found the following executable files:
+  .git/objects/06/9ad09358ac87398871132d8c44c5eb1c73368d
+  .git/objects/24/0a2de2b077606047c7448a2eb0dbb495c8525d
+  .git/objects/26/c3c597574fb9d683fea4ea21ab9a2a4c4cc2a1
+  .git/objects/74/03f47a99246e3ca720b01f3f4425778d735d42
+  .git/objects/a6/0f586df8f908d8697a6c33178100d51c5412ba
+  .git/objects/b7/f47c0aaf7cbbab6efc51230f8778d17a8e1bd2
+  .git/objects/ba/1b06949432e704ccaa0e21bfef2e64361ba797
+  .git/objects/e1/e4a2bf4027bf0d4be1ac9fb16dbee13083cda6
+  .git/objects/e6/9de29bb2d1d6434b8b29ae775ad8c2e48c5391
+Source packages should not contain undeclared executable files.
+See section ‘Package structure’ in the ‘Writing R Extensions’ manual.
+* checking for hidden files and directories ... NOTE
+Found the following hidden files and directories:
+  .DS_Store
+  .Rhistory
+  .Rproj.user/.DS_Store
+  .git/.DS_Store
+  .git/lfs/.DS_Store
+  .gitattributes
+  .gitignore
+  README_cache/.DS_Store
+  data-raw/.DS_Store
+  data-raw/fsaArcPlc/.DS_Store
+  data-raw/fsaArcPlc/input_data/.DS_Store
+  data-raw/fsaArcPlc/input_data/fsaArcCoBenchmarks/.DS_Store
+  data-raw/fsaArcPlc/input_data/fsaEnrolledCountyBaseAcres/.DS_Store
+  data-raw/fsaCropAcreage/.DS_Store
+  data-raw/fsaCropAcreage/.Rhistory
+  data-raw/fsaFarmPayments/.DS_Store
+  ..Rcheck
+  .Rproj.user
+  .claude
+  .git
+These were most likely included in error. See section ‘Package
+structure’ in the ‘Writing R Extensions’ manual.
+* checking for portable file names ... WARNING
+Found the following files with non-portable file names:
+  .git/index (dylan-pc's conflicted copy 2025-06-25 1)
+  .git/index (dylan-pc's conflicted copy 2025-06-25 2)
+  .git/index (dylan-pc's conflicted copy 2025-06-25 3)
+  .git/index (dylan-pc's conflicted copy 2025-06-25 4)
+  .git/index (dylan-pc's conflicted copy 2025-06-25 5)
+  .git/index (dylan-pc's conflicted copy 2025-06-25)
+  .git/index (dylan-pc's conflicted copy 2025-08-25)
+  .git/index (dylan’s MacBook Pro's conflicted copy 2025-06-25 1)
+  .git/index (dylan’s MacBook Pro's conflicted copy 2025-06-25 2)
+  .git/index (dylan’s MacBook Pro's conflicted copy 2025-06-25 3)
+  .git/index (dylan’s MacBook Pro's conflicted copy 2025-06-25 4)
+  .git/index (dylan’s MacBook Pro's conflicted copy 2025-06-25 5)
+  .git/index (dylan’s MacBook Pro's conflicted copy 2025-06-25)
+  .git/index (dylan’s MacBook Pro's conflicted copy 2025-08-25)
+  data-raw/fsaArcPlc/supplementary_files/ARC PLC Definitions.pdf
+  data-raw/fsaFarmPayments/input_data/state al-in.foia_.na_.pmt24.final_.dt25002.rds
+  data-raw/fsaFarmPayments/input_data/state al-in.foia_.na_.pmt24.final_.dt25002.xlsx
+  data-raw/fsaFarmPayments/input_data/state al-in.foia_.na_.pmt24.final_.dt25002_cleaned.rds
+  data-raw/fsaFarmPayments/input_data/state ia-mi.foia_.na_.pmt24.final_.dt25002.rds
+  data-raw/fsaFarmPayments/input_data/state ia-mi.foia_.na_.pmt24.final_.dt25002.xlsx
+  data-raw/fsaFarmPayments/input_data/state ia-mi.foia_.na_.pmt24.final_.dt25002_cleaned.rds
+  data-raw/fsaFarmPayments/input_data/state mn-nc.foia_.na_.pmt24.final_.dt25002.rds
+  data-raw/fsaFarmPayments/input_data/state mn-nc.foia_.na_.pmt24.final_.dt25002.xlsx
+  data-raw/fsaFarmPayments/input_data/state mn-nc.foia_.na_.pmt24.final_.dt25002_cleaned.rds
+  data-raw/fsaFarmPayments/input_data/state nd-tn.foia_.na_.pmt24.final_.dt25002.rds
+  data-raw/fsaFarmPayments/input_data/state nd-tn.foia_.na_.pmt24.final_.dt25002.xlsx
+  data-raw/fsaFarmPayments/input_data/state nd-tn.foia_.na_.pmt24.final_.dt25002_cleaned.rds
+  data-raw/fsaFarmPayments/input_data/state tx-wy.foia_.na_.pmt24.final_.dt25002.rds
+  data-raw/fsaFarmPayments/input_data/state tx-wy.foia_.na_.pmt24.final_.dt25002.xlsx
+  data-raw/fsaFarmPayments/input_data/state tx-wy.foia_.na_.pmt24.final_.dt25002_cleaned.rds
+  data-raw/fsaCropAcreage/FSA Acreage Documentation
+These are not fully portable file names.
+See section ‘Package structure’ in the ‘Writing R Extensions’ manual.
+Found the following non-portable file paths:
+  rfsa/data-raw/fsaArcPlc/input_data/fsaEnrolledCountyBaseAcres/2019_enrolled_base_county_crop_program.xlsx
+  rfsa/data-raw/fsaArcPlc/input_data/fsaEnrolledCountyBaseAcres/2020_enrolled_base_county_crop_program.xlsx
+  rfsa/data-raw/fsaArcPlc/input_data/fsaEnrolledCountyBaseAcres/2021_enrolled_base_county_crop_program.xlsx
+  rfsa/data-raw/fsaArcPlc/input_data/fsaEnrolledCountyBaseAcres/2022_enrolled_base_county_crop_program.xlsx
+  rfsa/data-raw/fsaArcPlc/input_data/fsaEnrolledCountyBaseAcres/2023_enrolled_base_county_crop_program.xlsx
+  rfsa/data-raw/fsaArcPlc/input_data/fsaEnrolledCountyBaseAcres/2024_enrolled_base_county_crop_program.xlsx
+  rfsa/data-raw/fsaArcPlc/input_data/fsaEnrolledCountyBaseAcres/2025_enrolled_base_county_crop_program.xlsx
+  rfsa/data-raw/fsaArcPlc/supplementary_files/2014_Farm_Bill_Program_Schematic_for_CTP_ARC_PLC_Programs.pdf
+
+Tarballs are only required to store paths of up to 100 bytes and cannot
+store those of more than 256 bytes, with restrictions including to 100
+bytes for the final component.
+See section ‘Package structure’ in the ‘Writing R Extensions’ manual.
+* checking for sufficient/correct file permissions ... OK
+* checking whether package ‘rfsa’ can be installed ... OK
+* checking installed package size ... INFO
+  installed size is 24.4Mb
+  sub-directories of 1Mb or more:
+    data  24.0Mb
+* checking package directory ... OK
+* checking DESCRIPTION meta-information ... NOTE
+Checking should be performed on sources prepared by ‘R CMD build’.
+  Missing dependency on R >= 4.1.0 because package code uses the pipe
+  |> or function shorthand \(...) syntax added in R 4.1.0.
+  File(s) using such syntax:
+    ‘get_fsa_payments.R’
+* checking top-level files ... OK
+* checking for left-over files ... OK
+* checking index information ... OK
+* checking package subdirectories ... WARNING
+Found the following directory with the name of a check directory:
+  ./..Rcheck
+Most likely, these were included erroneously.
+Found the following CITATION file in a non-standard place:
+  CITATION.cff
+Most likely ‘inst/CITATION’ should be used instead.
+* checking code files for non-ASCII characters ... OK
+* checking R files for syntax errors ... OK
+* checking whether the package can be loaded ... OK
+* checking whether the package can be loaded with stated dependencies ... OK
+* checking whether the package can be unloaded cleanly ... OK
+* checking whether the namespace can be loaded with stated dependencies ... OK
+* checking whether the namespace can be unloaded cleanly ... OK
+* checking loading without being on the library search path ... OK
+* checking whether startup messages can be suppressed ... OK
+* checking dependencies in R code ... OK
+* checking S3 generic/method consistency ... OK
+* checking replacement functions ... OK
+* checking foreign function calls ... OK
+* checking R code for possible problems ... OK
+* checking Rd files ... OK
+* checking Rd metadata ... OK
+* checking Rd cross-references ... OK
+* checking for missing documentation entries ... OK
+* checking for code/documentation mismatches ... OK
+* checking Rd \usage sections ... OK
+* checking Rd contents ... OK
+* checking for unstated dependencies in examples ... OK
+* checking contents of ‘data’ directory ...

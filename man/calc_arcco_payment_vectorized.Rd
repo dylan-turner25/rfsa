@@ -87,12 +87,12 @@ Uses the new vectorized helper functions for true batch processing.
 }
 \details{
 This fully vectorized version provides maximum performance improvements:
-\\itemize{
-\\item Eliminates all row-by-row loops entirely
-\\item Uses vectorized helper functions for batch processing
-\\item Single dataset loads for all calculations
-\\item True vectorized processing of all operations
-\\item Expected 10-50x performance improvement for large datasets
+\itemize{
+\item Eliminates all row-by-row loops entirely
+\item Uses vectorized helper functions for batch processing
+\item Single dataset loads for all calculations
+\item True vectorized processing of all operations
+\item Expected 10-50x performance improvement for large datasets
 }
 }
 \examples{

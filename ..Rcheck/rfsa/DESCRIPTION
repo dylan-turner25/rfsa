@@ -1,0 +1,19 @@
+Package: rfsa
+Title: Data on programs administered by the USDA, Farm Service Agency
+Version: 0.0.0.9000
+Author: Dylan Turner <dylan.turner3@outlook.com>
+Maintainer: Dylan Turner <dylan.turner3@outlook.com>
+Authors@R: 
+    person("Dylan", "Turner", , "dylan.turner3@outlook.com", role = c("aut", "cre"))
+Description: What the package does (one paragraph).
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends: R (>= 3.5)
+Imports: cli, dplyr, purrr, rlang, gh, piggyback, memoise, usmap, utils
+LazyData: false
+Suggests: testthat (>= 3.0.0), knitr, rmarkdown
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+Built: R 4.5.1; ; 2025-09-27 08:47:11 UTC; unix

@@ -87,24 +87,24 @@ reference price exceeds the higher of the loan rate or the Marketing Year Averag
 }
 \details{
 The PLC payment calculation follows this logic:
-\\enumerate{
+\enumerate{
 \\item If ERP <= MYA Price: Payment = 0
 \\item If MYA Price <= National Marketing Loan Rate: Payment = (ERP - NMLR) × PLC Yield × Base Acres × Coverage Level
 \\item Otherwise: Payment = (ERP - MYA Price) × PLC Yield × Base Acres × Coverage Level
 }
 
 For program years 2014-2019, the statutory reference price (SRP) is used instead of
-the effective reference price (ERP) unless \\code{always_use_erp = TRUE}.
+the effective reference price (ERP) unless \code{always_use_erp = TRUE}.
 
 When crop_type is not specified for crops with multiple types (like rice or chickpeas),
 the function will average prices and yields across all available types and issue warnings.
 
 The function automatically retrieves missing data from FSA datasets:
-\\itemize{
-\\item MYA prices from \\code{fsaMyaPrice}
-\\item Reference prices from \\code{fsaEffectiveRefPrices}
-\\item Marketing loan rates from \\code{fsaPlcPaymentRate}
-\\item PLC yields from \\code{fsaPlcYields}
+\itemize{
+\item MYA prices from \code{fsaMyaPrice}
+\item Reference prices from \code{fsaEffectiveRefPrices}
+\item Marketing loan rates from \code{fsaPlcPaymentRate}
+\item PLC yields from \code{fsaPlcYields}
 }
 }
 \examples{
@@ -144,6 +144,6 @@ calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100,
 
 }
 \seealso{
-\\code{\\link{get_plc_yield}} for PLC yield calculations
-\\code{\\link{calc_effective_reference_price}} for ERP calculations
+\code{\link{get_plc_yield}} for PLC yield calculations
+\code{\link{calc_effective_reference_price}} for ERP calculations
 }

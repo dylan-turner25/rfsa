@@ -1,0 +1,14 @@
+citHeader("To cite rfsa in publications use:")
+
+citEntry(
+  entry    = "Manual",
+  title    = "rfsa: Data on programs administered by the USDA, Farm Service Agency",
+  author   = "Dylan Turner",
+  year     = "2025",
+  version  = "0.0.0.9000",
+  textVersion = paste(
+    "Turner D (2025).",
+    "rfsa: Data on programs administered by the USDA, Farm Service Agency.",
+    "R package version 0.0.0.9000."
+  )
+)

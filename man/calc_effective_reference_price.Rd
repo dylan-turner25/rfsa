@@ -17,10 +17,10 @@ calc_effective_reference_price(mya_prices, srp, oa_pct = 0.85, cap = 1.15)
 }
 \value{
 Numeric. The calculated effective reference price based on the formula:
-\\itemize{
-\\item If 85\% of Olympic average < SRP, then ERP = SRP
-\\item If 85\% of Olympic average >= 115\% of SRP, then ERP = 115\% of SRP
-\\item Otherwise, ERP = 85\% of Olympic average
+\itemize{
+\item If 85\% of Olympic average < SRP, then ERP = SRP
+\item If 85\% of Olympic average >= 115\% of SRP, then ERP = 115\% of SRP
+\item Otherwise, ERP = 85\% of Olympic average
 }
 }
 \description{
