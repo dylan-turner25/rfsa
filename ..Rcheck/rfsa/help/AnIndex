@@ -1,3 +1,4 @@
+aggregate_multi_param_results	aggregate_multi_param_results
 calculate_payment_response	calculate_payment_response
 calc_arcco_payment	calc_arcco_payment
 calc_arcco_payment_vectorized	calc_arcco_payment_vectorized

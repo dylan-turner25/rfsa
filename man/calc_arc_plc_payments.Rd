@@ -2,14 +2,14 @@
 % Please edit documentation in R/calc_arc_plc_payments.R
 \name{calc_arc_plc_payments}
 \alias{calc_arc_plc_payments}
-\title{Calculate ARC/PLC Payments with Policy Environment Support}
+\title{Calculate ARC/PLC Payments}
 \usage{
 calc_arc_plc_payments(
   data = NULL,
-  crop,
+  crop = NULL,
   program_year,
-  policy_environment = c("fb18", "obbb"),
-  payment_type = c("higher", "plc", "arc"),
+  policy_environment = "fb18",
+  payment_type = "higher",
   price_scenario = NULL,
   price_analysis = FALSE,
   price_range = NULL,
@@ -17,7 +17,7 @@ calc_arc_plc_payments(
   fips = NULL,
   state = NULL,
   county = NULL,
-  aggregate_level = c("total", "crop", "state", "county", "none"),
+  aggregate_level = "total",
   quiet = FALSE
 )
 }
@@ -25,22 +25,24 @@ calc_arc_plc_payments(
 \item{data}{Data frame, optional. Input dataset with all necessary variables.
 If NULL, uses the built-in fsaArcPlcData dataset.}
 
-\item{crop}{Character vector. The crop name(s) for which to calculate payments
-(e.g., "corn", "soybeans", "wheat").}
+\item{crop}{Character vector, optional. The crop name(s) for which to calculate payments
+(e.g., "corn", "soybeans", "wheat"). If NULL (default), calculates payments for all
+available crops and aggregates them.}
 
 \item{program_year}{Numeric vector. The program year(s) for the calculation (e.g., 2024).}
 
-\item{policy_environment}{Character. Policy environment to use:
+\item{policy_environment}{Character vector. Policy environment(s) to use:
 \itemize{
 \item "fb18": Farm Bill 2018 (current policy)
 \item "obbb": Proposed policy with updated parameters
 }}
 
-\item{payment_type}{Character. Type of payment calculation:
+\item{payment_type}{Character vector. Type(s) of payment calculation:
 \itemize{
 \item "plc": Price Loss Coverage only
 \item "arc": Agriculture Risk Coverage only
 \item "higher": Higher of ARC or PLC payments
+\item "sum": Both ARC and PLC payments calculated separately and summed
 }}
 
 \item{price_scenario}{Numeric vector, optional. Custom MYA price(s) to use instead
@@ -63,13 +65,14 @@ for state-level filtering.}
 \item{county}{Character vector, optional. County name(s) for county-level filtering.
 Requires state to also be specified.}
 
-\item{aggregate_level}{Character. Level of aggregation for results:
+\item{aggregate_level}{Character vector. Level(s) of aggregation for results:
 \itemize{
 \item "total": Single total across all data
 \item "crop": Aggregated by crop
 \item "state": Aggregated by state
 \item "county": Aggregated by county
 \item "none": No aggregation, return all records
+\item Multiple values: e.g., c("crop", "state") aggregates by both crop and state
 }}
 
 \item{quiet}{Logical. If TRUE, suppresses warning messages and progress output
@@ -79,14 +82,16 @@ Requires state to also be specified.}
 Data frame with payment calculations. Structure depends on aggregate_level:
 \itemize{
 \item For aggregated results: columns for grouping variables and total_payment
+\item For multiple vector parameters: separate rows for each unique combination
+\item For multiple aggregate levels: e.g., c("crop", "state") creates rows for each crop-state combination
 \item For price_analysis: includes price column with payment response
 \item For "none": full dataset with individual payment calculations
 }
 }
 \description{
-This function provides a unified interface for calculating Agriculture Risk Coverage (ARC)
+This function provides an interface for calculating Agriculture Risk Coverage (ARC)
 and Price Loss Coverage (PLC) payments under different policy environments, including
-support for price sensitivity analysis and policy scenario comparison.
+support for price sensitivity analysis.
 }
 \details{
 This function integrates ARC and PLC payment calculations with support for:
@@ -102,6 +107,7 @@ This function integrates ARC and PLC payment calculations with support for:
 \item PLC: Based on effective reference price vs MYA price comparison
 \item ARC: Revenue-based protection using county benchmarks
 \item Higher: Maximum of ARC and PLC for optimal payment selection
+\item Sum: Both ARC and PLC calculated separately based on enrolled acres and summed
 }
 
 \strong{Data Requirements:}
@@ -111,8 +117,15 @@ should include similar variables for proper calculation.
 }
 \examples{
 \dontrun{
+# Calculate payments for all crops (default behavior)
+all_crop_payments <- calc_arc_plc_payments(
+  program_year = 2024,
+  policy_environment = "fb18",
+  payment_type = "higher"
+)
+
 # Basic calculation for corn in 2024 under current policy
-payments <- calc_arc_plc_payments(
+corn_payments <- calc_arc_plc_payments(
   crop = "corn",
   program_year = 2024,
   policy_environment = "fb18",
@@ -153,6 +166,56 @@ custom_payments <- calc_arc_plc_payments(
   policy_environment = "fb18",
   payment_type = "plc",
   price_scenario = 12.50
+)
+
+# Sum both ARC and PLC payments based on enrolled acres
+sum_payments <- calc_arc_plc_payments(
+  crop = "corn",
+  program_year = 2024,
+  policy_environment = "fb18",
+  payment_type = "sum"
+)
+
+# Multi-year analysis with separate rows per year
+multi_year_payments <- calc_arc_plc_payments(
+  crop = "corn",
+  program_year = c(2022, 2023, 2024),
+  policy_environment = "fb18",
+  payment_type = "higher"
+)
+
+# Multi-parameter analysis: compare policies and payment types
+multi_param_payments <- calc_arc_plc_payments(
+  crop = c("corn", "soybeans"),
+  program_year = 2024,
+  policy_environment = c("fb18", "obbb"),
+  payment_type = c("higher", "sum"),
+  aggregate_level = "crop"
+)
+
+# Multiple price scenarios
+price_scenarios <- calc_arc_plc_payments(
+  crop = "wheat",
+  program_year = 2024,
+  policy_environment = "fb18",
+  payment_type = "plc",
+  price_scenario = c(5.00, 6.00, 7.00)
+)
+
+# Multiple aggregate levels: analyze by both crop and state
+crop_state_analysis <- calc_arc_plc_payments(
+  program_year = 2024,
+  policy_environment = "fb18",
+  payment_type = "higher",
+  aggregate_level = c("crop", "state")
+)
+
+# Crop and county level analysis
+detailed_analysis <- calc_arc_plc_payments(
+  program_year = 2024,
+  policy_environment = "fb18",
+  payment_type = "higher",
+  aggregate_level = c("crop", "county")
 )
 }
 

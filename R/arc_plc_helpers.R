@@ -118,7 +118,7 @@ setup_obbb_parameters <- function(data) {
 #' @param data_subset Filtered data for specific crop and year
 #' @param test_price MYA price to test. If NULL, uses current_mya_price from data
 #' @param policy_environment Either "fb18" or "obbb"
-#' @param payment_type Either "plc", "arc", or "higher"
+#' @param payment_type Either "plc", "arc", "higher", or "sum"
 #' @param sequestration_rate Sequestration rate to apply as percentage
 #' @param quiet Logical. If TRUE, suppresses warning messages
 #' @return Data frame with payment calculations
@@ -161,7 +161,7 @@ calc_payments_for_price <- function(data_subset, test_price = NULL, policy_envir
   )
 
   # Calculate payments based on payment_type
-  if (payment_type %in% c("plc", "higher")) {
+  if (payment_type %in% c("plc", "higher", "sum")) {
     # Calculate PLC payments
     data_subset$plc_payment_calc <- unlist(lapply(1:nrow(data_subset), function(i) {
       tryCatch({
@@ -201,7 +201,7 @@ calc_payments_for_price <- function(data_subset, test_price = NULL, policy_envir
     }))
   }
 
-  if (payment_type %in% c("arc", "higher")) {
+  if (payment_type %in% c("arc", "higher", "sum")) {
     # Calculate ARC payments
     data_subset$arc_payment_calc <- calc_arcco_payment_vectorized(
       crop = data_subset$crop,
@@ -230,6 +230,10 @@ calc_payments_for_price <- function(data_subset, test_price = NULL, policy_envir
     data_subset$final_payment <- data_subset$arc_payment_calc
   } else if (payment_type == "higher") {
     data_subset$final_payment <- pmax(data_subset$arc_payment_calc, data_subset$plc_payment_calc, na.rm = TRUE)
+  } else if (payment_type == "sum") {
+    # Calculate sum: (plc_payment * enrolled_base_PLC) + (arc_payment * enrolled_base_ARCCO)
+    data_subset$final_payment <- (data_subset$plc_payment_calc * data_subset$enrolled_base_PLC) +
+                                 (data_subset$arc_payment_calc * data_subset$enrolled_base_ARCCO)
   }
 
   return(data_subset)
@@ -244,7 +248,7 @@ calc_payments_for_price <- function(data_subset, test_price = NULL, policy_envir
 #' @param crop Crop to analyze (e.g., "corn", "soybeans", "wheat")
 #' @param year Program year to analyze
 #' @param policy_environment Either "fb18" (current Farm Bill) or "obbb"
-#' @param payment_type Either "plc", "arc", or "higher"
+#' @param payment_type Either "plc", "arc", "higher", or "sum"
 #' @param price_min Minimum MYA price to test
 #' @param price_max Maximum MYA price to test
 #' @param price_step Price increment (default 0.1)
@@ -254,7 +258,7 @@ calc_payments_for_price <- function(data_subset, test_price = NULL, policy_envir
 #' @return Data frame with columns: price, total_payment, policy_environment, payment_type, crop, year
 #' @keywords internal
 calculate_payment_response <- function(data, crop, year, policy_environment = c("obbb", "fb18"),
-                                     payment_type = c("plc", "arc", "higher"),
+                                     payment_type = c("plc", "arc", "higher", "sum"),
                                      price_min, price_max, price_step = 0.1,
                                      sequestration_rate = 0, aggregate_level = "total",
                                      quiet = FALSE) {

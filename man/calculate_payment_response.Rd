@@ -9,7 +9,7 @@ calculate_payment_response(
   crop,
   year,
   policy_environment = c("obbb", "fb18"),
-  payment_type = c("plc", "arc", "higher"),
+  payment_type = c("plc", "arc", "higher", "sum"),
   price_min,
   price_max,
   price_step = 0.1,
@@ -27,7 +27,7 @@ calculate_payment_response(
 
 \item{policy_environment}{Either "fb18" (current Farm Bill) or "obbb"}
 
-\item{payment_type}{Either "plc", "arc", or "higher"}
+\item{payment_type}{Either "plc", "arc", "higher", or "sum"}
 
 \item{price_min}{Minimum MYA price to test}
 

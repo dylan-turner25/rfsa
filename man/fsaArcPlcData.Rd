@@ -37,6 +37,7 @@ A data frame with comprehensive variables for ARC/PLC analysis:
 \item{annual_benchmark_price_lag5}{Price from five years prior (T-5)}
 \item{current_mya_price}{Marketing Year Average price for the current year}
 \item{current_national_loan_rate}{National loan rate for the current marketing year}
+\item{final_mya_price_lag1}{Final MYA price from T-1}
 \item{final_mya_price_lag2}{Final MYA price from T-2}
 \item{final_mya_price_lag3}{Final MYA price from T-3}
 \item{final_mya_price_lag4}{Final MYA price from T-4}
@@ -45,7 +46,9 @@ A data frame with comprehensive variables for ARC/PLC analysis:
 \item{statutory_reference_price}{Statutory reference price for the crop}
 \item{effective_reference_price}{Effective reference price (ERP) when applicable}
 \item{erp_calc}{Calculated ERP using Olympic average methodology}
+\item{erp_calc_check}{Verification check for ERP calculations}
 \item{oa_bench_mark_price_calc}{Calculated Olympic average benchmark price}
+\item{current_arcco_benchmark_price}{Current ARC-CO benchmark price for revenue calculations}
 \item{base_acres}{Total base acres for the county, crop, and program year}
 \item{enrolled_base_ARCCO}{Base acres enrolled in ARC-CO program}
 \item{enrolled_base_PLC}{Base acres enrolled in PLC program}

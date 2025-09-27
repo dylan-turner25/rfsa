@@ -20,7 +20,7 @@ calc_payments_for_price(
 
 \item{policy_environment}{Either "fb18" or "obbb"}
 
-\item{payment_type}{Either "plc", "arc", or "higher"}
+\item{payment_type}{Either "plc", "arc", "higher", or "sum"}
 
 \item{sequestration_rate}{Sequestration rate to apply as percentage}
 
