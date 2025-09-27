@@ -103,9 +103,9 @@ See section ‘Package structure’ in the ‘Writing R Extensions’ manual.
 * checking for sufficient/correct file permissions ... OK
 * checking whether package ‘rfsa’ can be installed ... OK
 * checking installed package size ... INFO
-  installed size is 24.4Mb
+  installed size is 32.9Mb
   sub-directories of 1Mb or more:
-    data  24.0Mb
+    data  32.4Mb
 * checking package directory ... OK
 * checking DESCRIPTION meta-information ... NOTE
 Checking should be performed on sources prepared by ‘R CMD build’.
@@ -136,13 +136,66 @@ Most likely ‘inst/CITATION’ should be used instead.
 * checking S3 generic/method consistency ... OK
 * checking replacement functions ... OK
 * checking foreign function calls ... OK
-* checking R code for possible problems ... OK
+* checking R code for possible problems ... NOTE
+calc_arc_plc_payments: no visible binding for global variable
+  ‘fsaArcPlcData’
+calc_arc_plc_payments: no visible binding for global variable
+  ‘state_name’
+calc_arc_plc_payments: no visible binding for global variable
+  ‘county_name’
+calc_arc_plc_payments: no visible binding for global variable
+  ‘total_payment_value’
+calculate_payment_response: no visible binding for global variable
+  ‘program_year’
+setup_obbb_parameters: no visible binding for global variable ‘crop’
+Undefined global functions or variables:
+  county_name crop fsaArcPlcData program_year state_name
+  total_payment_value
 * checking Rd files ... OK
 * checking Rd metadata ... OK
 * checking Rd cross-references ... OK
 * checking for missing documentation entries ... OK
-* checking for code/documentation mismatches ... OK
+* checking for code/documentation mismatches ... WARNING
+Data codoc mismatches from Rd file 'fsaArcPlcData.Rd':
+Variables in data frame 'fsaArcPlcData'
+  Code: actual_revenue actual_yield annual_benchmark_price_lag1
+        annual_benchmark_price_lag2 annual_benchmark_price_lag3
+        annual_benchmark_price_lag4 annual_benchmark_price_lag5
+        base_acres benchmark_revenue county_name county_yield_type crop
+        crop_type current_arcco_benchmark_price current_mya_price
+        current_national_loan_rate effective_reference_price
+        enrolled_base_ARCCO enrolled_base_PLC erp_calc erp_calc_check
+        failed_acres final_mya_price_lag1 final_mya_price_lag2
+        final_mya_price_lag3 final_mya_price_lag4 final_mya_price_lag5
+        final_mya_price_lag6 fips formula_payment_rate
+        guarantee_revenue marketing_year maximum_payment_rate
+        national_price oa_bench_mark_price oa_bench_mark_price_calc
+        oa_bench_mark_years oa_bench_mark_yield payment_rate
+        planted_acres planted_and_failed_acres planted_irrigated_share
+        planted_irrigated_share_national planted_non_irrigated_share
+        planted_non_irrigated_share_national plc_yield prevented_acres
+        program_year rma_crop_code rma_type_code state_name
+        statutory_reference_price unit yield_type
+  Docs: actual_revenue actual_yield annual_benchmark_price_lag1
+        annual_benchmark_price_lag2 annual_benchmark_price_lag3
+        annual_benchmark_price_lag4 annual_benchmark_price_lag5
+        base_acres benchmark_revenue county_name county_yield_type crop
+        crop_type current_mya_price current_national_loan_rate
+        effective_reference_price enrolled_base_ARCCO enrolled_base_PLC
+        erp_calc failed_acres final_mya_price_lag2 final_mya_price_lag3
+        final_mya_price_lag4 final_mya_price_lag5 final_mya_price_lag6
+        fips formula_payment_rate guarantee_revenue marketing_year
+        maximum_payment_rate national_price oa_bench_mark_price
+        oa_bench_mark_price_calc oa_bench_mark_years
+        oa_bench_mark_yield payment_rate planted_acres
+        planted_and_failed_acres planted_irrigated_share
+        planted_irrigated_share_national planted_non_irrigated_share
+        planted_non_irrigated_share_national plc_yield prevented_acres
+        program_year rma_crop_code rma_type_code state_name
+        statutory_reference_price unit yield_type
+
 * checking Rd \usage sections ... OK
 * checking Rd contents ... OK
 * checking for unstated dependencies in examples ... OK
-* checking contents of ‘data’ directory ...
+* checking contents of ‘data’ directory ... OK
+* checking data for non-ASCII characters ...

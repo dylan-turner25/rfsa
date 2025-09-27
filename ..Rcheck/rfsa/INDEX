@@ -1,3 +1,5 @@
+calc_arc_plc_payments   Calculate ARC/PLC Payments with Policy
+                        Environment Support
 calc_arcco_payment      Calculate ARC-CO Payment
 calc_arcco_payment_vectorized
                         Calculate ARC-CO Payment (Fully Vectorized
@@ -9,6 +11,7 @@ fsaArcCoPrice           ARC-CO Benchmark and Actual Price Data
 fsaArcIcPrice           Commodity-specific ARC-IC benchmark prices, MYA
                         prices, and statutory reference prices.
 fsaArcPlcBaseAcres      ARC/PLC enrolled base acres by commodity
+fsaArcPlcData           Comprehensive ARC/PLC Payment Analysis Dataset
 fsaArcPlcPayments       ARC/PLC Program Payments by Crop and Year
 fsaCountyBaseAcres      County‐level base acres and average PLC yields
                         by crop

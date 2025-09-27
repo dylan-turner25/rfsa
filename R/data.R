@@ -156,6 +156,131 @@
 "fsaArcCoBenchmarks"
 
 
+#' Comprehensive ARC/PLC Payment Analysis Dataset
+#'
+#' A comprehensive dataset that combines all necessary FSA data for ARC and PLC payment
+#' calculations, including base acres, enrolled acres, yields, prices, benchmarks,
+#' and irrigation adjustments. This dataset is created by cross-joining all counties,
+#' crops, and program years, then merging all relevant FSA data sources.
+#'
+#' @format A data frame with comprehensive variables for ARC/PLC analysis:
+#' \describe{
+#'   \item{fips}{5-digit FIPS code for county identification}
+#'   \item{state_name}{Name of the state}
+#'   \item{county_name}{Name of the county}
+#'   \item{crop}{Name of the commodity (e.g., "corn", "soybeans", "wheat")}
+#'   \item{crop_type}{Crop subtype if applicable (e.g., "long grain", "small")}
+#'   \item{program_year}{Program year (e.g., 2019-2025)}
+#'   \item{marketing_year}{Marketing year range (e.g., "2019-2020")}
+#'   \item{yield_type}{Type of yield data ("All", "Irrigated", "Nonirrigated")}
+#'   \item{actual_yield}{County yield for the program year (bushels/acre or pounds/acre)}
+#'   \item{benchmark_revenue}{Benchmark revenue calculated using Olympic average yields and prices}
+#'   \item{county_yield_type}{Type of county yield used in calculations}
+#'   \item{formula_payment_rate}{The formula-derived payment rate prior to maximum cap}
+#'   \item{guarantee_revenue}{86% of the benchmark revenue (ARC-CO guarantee)}
+#'   \item{maximum_payment_rate}{Maximum allowable payment rate (10% of benchmark revenue)}
+#'   \item{national_price}{Final national price used in revenue calculations}
+#'   \item{oa_bench_mark_price}{Olympic average benchmark price}
+#'   \item{oa_bench_mark_years}{Marketing years used for the Olympic average}
+#'   \item{oa_bench_mark_yield}{Olympic average county yield}
+#'   \item{payment_rate}{The final payment rate after applying caps}
+#'   \item{rma_crop_code}{RMA commodity code}
+#'   \item{rma_type_code}{RMA type classification code}
+#'   \item{unit}{Unit of measurement (e.g., "Bushel", "Pound")}
+#'   \item{plc_yield}{PLC yield for the county and crop}
+#'   \item{annual_benchmark_price_lag1}{Price from one year prior (T-1)}
+#'   \item{annual_benchmark_price_lag2}{Price from two years prior (T-2)}
+#'   \item{annual_benchmark_price_lag3}{Price from three years prior (T-3)}
+#'   \item{annual_benchmark_price_lag4}{Price from four years prior (T-4)}
+#'   \item{annual_benchmark_price_lag5}{Price from five years prior (T-5)}
+#'   \item{current_mya_price}{Marketing Year Average price for the current year}
+#'   \item{current_national_loan_rate}{National loan rate for the current marketing year}
+#'   \item{final_mya_price_lag2}{Final MYA price from T-2}
+#'   \item{final_mya_price_lag3}{Final MYA price from T-3}
+#'   \item{final_mya_price_lag4}{Final MYA price from T-4}
+#'   \item{final_mya_price_lag5}{Final MYA price from T-5}
+#'   \item{final_mya_price_lag6}{Final MYA price from T-6}
+#'   \item{statutory_reference_price}{Statutory reference price for the crop}
+#'   \item{effective_reference_price}{Effective reference price (ERP) when applicable}
+#'   \item{erp_calc}{Calculated ERP using Olympic average methodology}
+#'   \item{oa_bench_mark_price_calc}{Calculated Olympic average benchmark price}
+#'   \item{base_acres}{Total base acres for the county, crop, and program year}
+#'   \item{enrolled_base_ARCCO}{Base acres enrolled in ARC-CO program}
+#'   \item{enrolled_base_PLC}{Base acres enrolled in PLC program}
+#'   \item{planted_irrigated_share}{Share of planted acres that are irrigated}
+#'   \item{planted_non_irrigated_share}{Share of planted acres that are non-irrigated}
+#'   \item{planted_irrigated_share_national}{National share of irrigated acres for the crop}
+#'   \item{planted_non_irrigated_share_national}{National share of non-irrigated acres for the crop}
+#'   \item{planted_and_failed_acres}{Total planted and failed acres}
+#'   \item{prevented_acres}{Acres prevented from planting}
+#'   \item{planted_acres}{Successfully planted acres}
+#'   \item{failed_acres}{Acres that failed after planting}
+#'   \item{actual_revenue}{Actual revenue (actual_yield × national_price)}
+#' }
+#'
+#' @details
+#' This dataset is created by:
+#' \enumerate{
+#'   \item Cross-joining all unique combinations of FIPS codes, crops, and program years
+#'   \item Merging ARC-CO benchmark data from fsaArcCoBenchmarks
+#'   \item Adding PLC yields from fsaPlcYields
+#'   \item Incorporating price data from fsaArcCoPrice and fsaMyaPrice
+#'   \item Adding reference prices from fsaEffectiveRefPrices
+#'   \item Including base acre data from fsaCountyBaseAcres
+#'   \item Adding enrolled base acres from fsaEnrolledCountyBaseAcres
+#'   \item Incorporating planted acreage data from fsaCropAcreageCC
+#'   \item Adjusting base acres by irrigation status using county and national shares
+#'   \item Calculating missing effective reference prices and benchmark prices
+#'   \item Forward-filling missing loan rates and other parameters
+#' }
+#'
+#' **Irrigation Adjustments:**
+#' Base acres and enrolled acres are adjusted proportionally based on irrigation status.
+#' County-level irrigation shares are used when available, otherwise national-level
+#' shares are applied. This ensures yield_type consistency between yields and acres.
+#'
+#' **Missing Data Handling:**
+#' The dataset includes calculated values for missing effective reference prices
+#' and benchmark prices using the Olympic average methodology. Historical loan rates
+#' are forward-filled to handle missing values in recent years.
+#'
+#' **Program Years:**
+#' Currently includes data for program years 2019-2025, covering the period with
+#' comprehensive enrolled base acre data.
+#'
+#' @usage data(fsaArcPlcData)
+#' @source Multiple FSA data sources combined:
+#'   \url{https://www.fsa.usda.gov/programs-and-services/arcplc_program}
+#'   \url{https://www.nass.usda.gov/}
+#'   \url{https://www.rma.usda.gov/}
+#'
+#' @examples
+#' \dontrun{
+#' # Load the comprehensive dataset
+#' data(fsaArcPlcData)
+#'
+#' # View structure
+#' str(fsaArcPlcData)
+#'
+#' # Summary of coverage by program year
+#' table(fsaArcPlcData$program_year)
+#'
+#' # Counties with corn data in 2024
+#' corn_2024 <- fsaArcPlcData %>%
+#'   filter(crop == "corn", program_year == 2024, !is.na(enrolled_base_PLC))
+#'
+#' # Calculate total enrolled base acres by crop and year
+#' enrollment_summary <- fsaArcPlcData %>%
+#'   group_by(crop, program_year) %>%
+#'   summarize(
+#'     total_plc_acres = sum(enrolled_base_PLC, na.rm = TRUE),
+#'     total_arc_acres = sum(enrolled_base_ARCCO, na.rm = TRUE),
+#'     .groups = "drop"
+#'   )
+#' }
+"fsaArcPlcData"
+
+
 #' ARC-CO Benchmark and Actual Price Data
 #'
 #' A dataset containing annual commodity-level price data used in the calculation of ARC-CO (Agriculture Risk Coverage - County) benchmark and actual prices, including statutory and market-based price indicators.

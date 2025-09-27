@@ -1,0 +1,34 @@
+---
+title: "Calculating ARC and PLC Payments Using rfsa"
+author: "Dylan Turner"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{Comprehensive ARC/PLC Payment Analysis with calc_arc_plc_payments()}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+# Introduction
+
+
+## Loading the Package
+
+```{r load-package}
+library(rfsa)
+library(dplyr)  # For data manipulation in examples
+
+
+```
