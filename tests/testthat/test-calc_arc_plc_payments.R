@@ -11,24 +11,26 @@ test_that("calc_arc_plc_payments produce origional values",{
 
 })
 
-test_that("calc_arc_plc_payments produce same value when using price type",{
+test_that("calc_arc_plc_payments works with custom price parameter",{
 
-  result1 <- calc_arc_plc_payments(program_year = 2025,
+  # Test that custom price produces different result
+  result_custom <- calc_arc_plc_payments(program_year = 2025,
                                   crop = "corn",
                                   policy_environment = "obbb",
                                   payment_type = "higher",
-                                  price_range = c(3.9,3.9,0),
+                                  price = 5.0,
                                   aggregate_level = "total",
                                   quiet = T)$total_payment
 
-  result2 <- calc_arc_plc_payments(program_year = 2025,
+  result_current <- calc_arc_plc_payments(program_year = 2025,
                                    crop = "corn",
                                    policy_environment = "obbb",
                                    payment_type = "higher",
                                    aggregate_level = "total",
                                    quiet = T)$total_payment
 
-  expect_equal(result1, result2)
+  # Custom price should produce different (lower) payment for higher price
+  expect_true(result_custom < result_current)
 
 })
 

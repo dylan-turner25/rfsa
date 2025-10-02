@@ -10,9 +10,7 @@ calc_arc_plc_payments(
   program_year,
   policy_environment = "fb18",
   payment_type = "higher",
-  price_scenario = NULL,
-  price_analysis = FALSE,
-  price_range = NULL,
+  price = NULL,
   sequestration_rate = 0,
   fips = NULL,
   state = NULL,
@@ -45,14 +43,12 @@ available crops and aggregates them.}
 \item "sum": Both ARC and PLC payments calculated separately and summed
 }}
 
-\item{price_scenario}{Numeric vector, optional. Custom MYA price(s) to use instead
-of current prices. If NULL, uses current MYA prices from data.}
-
-\item{price_analysis}{Logical. If TRUE, enables price sensitivity analysis across
-a range of prices (default: FALSE).}
-
-\item{price_range}{Numeric vector, optional. Price range for sensitivity analysis
-as c(min_price, max_price, price_step). Required if price_analysis = TRUE.}
+\item{price}{Numeric vector, optional. Custom MYA price(s) to use instead
+of current prices. If NULL, uses current MYA prices from data. Can be:
+\itemize{
+\item Single value: Applied to all crops
+\item Vector: One price per crop (length must match number of crops)
+}}
 
 \item{sequestration_rate}{Numeric. Sequestration rate to apply as percentage
 (default: 0 for no sequestration).}
@@ -84,7 +80,6 @@ Data frame with payment calculations. Structure depends on aggregate_level:
 \item For aggregated results: columns for grouping variables and total_payment
 \item For multiple vector parameters: separate rows for each unique combination
 \item For multiple aggregate levels: e.g., c("crop", "state") creates rows for each crop-state combination
-\item For price_analysis: includes price column with payment response
 \item For "none": full dataset with individual payment calculations
 }
 }
@@ -149,23 +144,22 @@ obbb_payments <- calc_arc_plc_payments(
   aggregate_level = "crop"
 )
 
-# Price sensitivity analysis
-price_response <- calc_arc_plc_payments(
-  crop = "corn",
-  program_year = 2024,
-  policy_environment = "obbb",
-  payment_type = "higher",
-  price_analysis = TRUE,
-  price_range = c(3.0, 6.0, 0.1)
-)
-
-# Custom price scenario
+# Custom price scenario (single price for all crops)
 custom_payments <- calc_arc_plc_payments(
   crop = "soybeans",
   program_year = 2024,
   policy_environment = "fb18",
   payment_type = "plc",
-  price_scenario = 12.50
+  price = 12.50
+)
+
+# Custom price scenario (different price per crop)
+multi_price_payments <- calc_arc_plc_payments(
+  crop = c("corn", "soybeans", "wheat"),
+  program_year = 2024,
+  policy_environment = "fb18",
+  payment_type = "higher",
+  price = c(3.9, 12.5, 6.2)
 )
 
 # Sum both ARC and PLC payments based on enrolled acres
@@ -191,15 +185,6 @@ multi_param_payments <- calc_arc_plc_payments(
   policy_environment = c("fb18", "obbb"),
   payment_type = c("higher", "sum"),
   aggregate_level = "crop"
-)
-
-# Multiple price scenarios
-price_scenarios <- calc_arc_plc_payments(
-  crop = "wheat",
-  program_year = 2024,
-  policy_environment = "fb18",
-  payment_type = "plc",
-  price_scenario = c(5.00, 6.00, 7.00)
 )
 
 # Multiple aggregate levels: analyze by both crop and state

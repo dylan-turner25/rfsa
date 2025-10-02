@@ -22,12 +22,12 @@
 #'     \item "higher": Higher of ARC or PLC payments
 #'     \item "sum": Both ARC and PLC payments calculated separately and summed
 #'   }
-#' @param price_scenario Numeric vector, optional. Custom MYA price(s) to use instead
-#'   of current prices. If NULL, uses current MYA prices from data.
-#' @param price_analysis Logical. If TRUE, enables price sensitivity analysis across
-#'   a range of prices (default: FALSE).
-#' @param price_range Numeric vector, optional. Price range for sensitivity analysis
-#'   as c(min_price, max_price, price_step). Required if price_analysis = TRUE.
+#' @param price Numeric vector, optional. Custom MYA price(s) to use instead
+#'   of current prices. If NULL, uses current MYA prices from data. Can be:
+#'   \itemize{
+#'     \item Single value: Applied to all crops
+#'     \item Vector: One price per crop (length must match number of crops)
+#'   }
 #' @param sequestration_rate Numeric. Sequestration rate to apply as percentage
 #'   (default: 0 for no sequestration).
 #' @param fips Character vector, optional. 5-digit FIPS code(s) for county-level filtering.
@@ -52,7 +52,6 @@
 #'     \item For aggregated results: columns for grouping variables and total_payment
 #'     \item For multiple vector parameters: separate rows for each unique combination
 #'     \item For multiple aggregate levels: e.g., c("crop", "state") creates rows for each crop-state combination
-#'     \item For price_analysis: includes price column with payment response
 #'     \item For "none": full dataset with individual payment calculations
 #'   }
 #'
@@ -112,23 +111,22 @@
 #'   aggregate_level = "crop"
 #' )
 #'
-#' # Price sensitivity analysis
-#' price_response <- calc_arc_plc_payments(
-#'   crop = "corn",
-#'   program_year = 2024,
-#'   policy_environment = "obbb",
-#'   payment_type = "higher",
-#'   price_analysis = TRUE,
-#'   price_range = c(3.0, 6.0, 0.1)
-#' )
-#'
-#' # Custom price scenario
+#' # Custom price scenario (single price for all crops)
 #' custom_payments <- calc_arc_plc_payments(
 #'   crop = "soybeans",
 #'   program_year = 2024,
 #'   policy_environment = "fb18",
 #'   payment_type = "plc",
-#'   price_scenario = 12.50
+#'   price = 12.50
+#' )
+#'
+#' # Custom price scenario (different price per crop)
+#' multi_price_payments <- calc_arc_plc_payments(
+#'   crop = c("corn", "soybeans", "wheat"),
+#'   program_year = 2024,
+#'   policy_environment = "fb18",
+#'   payment_type = "higher",
+#'   price = c(3.9, 12.5, 6.2)
 #' )
 #'
 #' # Sum both ARC and PLC payments based on enrolled acres
@@ -154,15 +152,6 @@
 #'   policy_environment = c("fb18", "obbb"),
 #'   payment_type = c("higher", "sum"),
 #'   aggregate_level = "crop"
-#' )
-#'
-#' # Multiple price scenarios
-#' price_scenarios <- calc_arc_plc_payments(
-#'   crop = "wheat",
-#'   program_year = 2024,
-#'   policy_environment = "fb18",
-#'   payment_type = "plc",
-#'   price_scenario = c(5.00, 6.00, 7.00)
 #' )
 #'
 #' # Multiple aggregate levels: analyze by both crop and state
@@ -193,9 +182,7 @@ calc_arc_plc_payments <- function(data = NULL,
                                  program_year,
                                  policy_environment = "fb18",
                                  payment_type = "higher",
-                                 price_scenario = NULL,
-                                 price_analysis = FALSE,
-                                 price_range = NULL,
+                                 price = NULL,
                                  sequestration_rate = 0,
                                  fips = NULL,
                                  state = NULL,
@@ -237,16 +224,6 @@ calc_arc_plc_payments <- function(data = NULL,
     if (!quiet) cli::cli_inform("Using fsaArcPlcData dataset")
     data("fsaArcPlcData", envir = environment())
     data <- fsaArcPlcData
-  }
-
-  # Validate price analysis parameters
-  if (price_analysis) {
-    if (is.null(price_range) || length(price_range) != 3) {
-      stop("price_range must be specified as c(min_price, max_price, price_step) when price_analysis = TRUE")
-    }
-    if (!is.null(price_scenario)) {
-      cli::cli_warn("price_scenario ignored when price_analysis = TRUE")
-    }
   }
 
   # Setup OBBB parameters if needed
@@ -296,16 +273,44 @@ calc_arc_plc_payments <- function(data = NULL,
     stop("No data found matching the specified criteria")
   }
 
+  # Validate price parameter
+  if (!is.null(price)) {
+    # Get unique crops after filtering
+    unique_crops <- unique(data$crop)
+    n_crops <- length(unique_crops)
+
+    if (length(price) > 1 && length(price) != n_crops) {
+      stop("When price is a vector, its length must equal the number of crops selected (",
+           n_crops, "). Got ", length(price), " prices.")
+    }
+
+    # Expand single price to all crops if needed
+    if (length(price) == 1) {
+      price_vector <- rep(price, n_crops)
+    } else {
+      price_vector <- price
+    }
+
+    # Create price mapping for each crop
+    price_map <- data.frame(
+      crop = unique_crops,
+      custom_price = price_vector,
+      stringsAsFactors = FALSE
+    )
+
+    # Join price to data
+    data <- data %>%
+      left_join(price_map, by = "crop")
+  }
+
   # Create parameter combinations for multiple values
-  if (length(policy_environment) > 1 || length(payment_type) > 1 ||
-      length(program_year) > 1 || (!is.null(price_scenario) && length(price_scenario) > 1)) {
+  if (length(policy_environment) > 1 || length(payment_type) > 1 || length(program_year) > 1) {
 
     # Create all combinations of parameters
     param_combinations <- expand.grid(
       policy_environment = policy_environment,
       payment_type = payment_type,
       program_year = program_year,
-      price_scenario = if (is.null(price_scenario)) NA else price_scenario,
       stringsAsFactors = FALSE
     )
 
@@ -320,27 +325,98 @@ calc_arc_plc_payments <- function(data = NULL,
 
       if (nrow(combo_data) == 0) next
 
-      # Calculate payments for this combination
-      combo_price <- if (is.na(combo$price_scenario)) NULL else combo$price_scenario
-
-      combo_results <- calc_payments_for_price(
-        data_subset = combo_data,
-        test_price = combo_price,
-        policy_environment = combo$policy_environment,
-        payment_type = combo$payment_type,
-        sequestration_rate = sequestration_rate,
-        quiet = quiet
-      )
-
-      # Add parameter metadata
-      combo_results$policy_environment <- combo$policy_environment
-      combo_results$payment_type <- combo$payment_type
-      combo_results$program_year <- combo$program_year
-      if (!is.na(combo$price_scenario)) {
-        combo_results$price_scenario <- combo$price_scenario
+      # Update current MYA price if custom price provided
+      if (!is.null(price)) {
+        combo_data$current_mya_price <- combo_data$custom_price
+        combo_data$actual_revenue <- combo_data$actual_yield * combo_data$custom_price
       }
 
-      all_results[[i]] <- combo_results
+      # Set up policy parameters
+      if (combo$policy_environment == "obbb") {
+        srp_col <- "obbb_srps"
+        nmlr_col <- "obbb_nmlr"
+        oa_pct <- 0.88
+        cap <- 1.15
+        max_payment_level <- 0.1
+        payment_trigger_level <- 0.9
+      } else {
+        srp_col <- "statutory_reference_price"
+        nmlr_col <- "current_national_loan_rate"
+        oa_pct <- 0.85
+        cap <- 1.15
+        max_payment_level <- 0.1
+        payment_trigger_level <- 0.86
+      }
+
+      # Prepare historical prices matrix
+      historical_prices_matrix <- cbind(
+        combo_data$annual_benchmark_price_lag1,
+        combo_data$annual_benchmark_price_lag2,
+        combo_data$annual_benchmark_price_lag3,
+        combo_data$annual_benchmark_price_lag4,
+        combo_data$annual_benchmark_price_lag5
+      )
+
+      # Calculate payments based on payment_type
+      if (combo$payment_type %in% c("plc", "higher", "sum")) {
+        combo_data$plc_payment_calc <- calc_plc_payment_vectorized(
+          crop = combo_data$crop,
+          crop_type = combo_data$crop_type,
+          program_year = combo_data$program_year,
+          base_acres = 1,
+          mya_price = combo_data$current_mya_price,
+          historic_mya_prices = historical_prices_matrix,
+          srp = combo_data[[srp_col]],
+          erp = NULL,
+          nmlr = combo_data[[nmlr_col]],
+          plc_yield = combo_data$plc_yield,
+          cov_lvl = 0.85,
+          fips = combo_data$fips,
+          oa_pct = oa_pct,
+          cap = cap,
+          quiet = quiet
+        )
+      }
+
+      if (combo$payment_type %in% c("arc", "higher", "sum")) {
+        combo_data$arc_payment_calc <- calc_arcco_payment_vectorized(
+          crop = combo_data$crop,
+          crop_type = combo_data$crop_type,
+          program_year = combo_data$program_year,
+          actual_revenue = combo_data$actual_revenue,
+          base_acres = 1,
+          mya_price = combo_data$current_mya_price,
+          srp = combo_data[[srp_col]],
+          oa_benchmark_yield = combo_data$oa_bench_mark_yield,
+          nmlr = combo_data[[nmlr_col]],
+          historic_mya_prices = historical_prices_matrix,
+          fips = combo_data$fips,
+          quiet = quiet,
+          max_payment_level = max_payment_level,
+          oa_pct = oa_pct,
+          cap = cap,
+          payment_trigger_level = payment_trigger_level
+        )
+      }
+
+      # Calculate final payment based on payment_type
+      if (combo$payment_type == "plc") {
+        combo_data$final_payment <- combo_data$plc_payment_calc
+      } else if (combo$payment_type == "arc") {
+        combo_data$final_payment <- combo_data$arc_payment_calc
+      } else if (combo$payment_type == "higher") {
+        combo_data$final_payment <- pmax(combo_data$arc_payment_calc, combo_data$plc_payment_calc, na.rm = TRUE)
+      } else if (combo$payment_type == "sum") {
+        combo_data$final_payment <- (combo_data$plc_payment_calc * combo_data$enrolled_base_PLC) +
+                                     (combo_data$arc_payment_calc * combo_data$enrolled_base_ARCCO)
+      }
+
+      # Add parameter metadata
+      combo_data$policy_environment <- combo$policy_environment
+      combo_data$payment_type <- combo$payment_type
+      combo_data$program_year <- combo$program_year
+
+      all_results[[i]] <- combo_data
     }
 
     # Combine all results
@@ -350,45 +426,94 @@ calc_arc_plc_payments <- function(data = NULL,
     return(aggregate_multi_param_results(results, aggregate_level, sequestration_rate))
   }
 
-  # Price sensitivity analysis
-  if (price_analysis) {
-    results <- calculate_payment_response(
-      data = data,
-      crop = crop,
-      year = program_year,
-      policy_environment = policy_environment,
-      payment_type = payment_type,
-      price_min = price_range[1],
-      price_max = price_range[2],
-      price_step = price_range[3],
-      sequestration_rate = sequestration_rate,
-      aggregate_level = aggregate_level,
-      quiet = quiet
-    )
-    return(results)
+  # Single parameter calculation - inlined logic
+  # Update current MYA price if custom price provided
+  if (!is.null(price)) {
+    data$current_mya_price <- data$custom_price
+    data$actual_revenue <- data$actual_yield * data$custom_price
   }
 
-  # Single price scenario calculation
-  if (!is.null(price_scenario)) {
-    results <- calc_payments_for_price(
-      data_subset = data,
-      test_price = price_scenario,
-      policy_environment = policy_environment,
-      payment_type = payment_type,
-      sequestration_rate = sequestration_rate,
-      quiet = quiet
-    )
+  # Set up policy parameters
+  if (policy_environment == "obbb") {
+    srp_col <- "obbb_srps"
+    nmlr_col <- "obbb_nmlr"
+    oa_pct <- 0.88
+    cap <- 1.15
+    max_payment_level <- 0.1
+    payment_trigger_level <- 0.9
   } else {
-    # Use current prices from data
-    results <- calc_payments_for_price(
-      data_subset = data,
-      test_price = NULL,  # Will use current_mya_price from data
-      policy_environment = policy_environment,
-      payment_type = payment_type,
-      sequestration_rate = sequestration_rate,
+    srp_col <- "statutory_reference_price"
+    nmlr_col <- "current_national_loan_rate"
+    oa_pct <- 0.85
+    cap <- 1.15
+    max_payment_level <- 0.1
+    payment_trigger_level <- 0.86
+  }
+
+  # Prepare historical prices matrix
+  historical_prices_matrix <- cbind(
+    data$annual_benchmark_price_lag1,
+    data$annual_benchmark_price_lag2,
+    data$annual_benchmark_price_lag3,
+    data$annual_benchmark_price_lag4,
+    data$annual_benchmark_price_lag5
+  )
+
+  # Calculate payments based on payment_type
+  if (payment_type %in% c("plc", "higher", "sum")) {
+    data$plc_payment_calc <- calc_plc_payment_vectorized(
+      crop = data$crop,
+      crop_type = data$crop_type,
+      program_year = data$program_year,
+      base_acres = 1,
+      mya_price = data$current_mya_price,
+      historic_mya_prices = historical_prices_matrix,
+      srp = data[[srp_col]],
+      erp = NULL,
+      nmlr = data[[nmlr_col]],
+      plc_yield = data$plc_yield,
+      cov_lvl = 0.85,
+      fips = data$fips,
+      oa_pct = oa_pct,
+      cap = cap,
       quiet = quiet
     )
   }
+
+  if (payment_type %in% c("arc", "higher", "sum")) {
+    data$arc_payment_calc <- calc_arcco_payment_vectorized(
+      crop = data$crop,
+      crop_type = data$crop_type,
+      program_year = data$program_year,
+      actual_revenue = data$actual_revenue,
+      base_acres = 1,
+      mya_price = data$current_mya_price,
+      srp = data[[srp_col]],
+      oa_benchmark_yield = data$oa_bench_mark_yield,
+      nmlr = data[[nmlr_col]],
+      historic_mya_prices = historical_prices_matrix,
+      fips = data$fips,
+      quiet = quiet,
+      max_payment_level = max_payment_level,
+      oa_pct = oa_pct,
+      cap = cap,
+      payment_trigger_level = payment_trigger_level
+    )
+  }
+
+  # Calculate final payment based on payment_type
+  if (payment_type == "plc") {
+    data$final_payment <- data$plc_payment_calc
+  } else if (payment_type == "arc") {
+    data$final_payment <- data$arc_payment_calc
+  } else if (payment_type == "higher") {
+    data$final_payment <- pmax(data$arc_payment_calc, data$plc_payment_calc, na.rm = TRUE)
+  } else if (payment_type == "sum") {
+    data$final_payment <- (data$plc_payment_calc * data$enrolled_base_PLC) +
+                          (data$arc_payment_calc * data$enrolled_base_ARCCO)
+  }
+
+  results <- data
 
   # Add metadata to results for single parameter case
   results$policy_environment <- policy_environment
@@ -431,11 +556,6 @@ aggregate_multi_param_results <- function(results, aggregate_level, sequestratio
 
   # Define grouping variables based on aggregate level and available parameters
   base_groups <- c("policy_environment", "payment_type", "program_year")
-
-  # Add price_scenario if it exists
-  if ("price_scenario" %in% names(results)) {
-    base_groups <- c(base_groups, "price_scenario")
-  }
 
   # Add aggregate-specific grouping variables
   grouping_vars <- base_groups
