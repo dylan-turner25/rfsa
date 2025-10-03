@@ -192,7 +192,7 @@ The following table provides some information about the ARC and PLC specific dat
 
 ```{r, include = TRUE, echo = FALSE, cache=FALSE}
  knitr::kable(df) 
-``` 
+```
 
 
 ## PLC Payment Calculations
@@ -200,7 +200,7 @@ The following table provides some information about the ARC and PLC specific dat
 The `rfsa` package includes the `calc_plc_payment()` function for calculating Price Loss Coverage payments. Custom values for the various prices, percentages, yields, and other parameters can be specified, or the function can use default values based on the ARC and PLC data described above. The function requires a minimum of the `crop` and `program_year` arguments to be specified. If no other arguments are specified, the returned value will be the PLC payment for 1 base acre based on the national average of county level PLC yields (available in the `fsaPLcYields` data set).
 
 ```{r plc-example}
-# Calculate PLC payment for 1 base acre of corn in 2024 (based on national average of county level PLC yields). 
+# Calculate PLC payment for 1 base acre of corn in 2024 (based on national average of county level PLC yields).
 payment <- calc_plc_payment(
   crop = "corn",
   program_year = 2019
@@ -483,4 +483,73 @@ ggplot(data, aes(x = unique_programs)) +
   theme(text = element_text(size = 12))
 
 
+```
+
+# FSA Crop Acreage Data
+
+The `rfsa` package includes the `fsaCropAcreageCC` dataset, which contains county-level planted acreage data for covered commodities eligible for FSA programs such as ARC and PLC. This dataset is compiled from FSA's publicly available [crop acreage data](https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/electronic-reading-room/frequently-requested/crop-acreage-data) and has been cleaned for easy analysis and merging with other FSA datasets.
+
+## Dataset Overview
+
+The dataset includes:
+
+- **258,382 observations** across **2,937 counties**
+- **20 covered commodities** (barley, canola, chickpeas, corn, cotton, crambe, dry peas, flaxseed, grain sorghum, lentils, mustard, oats, peanuts, rapeseed, rice, safflower, sesame, soybeans, sunflower, wheat)
+- **Years: 2013-2025**
+- Separated by irrigation practice (irrigated vs non-irrigated)
+- Crop subtypes where applicable (rice varieties, cotton types, chickpea sizes)
+
+## Loading and Using the Data
+
+```{r acreage-basic}
+# Load the crop acreage dataset
+data("fsaCropAcreageCC")
+
+# View structure
+head(fsaCropAcreageCC)
+
+# Get summary of available crops
+unique(fsaCropAcreageCC$crop)
+```
+
+## Example: Analyze Corn Planted Acres by Irrigation Practice
+
+```{r acreage-corn-example}
+library(dplyr)
+
+# Filter to corn in 2024
+corn_2024 <- fsaCropAcreageCC %>%
+  filter(crop == "corn", crop_yr == 2024) %>%
+  group_by(irrigation_practice) %>%
+  summarize(
+    total_planted = sum(planted_acres, na.rm = TRUE),
+    counties = n_distinct(fips)
+  )
+
+print(corn_2024)
+```
+
+## Example: Plot Planted Acres Over Time
+
+```{r acreage-time-series}
+library(ggplot2)
+
+# Aggregate major crops by year
+major_crops <- c("corn", "soybeans", "wheat", "cotton", "rice")
+
+crop_trends <- fsaCropAcreageCC %>%
+  filter(crop %in% major_crops) %>%
+  group_by(crop, crop_yr) %>%
+  summarize(total_planted = sum(planted_acres, na.rm = TRUE), .groups = "drop")
+
+ggplot(crop_trends, aes(x = crop_yr, y = total_planted / 1e6, color = crop)) +
+  geom_line(size = 1) +
+  labs(
+    title = "Planted Acres for Major Covered Commodities (2013-2025)",
+    x = "Crop Year",
+    y = "Total Planted Acres (Millions)",
+    color = "Crop"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
 ```
