@@ -358,6 +358,7 @@ calc_arc_plc_payments <- function(data = NULL,
       )
 
       # Calculate payments based on payment_type
+      # Initialize columns to ensure consistent structure
       if (combo$payment_type %in% c("plc", "higher", "sum")) {
         combo_data$plc_payment_calc <- calc_plc_payment_vectorized(
           crop = combo_data$crop,
@@ -376,6 +377,9 @@ calc_arc_plc_payments <- function(data = NULL,
           cap = cap,
           quiet = quiet
         )
+      } else {
+        # Initialize plc_payment_calc as NA for non-PLC calculations
+        combo_data$plc_payment_calc <- NA_real_
       }
 
       if (combo$payment_type %in% c("arc", "higher", "sum")) {
@@ -397,6 +401,9 @@ calc_arc_plc_payments <- function(data = NULL,
           cap = cap,
           payment_trigger_level = payment_trigger_level
         )
+      } else {
+        # Initialize arc_payment_calc as NA for non-ARC calculations
+        combo_data$arc_payment_calc <- NA_real_
       }
 
       # Calculate final payment based on payment_type
