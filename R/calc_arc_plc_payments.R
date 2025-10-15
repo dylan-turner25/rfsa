@@ -237,9 +237,42 @@ calc_arc_plc_payments <- function(data = NULL,
   }
 
   if (!is.null(state)) {
-    # Handle state filtering (name, abbreviation, or FIPS)
-    data <- data %>% filter(state_name %in% !!state |
-                           substr(fips, 1, 2) %in% !!state)
+    # Handle state filtering - convert all state inputs to full state names
+    # Accepts state names, abbreviations, or FIPS codes
+    state_names <- character(0)
+
+    for (s in state) {
+      # Validate state input
+      s <- valid_state(s)
+
+      # Convert state input to full state name for filtering
+      if (tolower(s) %in% tolower(datasets::state.abb)) {
+        # Convert abbreviation to full name
+        state_index <- which(tolower(datasets::state.abb) == tolower(s))
+        state_names <- c(state_names, datasets::state.name[state_index])
+      } else if (tolower(s) %in% tolower(datasets::state.name)) {
+        # State is already a full name
+        state_names <- c(state_names, s)
+      } else if (nchar(s) <= 2 && suppressWarnings(!is.na(as.numeric(s)))) {
+        # State is a fips code - convert to state name
+        state_fips <- sprintf("%02d", as.numeric(s))
+        # Get state name from fips code
+        fips_to_state <- data.frame(
+          fips = usmap::fips(state = datasets::state.name),
+          name = datasets::state.name
+        )
+        state_match <- fips_to_state[fips_to_state$fips == state_fips, "name"]
+        if (length(state_match) == 0) {
+          stop("Invalid state fips code: ", s)
+        }
+        state_names <- c(state_names, state_match[1])
+      } else {
+        stop("Invalid state input: ", s)
+      }
+    }
+
+    # Filter data using converted state names
+    data <- data %>% filter(state_name %in% !!state_names)
   }
 
   if (!is.null(county)) {
