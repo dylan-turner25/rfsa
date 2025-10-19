@@ -219,6 +219,18 @@
 #'   \item{planted_acres}{Successfully planted acres}
 #'   \item{failed_acres}{Acres that failed after planting}
 #'   \item{actual_revenue}{Actual revenue (actual_yield × national_price)}
+#'   \item{actual_yield_5yr_avg}{Five-year average of actual yields used for imputation}
+#'   \item{imputation_method}{Method used to impute missing yields (e.g., "state_5yr_avg", "national_5yr_avg", "not_imputed")}
+#'   \item{nass_5yr_avg}{Five-year average of NASS yields used in imputation calculations}
+#'   \item{nass_pct_change_applied}{Percentage change applied during yield imputation}
+#'   \item{nass_yield_national}{National NASS yield for the crop and year}
+#'   \item{nass_yield_state}{State-level NASS yield for the crop and year}
+#'   \item{rma_detrended_yield}{RMA detrended yield amount}
+#'   \item{rma_practice_count}{Number of RMA practices aggregated for yield calculation}
+#'   \item{rma_trended_yield}{RMA trended yield amount}
+#'   \item{rma_yield_amount}{RMA reported yield amount}
+#'   \item{years_used_in_avg}{Number of years of data used in calculating 5-year average}
+#'   \item{yield_imputed}{Logical indicating whether the yield was imputed (TRUE/FALSE)}
 #' }
 #'
 #' @details

@@ -16,4 +16,4 @@ LazyData: false
 Suggests: testthat (>= 3.0.0), knitr, rmarkdown, ggplot2
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-Built: R 4.5.1; ; 2025-09-27 10:36:11 UTC; unix
+Built: R 4.5.1; ; 2025-10-19 10:56:58 UTC; unix

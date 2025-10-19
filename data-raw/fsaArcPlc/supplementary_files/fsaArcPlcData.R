@@ -393,6 +393,7 @@ data <- data %>%
   ) %>%
   ungroup()
 
+  oats = "OATS"
 # fill in national_price with current_mya_price where missing
 data$national_price[is.na(data$national_price)] <-
   data$current_mya_price[is.na(data$national_price)]

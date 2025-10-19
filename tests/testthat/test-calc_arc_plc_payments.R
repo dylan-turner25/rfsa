@@ -7,7 +7,17 @@ test_that("calc_arc_plc_payments produce origional values",{
                         aggregate_level = "total",
                         quiet = T)$total_payment
 
-  expect_equal(result, 5834405910)
+  expect_equal(result, 6746198001)
+
+  result <- calc_arc_plc_payments(program_year = 2025,
+                                  crop = "wheat",
+                                  sequestration_rate = 5.7,
+                                  policy_environment = "obbb",
+                                  payment_type = "higher",
+                                  aggregate_level = "total",
+                                  quiet = T)$total_payment
+
+  expect_equal(result, 2571646103)
 
 })
 

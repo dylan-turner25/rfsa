@@ -1,0 +1,461 @@
+pkgname <- "rfsa"
+source(file.path(R.home("share"), "R", "examples-header.R"))
+options(warn = 1)
+library('rfsa')
+
+base::assign(".oldSearch", base::search(), pos = 'CheckExEnv')
+base::assign(".old_wd", base::getwd(), pos = 'CheckExEnv')
+cleanEx()
+nameEx("calc_arc_plc_payments")
+### * calc_arc_plc_payments
+
+flush(stderr()); flush(stdout())
+
+### Name: calc_arc_plc_payments
+### Title: Calculate ARC/PLC Payments
+### Aliases: calc_arc_plc_payments
+
+### ** Examples
+
+## Not run: 
+##D # Calculate payments for all crops (default behavior)
+##D all_crop_payments <- calc_arc_plc_payments(
+##D   program_year = 2024,
+##D   policy_environment = "fb18",
+##D   payment_type = "higher"
+##D )
+##D 
+##D # Basic calculation for corn in 2024 under current policy
+##D corn_payments <- calc_arc_plc_payments(
+##D   crop = "corn",
+##D   program_year = 2024,
+##D   policy_environment = "fb18",
+##D   payment_type = "higher"
+##D )
+##D 
+##D # Compare policies for multiple crops
+##D fb18_payments <- calc_arc_plc_payments(
+##D   crop = c("corn", "soybeans", "wheat"),
+##D   program_year = 2024,
+##D   policy_environment = "fb18",
+##D   payment_type = "higher",
+##D   aggregate_level = "crop"
+##D )
+##D 
+##D obbb_payments <- calc_arc_plc_payments(
+##D   crop = c("corn", "soybeans", "wheat"),
+##D   program_year = 2024,
+##D   policy_environment = "obbb",
+##D   payment_type = "higher",
+##D   aggregate_level = "crop"
+##D )
+##D 
+##D # Custom price scenario (single price for all crops)
+##D custom_payments <- calc_arc_plc_payments(
+##D   crop = "soybeans",
+##D   program_year = 2024,
+##D   policy_environment = "fb18",
+##D   payment_type = "plc",
+##D   price = 12.50
+##D )
+##D 
+##D # Custom price scenario (different price per crop)
+##D multi_price_payments <- calc_arc_plc_payments(
+##D   crop = c("corn", "soybeans", "wheat"),
+##D   program_year = 2024,
+##D   policy_environment = "fb18",
+##D   payment_type = "higher",
+##D   price = c(3.9, 12.5, 6.2)
+##D )
+##D 
+##D # Sum both ARC and PLC payments based on enrolled acres
+##D sum_payments <- calc_arc_plc_payments(
+##D   crop = "corn",
+##D   program_year = 2024,
+##D   policy_environment = "fb18",
+##D   payment_type = "sum"
+##D )
+##D 
+##D # Multi-year analysis with separate rows per year
+##D multi_year_payments <- calc_arc_plc_payments(
+##D   crop = "corn",
+##D   program_year = c(2022, 2023, 2024),
+##D   policy_environment = "fb18",
+##D   payment_type = "higher"
+##D )
+##D 
+##D # Multi-parameter analysis: compare policies and payment types
+##D multi_param_payments <- calc_arc_plc_payments(
+##D   crop = c("corn", "soybeans"),
+##D   program_year = 2024,
+##D   policy_environment = c("fb18", "obbb"),
+##D   payment_type = c("higher", "sum"),
+##D   aggregate_level = "crop"
+##D )
+##D 
+##D # Multiple aggregate levels: analyze by both crop and state
+##D crop_state_analysis <- calc_arc_plc_payments(
+##D   program_year = 2024,
+##D   policy_environment = "fb18",
+##D   payment_type = "higher",
+##D   aggregate_level = c("crop", "state")
+##D )
+##D 
+##D # Crop and county level analysis
+##D detailed_analysis <- calc_arc_plc_payments(
+##D   program_year = 2024,
+##D   policy_environment = "fb18",
+##D   payment_type = "higher",
+##D   aggregate_level = c("crop", "county")
+##D )
+## End(Not run)
+
+
+
+
+cleanEx()
+nameEx("calc_arcco_payment")
+### * calc_arcco_payment
+
+flush(stderr()); flush(stdout())
+
+### Name: calc_arcco_payment
+### Title: Calculate ARC-CO Payment
+### Aliases: calc_arcco_payment
+
+### ** Examples
+
+## Not run: 
+##D # Calculate ARC-CO payment for corn in 2023
+##D payment <- calc_arcco_payment(
+##D   crop = "corn",
+##D   program_year = 2023,
+##D   base_acres = 100,
+##D   fips = 17001
+##D )
+##D 
+##D # Calculate with custom parameters
+##D payment <- calc_arcco_payment(
+##D   crop = "soybeans",
+##D   program_year = 2023,
+##D   base_acres = 250,
+##D   cov_lvl = 0.80,
+##D   state = "Iowa",
+##D   county = "Story"
+##D )
+##D 
+##D # Calculate with custom ERP parameters
+##D payment <- calc_arcco_payment(
+##D   crop = "corn",
+##D   program_year = 2023,
+##D   base_acres = 100,
+##D   historic_mya_prices = c(4.20, 4.30, 4.40, 4.10, 4.35),
+##D   oa_pct = 0.90,
+##D   cap = 1.20,
+##D   fips = 17001
+##D )
+## End(Not run)
+
+
+
+
+cleanEx()
+nameEx("calc_arcco_payment_vectorized")
+### * calc_arcco_payment_vectorized
+
+flush(stderr()); flush(stdout())
+
+### Name: calc_arcco_payment_vectorized
+### Title: Calculate ARC-CO Payment (Fully Vectorized Version)
+### Aliases: calc_arcco_payment_vectorized
+
+### ** Examples
+
+## Not run: 
+##D # Vectorized calculation for maximum performance
+##D payments <- calc_arcco_payment_vectorized(
+##D   crop = c("corn", "soybeans", "wheat"),
+##D   program_year = c(2023, 2023, 2023),
+##D   base_acres = c(100, 150, 200),
+##D   fips = c("17001", "17001", "17001")
+##D )
+## End(Not run)
+
+
+
+
+cleanEx()
+nameEx("calc_effective_reference_price")
+### * calc_effective_reference_price
+
+flush(stderr()); flush(stdout())
+
+### Name: calc_effective_reference_price
+### Title: Calculate Effective Reference Price (Internal Function)
+### Aliases: calc_effective_reference_price
+### Keywords: internal
+
+### ** Examples
+
+## Not run: 
+##D # Calculate ERP with 5 years of MYA prices
+##D mya_prices <- c(3.70, 3.60, 3.50, 3.40, 3.30)
+##D srp <- 3.90
+##D calc_effective_reference_price(mya_prices, srp)
+## End(Not run)
+
+
+
+
+cleanEx()
+nameEx("calc_plc_payment")
+### * calc_plc_payment
+
+flush(stderr()); flush(stdout())
+
+### Name: calc_plc_payment
+### Title: Calculate Price Loss Coverage (PLC) Payment
+### Aliases: calc_plc_payment
+
+### ** Examples
+
+## Not run: 
+##D # Basic PLC payment calculation
+##D calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100)
+##D 
+##D # Rice with specific crop type
+##D calc_plc_payment(crop = "rice", crop_type = "long grain",
+##D                  program_year = 2024, base_acres = 150)
+##D 
+##D # County-specific calculation
+##D calc_plc_payment(crop = "soybeans", program_year = 2024, base_acres = 200,
+##D                  state = "Iowa", county = "Story")
+##D 
+##D # Using FIPS code for location
+##D calc_plc_payment(crop = "wheat", program_year = 2024, base_acres = 75,
+##D                  fips = "19169")
+##D 
+##D # Custom coverage level
+##D calc_plc_payment(crop = "cotton", program_year = 2024, base_acres = 50,
+##D                  cov_lvl = 0.88)
+##D 
+##D # Provide custom current MYA price and ERP
+##D calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100,
+##D                  mya_price = 4.50, erp = 4.30)
+##D 
+##D # Calculate ERP from historic MYA prices
+##D calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100,
+##D                  mya_price = 4.50, historic_mya_prices = c(4.20, 4.30, 4.40, 4.10, 4.35))
+##D 
+##D # Calculate with custom ERP parameters
+##D calc_plc_payment(crop = "corn", program_year = 2024, base_acres = 100,
+##D                  historic_mya_prices = c(4.20, 4.30, 4.40, 4.10, 4.35),
+##D                  oa_pct = 0.90, cap = 1.20)
+## End(Not run)
+
+
+
+
+cleanEx()
+nameEx("clear_rfsa_cache")
+### * clear_rfsa_cache
+
+flush(stderr()); flush(stdout())
+
+### Name: clear_rfsa_cache
+### Title: Clear the package cache of downloaded RDS files
+### Aliases: clear_rfsa_cache
+
+### ** Examples
+
+## Not run: 
+##D # Remove all cached RDS files so they will be re-downloaded on next use
+##D clear_rfsa_cache()
+## End(Not run)
+
+
+
+cleanEx()
+nameEx("fsaArcPlcData")
+### * fsaArcPlcData
+
+flush(stderr()); flush(stdout())
+
+### Name: fsaArcPlcData
+### Title: Comprehensive ARC/PLC Payment Analysis Dataset
+### Aliases: fsaArcPlcData
+### Keywords: datasets
+
+### ** Examples
+
+## Not run: 
+##D # Load the comprehensive dataset
+##D data(fsaArcPlcData)
+##D 
+##D # View structure
+##D str(fsaArcPlcData)
+##D 
+##D # Summary of coverage by program year
+##D table(fsaArcPlcData$program_year)
+##D 
+##D # Counties with corn data in 2024
+##D corn_2024 <- fsaArcPlcData %>%
+##D   filter(crop == "corn", program_year == 2024, !is.na(enrolled_base_PLC))
+##D 
+##D # Calculate total enrolled base acres by crop and year
+##D enrollment_summary <- fsaArcPlcData %>%
+##D   group_by(crop, program_year) %>%
+##D   summarize(
+##D     total_plc_acres = sum(enrolled_base_PLC, na.rm = TRUE),
+##D     total_arc_acres = sum(enrolled_base_ARCCO, na.rm = TRUE),
+##D     .groups = "drop"
+##D   )
+## End(Not run)
+
+
+
+cleanEx()
+nameEx("get_arcco_actual_revenue")
+### * get_arcco_actual_revenue
+
+flush(stderr()); flush(stdout())
+
+### Name: get_arcco_actual_revenue
+### Title: Get ARC-CO Actual Revenue
+### Aliases: get_arcco_actual_revenue
+### Keywords: internal
+
+### ** Examples
+
+## Not run: 
+##D # County-specific actual revenue
+##D get_arcco_actual_revenue("corn", 2024, mya_price = 4.50, nmlr = 4.30, fips = "19001")
+##D 
+##D # State average with crop and yield types
+##D get_arcco_actual_revenue("rice", 2024, mya_price = 15.20, nmlr = 14.50,
+##D                          crop_type = "long grain", yield_type = "irrigated", state = "IA")
+## End(Not run)
+
+
+
+
+cleanEx()
+nameEx("get_arcco_benchmarks")
+### * get_arcco_benchmarks
+
+flush(stderr()); flush(stdout())
+
+### Name: get_arcco_benchmarks
+### Title: Get ARC-CO Benchmark Data
+### Aliases: get_arcco_benchmarks
+### Keywords: internal
+
+### ** Examples
+
+## Not run: 
+##D # County-specific yield using FIPS
+##D get_arcco_benchmarks("corn", 2024, "yield", fips = "19001")
+##D 
+##D # County-specific price using state + county with crop type and yield type
+##D get_arcco_benchmarks("rice", 2024, "price", crop_type = "long grain", yield_type = "irrigated",
+##D                      state = "IA", county = "Adair")
+##D 
+##D # State average yield (abbreviation converted to full name)
+##D get_arcco_benchmarks("corn", 2024, "yield", state = "IA")
+##D 
+##D # National average price with crop type
+##D get_arcco_benchmarks("rice", 2024, "price", crop_type = "long grain")
+##D 
+##D # Olympic average calculation using historical yields
+##D get_arcco_benchmarks("corn", 2024, "yield", historical_yields = c(170, 175, 180, 185, 190))
+##D 
+##D # Olympic average calculation using historical prices
+##D get_arcco_benchmarks("corn", 2024, "price", historical_prices = c(4.20, 4.30, 4.40, 4.50, 4.60))
+## End(Not run)
+
+
+
+
+cleanEx()
+nameEx("get_fsa_payments")
+### * get_fsa_payments
+
+flush(stderr()); flush(stdout())
+
+### Name: get_fsa_payments
+### Title: Loads data from FSA individual payment files for specified years
+###   and programs
+### Aliases: get_fsa_payments
+
+### ** Examples
+
+## Not run: 
+##D get_fsa_payments(year = 2024,
+##D                                     program = c("ARC-CO","PLC"),
+##D                                     year_type = "program",
+##D                                     aggregation = "county")
+## End(Not run)
+
+
+
+cleanEx()
+nameEx("get_plc_yield")
+### * get_plc_yield
+
+flush(stderr()); flush(stdout())
+
+### Name: get_plc_yield
+### Title: Get PLC Yield Data
+### Aliases: get_plc_yield
+### Keywords: internal
+
+### ** Examples
+
+## Not run: 
+##D # County-specific yield using FIPS
+##D get_plc_yield("corn", 2024, fips = "19001")
+##D 
+##D # County-specific yield using state + county with crop type
+##D get_plc_yield("rice", 2024, crop_type = "long grain", state = "IA", county = "Adair")
+##D 
+##D # State average (abbreviation converted to full name)
+##D get_plc_yield("corn", 2024, state = "IA")
+##D 
+##D # National average with crop type
+##D get_plc_yield("rice", 2024, crop_type = "long grain")
+## End(Not run)
+
+
+
+
+cleanEx()
+nameEx("list_data_assets")
+### * list_data_assets
+
+flush(stderr()); flush(stdout())
+
+### Name: list_data_assets
+### Title: List asset names from the latest GitHub release
+### Aliases: list_data_assets
+### Keywords: internal
+
+### ** Examples
+
+## Not run: 
+##D files = list_data_assets()
+## End(Not run)
+
+
+
+### * <FOOTER>
+###
+cleanEx()
+options(digits = 7L)
+base::cat("Time elapsed: ", proc.time() - base::get("ptime", pos = 'CheckExEnv'),"\n")
+grDevices::dev.off()
+###
+### Local variables: ***
+### mode: outline-minor ***
+### outline-regexp: "\\(> \\)?### [*]+" ***
+### End: ***
+quit('no')
