@@ -28,8 +28,12 @@
 #'     \item Single value: Applied to all crops
 #'     \item Vector: One price per crop (length must match number of crops)
 #'   }
-#' @param sequestration_rate Numeric. Sequestration rate to apply as percentage
-#'   (default: 0 for no sequestration).
+#' @param sequestration_rate Numeric vector. Sequestration rate(s) to apply as percentage
+#'   (default: 0 for no sequestration). Can be:
+#'   \itemize{
+#'     \item Single value: Applied to all program years
+#'     \item Vector: One sequestration rate per program year (length must match number of program years)
+#'   }
 #' @param fips Character vector, optional. 5-digit FIPS code(s) for county-level filtering.
 #' @param state Character vector, optional. State name(s), abbreviation(s), or FIPS code(s)
 #'   for state-level filtering.
@@ -39,6 +43,7 @@
 #'   \itemize{
 #'     \item "total": Single total across all data
 #'     \item "crop": Aggregated by crop
+#'     \item "crop_type": Aggregated by crop type (e.g., program crops vs. other oilseeds)
 #'     \item "state": Aggregated by state
 #'     \item "county": Aggregated by county
 #'     \item "none": No aggregation, return all records
@@ -169,6 +174,23 @@
 #'   payment_type = "higher",
 #'   aggregate_level = c("crop", "county")
 #' )
+#'
+#' # Aggregate by crop type
+#' crop_type_analysis <- calc_arc_plc_payments(
+#'   program_year = 2024,
+#'   policy_environment = "fb18",
+#'   payment_type = "higher",
+#'   aggregate_level = "crop_type"
+#' )
+#'
+#' # Multi-year analysis with different sequestration rates per year
+#' multi_year_seq <- calc_arc_plc_payments(
+#'   crop = "corn",
+#'   program_year = c(2022, 2023, 2024),
+#'   policy_environment = "fb18",
+#'   payment_type = "higher",
+#'   sequestration_rate = c(0, 5.7, 5.7)
+#' )
 #' }
 #'
 #' @seealso
@@ -191,8 +213,16 @@ calc_arc_plc_payments <- function(data = NULL,
                                  quiet = FALSE) {
 
   # Validate inputs
+  # Validate sequestration_rate
+  if (!is.null(sequestration_rate) && length(sequestration_rate) > 1) {
+    if (length(sequestration_rate) != length(program_year)) {
+      stop("When sequestration_rate is a vector, its length must equal the number of program years (",
+           length(program_year), "). Got ", length(sequestration_rate), " sequestration rates.")
+    }
+  }
+
   # Validate aggregate_level vector
-  valid_aggregate_levels <- c("total", "crop", "state", "county", "none")
+  valid_aggregate_levels <- c("total", "crop", "crop_type", "state", "county", "none")
   if (!all(aggregate_level %in% valid_aggregate_levels)) {
     stop("aggregate_level must be one or more of: ", paste(valid_aggregate_levels, collapse = ", "))
   }
@@ -336,6 +366,23 @@ calc_arc_plc_payments <- function(data = NULL,
       left_join(price_map, by = "crop")
   }
 
+  # Create sequestration rate mapping
+  if (is.null(sequestration_rate)) {
+    sequestration_rate <- 0
+  }
+
+  if (length(sequestration_rate) == 1) {
+    seq_rate_vector <- rep(sequestration_rate, length(program_year))
+  } else {
+    seq_rate_vector <- sequestration_rate
+  }
+
+  sequestration_map <- data.frame(
+    program_year = program_year,
+    sequestration_rate = seq_rate_vector,
+    stringsAsFactors = FALSE
+  )
+
   # Create parameter combinations for multiple values
   if (length(policy_environment) > 1 || length(payment_type) > 1 || length(program_year) > 1) {
 
@@ -346,6 +393,10 @@ calc_arc_plc_payments <- function(data = NULL,
       program_year = program_year,
       stringsAsFactors = FALSE
     )
+
+    # Add sequestration rate to combinations
+    param_combinations <- param_combinations %>%
+      left_join(sequestration_map, by = "program_year")
 
     # Process each combination and combine results
     all_results <- list()
@@ -455,6 +506,7 @@ calc_arc_plc_payments <- function(data = NULL,
       combo_data$policy_environment <- combo$policy_environment
       combo_data$payment_type <- combo$payment_type
       combo_data$program_year <- combo$program_year
+      combo_data$sequestration_rate <- combo$sequestration_rate
 
       all_results[[i]] <- combo_data
     }
@@ -463,7 +515,7 @@ calc_arc_plc_payments <- function(data = NULL,
     results <- do.call(rbind, all_results)
 
     # Apply aggregation and return
-    return(aggregate_multi_param_results(results, aggregate_level, sequestration_rate))
+    return(aggregate_multi_param_results(results, aggregate_level))
   }
 
   # Single parameter calculation - inlined logic
@@ -560,16 +612,19 @@ calc_arc_plc_payments <- function(data = NULL,
   results$payment_type <- payment_type
   results$program_year <- program_year
 
+  # Add sequestration rate from the mapping
+  results <- results %>%
+    left_join(sequestration_map, by = "program_year")
+
   # Apply aggregation using helper function
-  return(aggregate_multi_param_results(results, aggregate_level, sequestration_rate))
+  return(aggregate_multi_param_results(results, aggregate_level))
 }
 
 #' Helper function to aggregate results for multiple parameter combinations
 #' @param results Combined results data frame
 #' @param aggregate_level Aggregation level
-#' @param sequestration_rate Sequestration rate
 #' @keywords internal
-aggregate_multi_param_results <- function(results, aggregate_level, sequestration_rate) {
+aggregate_multi_param_results <- function(results, aggregate_level) {
 
   # Calculate total payments based on payment type and enrolled acres
   results <- results %>%
@@ -583,11 +638,9 @@ aggregate_multi_param_results <- function(results, aggregate_level, sequestratio
       )
     )
 
-  # Apply sequestration
-  if (sequestration_rate > 0) {
-    results <- results %>%
-      mutate(total_payment_value = total_payment_value * (1 - sequestration_rate / 100))
-  }
+  # Apply sequestration (use sequestration_rate from results data frame)
+  results <- results %>%
+    mutate(total_payment_value = total_payment_value * (1 - sequestration_rate / 100))
 
   # Return individual records if no aggregation
   if ("none" %in% aggregate_level) {
@@ -604,6 +657,9 @@ aggregate_multi_param_results <- function(results, aggregate_level, sequestratio
   if (!"total" %in% aggregate_level) {
     if ("crop" %in% aggregate_level) {
       grouping_vars <- c(grouping_vars, "crop")
+    }
+    if ("crop_type" %in% aggregate_level) {
+      grouping_vars <- c(grouping_vars, "crop_type")
     }
     if ("state" %in% aggregate_level) {
       grouping_vars <- c(grouping_vars, "state_name")

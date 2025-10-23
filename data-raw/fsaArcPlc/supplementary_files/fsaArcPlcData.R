@@ -373,10 +373,6 @@ data <- left_join(
 # In cases where no planted acres data are avaliable (i.e. planted acres are zero for the county and crop),
 # the national level share of irrigated vs non-irrigated acres for that crop is used to adjust base acres proportionally.
 
-# Note: at this point, base acres are duplicated for irrigation status, i.e. if irrigated and non-irrigated yields are reported,
-# base acres are duplicated since we don't have irrigation status in the base acres data. RaFF addressed this by assuming all acres were non-irrigated
-# and using the census of agriculture to estimate the share of irrigated acres by county and applying base acres proportionally. This could be done in the future,
-# in which case the code to do so would be placed here. For now, we are assuming non-irrigated and filtering out irrigated observations.
 
 # if no planted acres are reported, set planted acres to zero
 data$planted_acres[is.na(data$planted_acres)] <- 0

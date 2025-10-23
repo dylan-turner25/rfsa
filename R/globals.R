@@ -28,6 +28,7 @@ utils::globalVariables(c(
   "enrolled_base_PLC",
   "enrolled_base_ARCCO",
   "final_payment",
+  "sequestration_rate",
 
   # dplyr/tidyverse variables
   ".data",

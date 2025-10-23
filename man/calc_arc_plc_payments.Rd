@@ -50,8 +50,12 @@ of current prices. If NULL, uses current MYA prices from data. Can be:
 \item Vector: One price per crop (length must match number of crops)
 }}
 
-\item{sequestration_rate}{Numeric. Sequestration rate to apply as percentage
-(default: 0 for no sequestration).}
+\item{sequestration_rate}{Numeric vector. Sequestration rate(s) to apply as percentage
+(default: 0 for no sequestration). Can be:
+\itemize{
+\item Single value: Applied to all program years
+\item Vector: One sequestration rate per program year (length must match number of program years)
+}}
 
 \item{fips}{Character vector, optional. 5-digit FIPS code(s) for county-level filtering.}
 
@@ -65,6 +69,7 @@ Requires state to also be specified.}
 \itemize{
 \item "total": Single total across all data
 \item "crop": Aggregated by crop
+\item "crop_type": Aggregated by crop type (e.g., program crops vs. other oilseeds)
 \item "state": Aggregated by state
 \item "county": Aggregated by county
 \item "none": No aggregation, return all records
@@ -201,6 +206,23 @@ detailed_analysis <- calc_arc_plc_payments(
   policy_environment = "fb18",
   payment_type = "higher",
   aggregate_level = c("crop", "county")
+)
+
+# Aggregate by crop type
+crop_type_analysis <- calc_arc_plc_payments(
+  program_year = 2024,
+  policy_environment = "fb18",
+  payment_type = "higher",
+  aggregate_level = "crop_type"
+)
+
+# Multi-year analysis with different sequestration rates per year
+multi_year_seq <- calc_arc_plc_payments(
+  crop = "corn",
+  program_year = c(2022, 2023, 2024),
+  policy_environment = "fb18",
+  payment_type = "higher",
+  sequestration_rate = c(0, 5.7, 5.7)
 )
 }
 

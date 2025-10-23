@@ -4,14 +4,12 @@
 \alias{aggregate_multi_param_results}
 \title{Helper function to aggregate results for multiple parameter combinations}
 \usage{
-aggregate_multi_param_results(results, aggregate_level, sequestration_rate)
+aggregate_multi_param_results(results, aggregate_level)
 }
 \arguments{
 \item{results}{Combined results data frame}
 
 \item{aggregate_level}{Aggregation level}
-
-\item{sequestration_rate}{Sequestration rate}
 }
 \description{
 Helper function to aggregate results for multiple parameter combinations
