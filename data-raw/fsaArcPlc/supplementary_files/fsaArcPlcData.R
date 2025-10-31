@@ -176,16 +176,28 @@ base <- fsaCountyBaseAcres %>%
   group_by(fips, crop, crop_type,program_year) %>%
   summarize(base_acres = sum(base_acres), .groups = "drop")
 
-data <- left_join(data, base)
 
 # for missing base acres, fill in with the most recent base acres available for that county/crop/crop_type
-data <- data %>%
-  arrange(fips, crop, crop_type, program_year) %>%
-  group_by(fips, crop, crop_type) %>%
-  mutate(
-    base_acres = zoo::na.locf(base_acres, na.rm = FALSE)
-  ) %>%
-  ungroup()
+# split into pre-2018 and post-2018 to use different fill directions (i.e. fromLast = TRUE for post-2018)
+base2014 <- base %>% filter(program_year == 2014)
+base2015 <- base %>% filter(program_year == 2015)
+base2016 <- base %>% filter(program_year == 2015) %>% mutate(program_year = 2016)
+base2017 <- base %>% filter(program_year == 2015) %>% mutate(program_year = 2017)
+base2018 <- base %>% filter(program_year == 2015) %>% mutate(program_year = 2018)
+base2019 <- base %>% filter(program_year == 2021) %>% mutate(program_year = 2019)
+base2020 <- base %>% filter(program_year == 2021) %>% mutate(program_year = 2020)
+base2021 <- base %>% filter(program_year == 2021)
+base2022 <- base %>% filter(program_year == 2022)
+base2023 <- base %>% filter(program_year == 2023)
+base2024 <- base %>% filter(program_year == 2023) %>% mutate(program_year = 2024)
+base2025 <- base %>% filter(program_year == 2023) %>% mutate(program_year = 2025)
+
+# bind together all base data frames
+base <- bind_rows(base2014, base2015, base2016, base2017, base2018, base2019,
+                  base2020, base2021, base2022, base2023, base2024, base2025)
+
+# merge in with data
+data <- left_join(data, base)
 
 
 # merge in enrolled base acres (current year)
@@ -309,7 +321,6 @@ data <- data %>%
       TRUE ~ enrolled_base_PLC
     )
   )
-
 
 
 
