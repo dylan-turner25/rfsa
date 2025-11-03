@@ -493,11 +493,12 @@ The `rfsa` package includes the `fsaCropAcreageCC` dataset, which contains count
 
 The dataset includes:
 
-- **258,382 observations** across **2,937 counties**
+- **391,596 observations** across **2,937 counties**
 - **20 covered commodities** (barley, canola, chickpeas, corn, cotton, crambe, dry peas, flaxseed, grain sorghum, lentils, mustard, oats, peanuts, rapeseed, rice, safflower, sesame, soybeans, sunflower, wheat)
 - **Years: 2013-2025**
 - Separated by irrigation practice (irrigated vs non-irrigated)
 - Crop subtypes where applicable (rice varieties, cotton types, chickpea sizes)
+- Intended use categories (e.g., grain, silage, grazing, dry edible)
 
 ## Loading and Using the Data
 
@@ -552,4 +553,59 @@ ggplot(crop_trends, aes(x = crop_yr, y = total_planted / 1e6, color = crop)) +
   ) +
   theme_minimal() +
   theme(legend.position = "bottom")
+```
+
+## Example: Analyze Oats by Intended Use
+
+```{r acreage-intended-use}
+# Examine oats acres by intended use in 2024
+oats_by_use <- fsaCropAcreageCC %>%
+  filter(crop == "oats", crop_yr == 2024) %>%
+  group_by(intended_use) %>%
+  summarize(
+    total_planted = sum(planted_acres, na.rm = TRUE),
+    counties = n_distinct(fips)
+  ) %>%
+  mutate(
+    pct_of_total = round(100 * total_planted / sum(total_planted), 2)
+  ) %>%
+  arrange(desc(total_planted))
+
+print(oats_by_use)
+```
+
+## Example: Plot Intended Use Distribution Across Multiple Crops
+
+```{r acreage-intended-use-plot}
+library(ggplot2)
+library(dplyr)
+
+# Select crops that have multiple intended uses
+selected_crops <- c("corn", "oats", "wheat", "barley", "grain sorghum","cotton","soybeans","peanuts","rice")
+
+# Calculate percentage of acres by intended use for each crop
+crop_use_summary <- fsaCropAcreageCC %>%
+  filter(crop %in% selected_crops, crop_yr == 2024, !is.na(intended_use)) %>%
+  group_by(crop, intended_use) %>%
+  summarize(total_planted = sum(planted_acres, na.rm = TRUE), .groups = "drop") %>%
+  group_by(crop) %>%
+  mutate(pct_of_total = 100 * total_planted / sum(total_planted)) %>%
+  ungroup()
+
+# Create faceted bar plot
+ggplot(crop_use_summary, aes(x = reorder(intended_use, -pct_of_total), y = pct_of_total, fill = intended_use)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~crop, scales = "free_x") +
+  labs(
+    title = "Distribution of Planted Acres by Intended Use (2024)",
+    x = "Intended Use",
+    y = "Percent of Total Acres (%)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none",
+    strip.text = element_text(face = "bold")
+  ) +
+  scale_fill_viridis_d()
 ```

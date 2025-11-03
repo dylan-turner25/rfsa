@@ -312,11 +312,11 @@ fsaCropAcreage <- fsaCropAcreage %>%
   select(fips,state,county,crop,fsa_crop_type,irrigation_practice,
          planted_acres,volunteer_acres,failed_acres,prevented_acres,
          not_planted_acres,planted_and_failed_acres,
-         crop_yr) %>%
+         crop_yr,intended_use) %>%
   mutate(county = str_to_title(county),
          state = str_to_title(state)) %>%
   rename(crop_type = fsa_crop_type) %>%
-  group_by(fips,state,county,crop,crop_type,irrigation_practice,crop_yr) %>%
+  group_by(fips,state,county,crop,crop_type,irrigation_practice,crop_yr,intended_use) %>%
   summarize(across(c(planted_acres,volunteer_acres,failed_acres,prevented_acres,
                      not_planted_acres,planted_and_failed_acres), ~ sum(.x, na.rm = TRUE)),
             .groups = "drop")

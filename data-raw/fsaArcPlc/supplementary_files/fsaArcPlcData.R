@@ -199,7 +199,6 @@ base <- bind_rows(base2014, base2015, base2016, base2017, base2018, base2019,
 # merge in with data
 data <- left_join(data, base)
 
-
 # merge in enrolled base acres (current year)
 enrolled_base <- fsaEnrolledCountyBaseAcres %>%
   select(fips, program_year, crop, crop_type, contains("enrolled"))
@@ -321,6 +320,11 @@ data <- data %>%
       TRUE ~ enrolled_base_PLC
     )
   )
+
+
+test <- data %>%
+  group_by(program_year, crop, crop_type) %>%
+  summarize(across(contains("base"), sum, na.rm = TRUE), .groups = "drop")
 
 
 

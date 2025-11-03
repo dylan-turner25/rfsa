@@ -5,7 +5,7 @@
 \alias{fsaCropAcreageCC}
 \title{FSA County-Level Crop Acreage Data - Covered Commodities Only}
 \format{
-A tibble with 15 variables:
+A tibble with 16 variables:
 \describe{
 \item{fips}{character. Five-digit combined state+county FIPS code.}
 \item{state}{character. Full name of the state.}
@@ -20,6 +20,7 @@ A tibble with 15 variables:
 \item{not_planted_acres}{numeric. Base acres that were not planted.}
 \item{planted_and_failed_acres}{numeric. Total of planted plus failed acres.}
 \item{crop_yr}{numeric. Crop year.}
+\item{intended_use}{character. Intended use category for the crop (e.g., "Grain", "Silage", "Grazing", "Dry Edible"). May be NA if not specified.}
 \item{rma_crop_code}{numeric. RMA (Risk Management Agency) crop code for commodity identification and cross-agency alignment.}
 \item{rma_type_code}{character. RMA crop type code for insurance classification. May be NA for crops without subtypes.}
 }
