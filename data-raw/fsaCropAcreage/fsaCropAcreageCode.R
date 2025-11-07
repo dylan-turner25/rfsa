@@ -160,6 +160,15 @@ fsaCropAcreage <- list.files(paste0("./Cleaned_Data"),
 data("fsaPlcYields")
 covered_commodities <- unique(fsaPlcYields$crop)
 
+# add a few more crops needed for other programs
+covered_commodities <- c(covered_commodities,
+                           "alfalfa",
+                           "millet",
+                           "rye",
+                           "triticale",
+                           "dry beans"
+                         )
+
 # apply any final cleaning operations
 
 # enforce common column naming conventions
@@ -281,6 +290,11 @@ fsaCropAcreage$fsa_crop_type[idx & grepl("green", fsaCropAcreage$fsa_crop_type)]
 # if crop is "peas" and intended use contains "Dry Edible" set crop to "dry peas"
 idx <- grepl("peas", fsaCropAcreage$crop) & grepl("dry edible", fsaCropAcreage$intended_use, ignore.case = TRUE)
 fsaCropAcreage$crop[idx] <- "dry peas"
+
+# dry beans
+# if crop is "beans" and intended use contains "Dry Edible" set crop to "dry beans"
+idx <- grepl("beans", fsaCropAcreage$crop) & grepl("dry edible", fsaCropAcreage$intended_use, ignore.case = TRUE)
+fsaCropAcreage$crop[idx] <- "dry beans"
 
 # grain sorghum
 idx <- grepl("sorghum", fsaCropAcreage$crop) & grepl("grain", fsaCropAcreage$intended_use, ignore.case = TRUE)

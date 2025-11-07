@@ -560,7 +560,7 @@ ggplot(crop_trends, aes(x = crop_yr, y = total_planted / 1e6, color = crop)) +
 ```{r acreage-intended-use}
 # Examine oats acres by intended use in 2024
 oats_by_use <- fsaCropAcreageCC %>%
-  filter(crop == "oats", crop_yr == 2024) %>%
+  filter(crop == "oats", crop_yr == 2025) %>%
   group_by(intended_use) %>%
   summarize(
     total_planted = sum(planted_acres, na.rm = TRUE),
