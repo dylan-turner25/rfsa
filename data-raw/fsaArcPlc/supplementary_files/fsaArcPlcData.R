@@ -8,7 +8,7 @@ data("fsaEnrolledCountyBaseAcres")
 data("fsaCountyBaseAcres")
 data("fsaCropAcreageCC")
 library(rnassqs)
-
+library(stringr)
 
 data <- fsaArcCoBenchmarks %>%
   mutate(marketing_year = paste0(program_year, "-", program_year + 1))
@@ -210,6 +210,14 @@ data <- left_join(data, enrolled_base)
 planted_acres <- fsaCropAcreageCC %>%
   mutate(
     crop_type = gsub("upland|extra long staple", "seed", crop_type)
+  ) %>%
+  group_by(crop_yr, crop, crop_type, fips, irrigation_practice) %>%
+  summarize(
+    planted_and_failed_acres = sum(planted_and_failed_acres, na.rm = TRUE),
+    prevented_acres = sum(prevented_acres, na.rm = TRUE),
+    planted_acres = sum(planted_acres, na.rm = TRUE),
+    failed_acres = sum(failed_acres, na.rm = TRUE),
+    .groups = "drop"
   )
 
 # Create detailed irrigation summary by year, crop, crop_type, and county
