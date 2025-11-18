@@ -421,7 +421,7 @@ calc_arc_plc_payments <- function(data = NULL,
         nmlr_col <- "obbb_nmlr"
         oa_pct <- 0.88
         cap <- 1.15
-        max_payment_level <- 0.1
+        max_payment_level <- 0.12
         payment_trigger_level <- 0.9
       } else {
         srp_col <- "statutory_reference_price"
