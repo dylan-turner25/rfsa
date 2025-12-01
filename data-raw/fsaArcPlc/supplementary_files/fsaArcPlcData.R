@@ -13,9 +13,10 @@ library(stringr)
 data <- fsaArcCoBenchmarks %>%
   mutate(marketing_year = paste0(program_year, "-", program_year + 1))
 
+
 # get a data frame of unique fips observations
 unique_fips <- data %>%
-  select(fips, state_name, county_name) %>%
+  select(fips, state_name) %>%
   distinct()
 
 unique_crops <- data %>%
@@ -998,7 +999,6 @@ data <- data %>%
       actual_revenue
     )
   )
-
 
 
 
