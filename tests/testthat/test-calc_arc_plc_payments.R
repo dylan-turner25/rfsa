@@ -205,3 +205,83 @@ test_that("crop_type aggregate_level produces correct aggregations", {
   expect_equal(sum(result_crop_type_state$total_payment), result_total)
 
 })
+
+
+test_that("single year vs multi-year vector produces identical results", {
+
+  # Test that passing a single year produces the same result as passing
+  # multiple years and filtering to that year. This prevents bugs where
+  # the single-parameter and multi-parameter code paths diverge.
+
+  # Single year calculation for 2025
+  result_single <- calc_arc_plc_payments(
+    program_year = 2025,
+    crop = "corn",
+    policy_environment = "obbb",
+    payment_type = "higher",
+    aggregate_level = c("county", "crop", "crop_type"),
+    quiet = TRUE
+  )
+
+  # Multi-year calculation including 2025
+  result_multi <- calc_arc_plc_payments(
+    program_year = 2019:2025,
+    crop = "corn",
+    policy_environment = "obbb",
+    payment_type = "higher",
+    aggregate_level = c("county", "crop", "crop_type"),
+    quiet = TRUE
+  ) %>%
+    filter(program_year == 2025)
+
+  # Results should be identical
+  expect_equal(nrow(result_single), nrow(result_multi))
+  expect_equal(sum(result_single$total_payment), sum(result_multi$total_payment))
+
+  # Test with FB18 policy as well
+  result_single_fb18 <- calc_arc_plc_payments(
+    program_year = 2025,
+    crop = "corn",
+    policy_environment = "fb18",
+    payment_type = c("arc", "plc"),
+    aggregate_level = c("county", "crop", "crop_type"),
+    quiet = TRUE
+  )
+
+  result_multi_fb18 <- calc_arc_plc_payments(
+    program_year = 2019:2025,
+    crop = "corn",
+    policy_environment = "fb18",
+    payment_type = c("arc", "plc"),
+    aggregate_level = c("county", "crop", "crop_type"),
+    quiet = TRUE
+  ) %>%
+    filter(program_year == 2025)
+
+  expect_equal(nrow(result_single_fb18), nrow(result_multi_fb18))
+  expect_equal(sum(result_single_fb18$total_payment), sum(result_multi_fb18$total_payment))
+
+  # Test at total aggregate level for simpler comparison
+  total_single <- calc_arc_plc_payments(
+    program_year = 2025,
+    crop = "corn",
+    policy_environment = "obbb",
+    payment_type = "higher",
+    aggregate_level = "total",
+    quiet = TRUE
+  )$total_payment
+
+  total_multi <- calc_arc_plc_payments(
+    program_year = 2024:2025,
+    crop = "corn",
+    policy_environment = "obbb",
+    payment_type = "higher",
+    aggregate_level = "total",
+    quiet = TRUE
+  ) %>%
+    filter(program_year == 2025) %>%
+    pull(total_payment)
+
+  expect_equal(total_single, total_multi)
+
+})
