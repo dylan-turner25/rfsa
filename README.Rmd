@@ -585,7 +585,7 @@ selected_crops <- c("corn", "oats", "wheat", "barley", "grain sorghum","cotton",
 
 # Calculate percentage of acres by intended use for each crop
 crop_use_summary <- fsaCropAcreageCC %>%
-  filter(crop %in% selected_crops, crop_yr == 2024, !is.na(intended_use)) %>%
+  filter(crop %in% selected_crops, crop_yr == 2025) %>%
   group_by(crop, intended_use) %>%
   summarize(total_planted = sum(planted_acres, na.rm = TRUE), .groups = "drop") %>%
   group_by(crop) %>%
@@ -597,7 +597,7 @@ ggplot(crop_use_summary, aes(x = reorder(intended_use, -pct_of_total), y = pct_o
   geom_bar(stat = "identity") +
   facet_wrap(~crop, scales = "free_x") +
   labs(
-    title = "Distribution of Planted Acres by Intended Use (2024)",
+    title = "Distribution of Planted Acres by Intended Use (2025)",
     x = "Intended Use",
     y = "Percent of Total Acres (%)"
   ) +
@@ -609,3 +609,7 @@ ggplot(crop_use_summary, aes(x = reorder(intended_use, -pct_of_total), y = pct_o
   ) +
   scale_fill_viridis_d()
 ```
+
+## Additional Crop Acreage Datasets
+
+In addition to `fsaCropAcreageCC`, the package also includes `fsaCropAcreage`, which contains the complete FSA crop acreage dataset for all crops (not limited to covered commodities). This dataset has not been scrutinized to the same extent as `fsaCropAcreageCC` in terms of standardizing crop names and classifications but includes all crops reported to FSA. The package also includes `fsaCoveredCommodityShares`, a county-level dataset that calculates the proportion of total planted acres consisting of covered commodities. 

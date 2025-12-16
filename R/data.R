@@ -497,6 +497,45 @@
 
 
 
+#' FSA County-Level Crop Acreage Data - All Crops
+#'
+#' A comprehensive FSA crop acreage dataset containing county-level planted acreage data
+#' for all crops reported to FSA. This dataset includes both covered commodities eligible
+#' for FSA programs and other crops, providing a complete picture of county-level planting
+#' decisions and agricultural land use.
+#'
+#' @format A tibble with 16 variables:
+#' \describe{
+#'   \item{fips}{character. Five-digit combined state+county FIPS code.}
+#'   \item{state}{character. Full name of the state.}
+#'   \item{county}{character. Name of the county.}
+#'   \item{crop}{character. Name of the crop (e.g., "corn", "soybeans", "wheat", "rice", "cotton", "alfalfa", "hay").}
+#'   \item{crop_type}{character. Crop subtype classification where applicable (e.g., "long grain", "short/medium grain", "temperate japonica" for rice; "upland", "extra long staple" for cotton; "large", "small" for chickpeas). NA for crops without relevant subtypes.}
+#'   \item{irrigation_practice}{character. Irrigation practice indicator ("Y" for irrigated, "N" for non-irrigated).}
+#'   \item{planted_acres}{numeric. Total acres planted for the crop in the county.}
+#'   \item{volunteer_acres}{numeric. Acres of volunteer crop (self-seeded from previous season).}
+#'   \item{failed_acres}{numeric. Acres that were planted but failed to produce a crop.}
+#'   \item{prevented_acres}{numeric. Acres where planting was prevented due to weather or other conditions.}
+#'   \item{not_planted_acres}{numeric. Base acres that were not planted.}
+#'   \item{planted_and_failed_acres}{numeric. Total of planted plus failed acres.}
+#'   \item{crop_yr}{numeric. Crop year.}
+#'   \item{intended_use}{character. Intended use category for the crop (e.g., "Grain", "Silage", "Grazing", "Dry Edible"). May be NA if not specified.}
+#'   \item{rma_crop_code}{numeric. RMA (Risk Management Agency) crop code for commodity identification and cross-agency alignment.}
+#'   \item{rma_type_code}{character. RMA crop type code for insurance classification. May be NA for crops without subtypes.}
+#' }
+#'
+#' @details
+#' This dataset includes all crops reported to FSA, not just covered commodities. For a
+#' dataset filtered to only covered commodities eligible for ARC/PLC programs, see
+#' \code{fsaCropAcreageCC}.
+#'
+#' To view code used to generate this dataset, see `./data-raw/fsaCropAcreage/fsaCropAcreageCode.R`
+#'
+#' @usage data(fsaCropAcreage)
+#' @source \url{https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/electronic-reading-room/frequently-requested/crop-acreage-data}
+"fsaCropAcreage"
+
+
 #' FSA County-Level Crop Acreage Data - Covered Commodities Only
 #'
 #' A subset of the comprehensive FSA crop acreage dataset containing county-level planted
@@ -525,10 +564,53 @@
 #' }
 #'
 #' @details
+#' This dataset is filtered to include only covered commodities. For the complete dataset
+#' including all crops, see \code{fsaCropAcreage}.
+#'
 #' To view code used to generate this dataset, see `./data-raw/fsaCropAcreage/fsaCropAcreageCode.R`
 #'
 #' @usage data(fsaCropAcreageCC)
 #' @source \url{https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/electronic-reading-room/frequently-requested/crop-acreage-data}
 "fsaCropAcreageCC"
+
+
+#' County-Level Covered Commodity Shares
+#'
+#' A dataset containing county-level calculations of the share of total planted acres
+#' that are covered commodities eligible for FSA programs. This dataset is useful for
+#' understanding the proportion of agricultural activity in each county that is directed
+#' toward program-eligible crops.
+#'
+#' @format A tibble with 6 variables:
+#' \describe{
+#'   \item{crop_yr}{numeric. Crop year.}
+#'   \item{state_cd}{character. Two-digit state FIPS code.}
+#'   \item{county_cd}{character. Three-digit county FIPS code.}
+#'   \item{state}{character. Full name of the state.}
+#'   \item{county}{character. Name of the county.}
+#'   \item{fips}{character. Five-digit combined state+county FIPS code.}
+#'   \item{total_acres}{numeric. Total planted acres in the county across all crops.}
+#'   \item{covered_commodity_acres}{numeric. Total planted acres of covered commodities in the county.}
+#'   \item{covered_commodity_share}{numeric. Proportion of total planted acres that are covered commodities (covered_commodity_acres / total_acres). Ranges from 0 to 1.}
+#' }
+#'
+#' @details
+#' This dataset aggregates data from \code{fsaCropAcreage} to calculate the share of
+#' total planted acres in each county that consist of covered commodities. Covered
+#' commodities are those eligible for ARC and PLC programs and include major crops
+#' like corn, soybeans, wheat, cotton, rice, and others.
+#'
+#' The covered commodity share can be used as an indicator of:
+#' \itemize{
+#'   \item Program exposure at the county level
+#'   \item Agricultural diversification (lower shares indicate more diverse cropping systems)
+#'   \item Geographic patterns in program participation potential
+#' }
+#'
+#' To view code used to generate this dataset, see `./data-raw/fsaCropAcreage/fsaCropAcreageCode.R`
+#'
+#' @usage data(fsaCoveredCommodityShares)
+#' @source \url{https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/electronic-reading-room/frequently-requested/crop-acreage-data}
+"fsaCoveredCommodityShares"
 
 

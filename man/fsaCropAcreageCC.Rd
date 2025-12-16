@@ -38,6 +38,9 @@ such as Agriculture Risk Coverage (ARC) and Price Loss Coverage (PLC). The datas
 has been cleaned for easy merging with other FSA datasets that contain data on covered commodities.
 }
 \details{
+This dataset is filtered to include only covered commodities. For the complete dataset
+including all crops, see \code{fsaCropAcreage}.
+
 To view code used to generate this dataset, see \code{./data-raw/fsaCropAcreage/fsaCropAcreageCode.R}
 }
 \keyword{datasets}

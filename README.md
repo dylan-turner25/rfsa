@@ -29,6 +29,8 @@ rfsa: A package for accessing USDA Farm Service Agency data
     Use](#example-analyze-oats-by-intended-use)
   - [Example: Plot Intended Use Distribution Across Multiple
     Crops](#example-plot-intended-use-distribution-across-multiple-crops)
+  - [Additional Crop Acreage
+    Datasets](#additional-crop-acreage-datasets)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -114,13 +116,15 @@ progress marketing years).
 | fsaArcCoPrice | ARC-CO Benchmark and Actual Price Data | 272 | 2014-2025 | 08/28/2025 | 08/28/2025 | crop, marketing_year_dates, publishing_dates_for_final_mya_price, unit, reference_price_combined, annual_benchmark_price_lag5, annual_benchmark_price_lag4, annual_benchmark_price_lag3, annual_benchmark_price_lag2, annual_benchmark_price_lag1, current_arcco_benchmark_price, current_mya_price, current_national_loan_rate, current_arcco_actual_price, marketing_year, program_year, crop_type, rma_type_code, rma_crop_code |
 | fsaArcIcPrice | Commodity-specific ARC-IC benchmark prices, MYA prices, and statutory reference prices. | 227 | 2015-2024 | 05/05/2025 | 05/05/2025 | crop, marketing_year_dates, publishing_dates_for_final_mya_price, unit, reference_price_combined, annual_benchmark_price_lag5, annual_benchmark_price_lag4, annual_benchmark_price_lag3, annual_benchmark_price_lag2, annual_benchmark_price_lag1, current_mya_price, current_national_loan_rate, current_arcic_actual_price, marketing_year, program_year, crop_type, rma_type_code, rma_crop_code |
 | fsaArcPlcBaseAcres | ARC/PLC enrolled base acres by commodity | 225 | 2015-2024 | 05/21/2025 | 05/05/2025 | covered_commodity, plc_covered_commodity_contract_base, plc_plantings_attributed_to_generic_base, arc_co_covered_commodity_contract_base, arc_co_plantings_attributed_to_generic_base, arc_ic_enrolled_base_covered_commodity_contract_base, total, plc_total, arc_co_total, arc_ic_total, program_year, arc_co_all, arc_co_irrigated, arc_co_nonirrigated, crop_type, rma_type_code, rma_crop_code, crop |
-| fsaArcPlcData | Comprehensive ARC/PLC Payment Analysis Dataset | 1344929 | 2014-2025 | 10/31/2025 | 05/05/2025 | fips, state_name, county_name, crop, crop_type, program_year, unit, yield_type, oa_bench_mark_years, rma_crop_code, rma_type_code, county_yield_type, benchmark_revenue, guarantee_revenue, maximum_payment_rate, actual_yield, national_price, actual_revenue, formula_payment_rate, payment_rate, oa_bench_mark_price, oa_bench_mark_yield, marketing_year, plc_yield, annual_benchmark_price_lag5, annual_benchmark_price_lag4, annual_benchmark_price_lag3, annual_benchmark_price_lag2, annual_benchmark_price_lag1, current_arcco_benchmark_price, current_national_loan_rate, current_mya_price, final_mya_price_lag1, final_mya_price_lag2, final_mya_price_lag3, final_mya_price_lag4, final_mya_price_lag5, final_mya_price_lag6, statutory_reference_price, effective_reference_price, erp_calc, erp_calc_check, oa_bench_mark_price_calc, base_acres, enrolled_base_ARCCO, enrolled_base_PLC, planted_irrigated_share, planted_non_irrigated_share, planted_irrigated_share_national, planted_non_irrigated_share_national, planted_and_failed_acres, prevented_acres, planted_acres, failed_acres, nass_yield_national, nass_yield_state, yield_imputed, imputation_method, nass_pct_change_applied, actual_yield_5yr_avg, nass_5yr_avg, years_used_in_avg, rma_yield_amount, rma_trended_yield, rma_detrended_yield, rma_practice_count |
+| fsaArcPlcData | Comprehensive ARC/PLC Payment Analysis Dataset | 1288552 | 2014-2025 | 12/01/2025 | 05/05/2025 | fips, state_name, crop, crop_type, program_year, county_name, unit, yield_type, oa_bench_mark_years, rma_crop_code, rma_type_code, county_yield_type, benchmark_revenue, guarantee_revenue, maximum_payment_rate, actual_yield, national_price, actual_revenue, formula_payment_rate, payment_rate, oa_bench_mark_price, oa_bench_mark_yield, marketing_year, plc_yield, annual_benchmark_price_lag5, annual_benchmark_price_lag4, annual_benchmark_price_lag3, annual_benchmark_price_lag2, annual_benchmark_price_lag1, current_arcco_benchmark_price, current_national_loan_rate, current_mya_price, final_mya_price_lag1, final_mya_price_lag2, final_mya_price_lag3, final_mya_price_lag4, final_mya_price_lag5, final_mya_price_lag6, statutory_reference_price, effective_reference_price, erp_calc, erp_calc_check, oa_bench_mark_price_calc, base_acres, enrolled_base_ARCCO, enrolled_base_PLC, planted_irrigated_share, planted_non_irrigated_share, planted_irrigated_share_national, planted_non_irrigated_share_national, planted_and_failed_acres, prevented_acres, planted_acres, failed_acres, nass_yield_national, nass_yield_state, yield_imputed, imputation_method, nass_pct_change_applied, actual_yield_5yr_avg, nass_5yr_avg, years_used_in_avg, rma_yield_amount, rma_trended_yield, rma_detrended_yield, rma_practice_count |
 | fsaArcPlcPayments | ARC/PLC Program Payments by Crop and Year | 481 | 2014-2023 | 05/05/2025 | 05/05/2025 | program, crop, program_year, payments, crop_type, rma_type_code, rma_crop_code |
 | fsaCountyBaseAcres | County‐level base acres and average PLC yields by crop | 99307 | 2014-2023 | 08/25/2025 | 05/05/2025 | state, county, state_code, county_code, crop, crop_type, base_acres, avg_plc_yield, program_year, rma_type_code, rma_crop_code, fips |
-| fsaCropAcreageCC | FSA County-Level Crop Acreage Data - Covered Commodities Only | 391596 | Inf–Inf | 11/03/2025 | 05/05/2025 | fips, state, county, crop, crop_type, irrigation_practice, crop_yr, intended_use, planted_acres, volunteer_acres, failed_acres, prevented_acres, not_planted_acres, planted_and_failed_acres, rma_crop_code, rma_type_code |
+| fsaCoveredCommodityShares | County-Level Covered Commodity Shares | 39767 | Inf–Inf | 12/16/2025 | 05/05/2025 | crop_yr, state_cd, county_cd, fips, total_planted_acres, cc_planted_acres, cc_planted_share |
+| fsaCropAcreage | FSA County-Level Crop Acreage Data - All Crops | 3223484 | Inf–Inf | 12/16/2025 | 05/05/2025 | state_cd, county_cd, crop_cd, state, county, fips, crop, fsa_crop_type, intended_use, irrigation_practice, planted_acres, volunteer_acres, failed_acres, prevented_acres, not_planted_acres, planted_and_failed_acres, crop_yr, release_date, release_month, release_yr, release_day, current_release, covered_commodity |
+| fsaCropAcreageCC | FSA County-Level Crop Acreage Data - Covered Commodities Only | 538946 | Inf–Inf | 12/16/2025 | 05/05/2025 | fips, state, county, crop, crop_type, irrigation_practice, crop_yr, intended_use, planted_acres, volunteer_acres, failed_acres, prevented_acres, not_planted_acres, planted_and_failed_acres, rma_crop_code, rma_type_code |
 | fsaEffectiveRefPrices | Effective Reference Prices for ARC/PLC Commodities | 161 | 2019-2025 | 07/05/2025 | 05/05/2025 | crop, marketing_year_dates, marketing_year, program_year, unit, statutory_reference_price, 115_statutory_reference_price, mya_price_lag5, mya_price_lag4, mya_price_lag3, mya_price_lag2, mya_price_lag1, 85_olympic_average_mya, effective_reference_price, crop_type, rma_type_code, rma_crop_code |
 | fsaEnrolledCountyBaseAcres | County-level enrolled base acres by program and commodity | 100489 | 2019-2025 | 08/27/2025 | 08/27/2025 | fips, state, county, crop, program_year, crop_type, rma_type_code, rma_crop_code, enrolled_base_ARCCO, enrolled_base_PLC |
-| fsaMyaPrice | FSA Marketing Year Average Prices | 272 | 2014-2025 | 09/18/2025 | 09/17/2025 | crop, marketing_year, marketing_year_dates, publishing_dates_for_final_mya_price, unit, current_mya_price, final_mya_price_lag1, final_mya_price_lag2, final_mya_price_lag3, final_mya_price_lag4, final_mya_price_lag5, final_mya_price_lag6, rma_crop_code, crop_type, rma_type_code |
+| fsaMyaPrice | FSA Marketing Year Average Prices | 272 | 2014-2025 | 11/17/2025 | 11/17/2025 | crop, marketing_year, marketing_year_dates, publishing_dates_for_final_mya_price, unit, current_mya_price, final_mya_price_lag1, final_mya_price_lag2, final_mya_price_lag3, final_mya_price_lag4, final_mya_price_lag5, final_mya_price_lag6, rma_crop_code, crop_type, rma_type_code |
 | fsaPlcPaymentRate | Price Loss Coverage (PLC) Payment Rates by Crop and Program Year | 249 | 2014-2024 | 07/05/2025 | 05/05/2025 | crop, marketing_year_dates, marketing_year, program_year, publishing_dates_for_final_mya_price, statutory_reference_price, effective_reference_price, combined_reference_price, unit, current_mya_price, current_national_loan_rate, plc_price, plc_payment_rate, max_plc_payment_rate, crop_type, rma_type_code, rma_crop_code |
 | fsaPlcYields | County-level PLC yields by commodity and program year | 152375 | 2018-2025 | 07/14/2025 | 06/24/2025 | fips, state, county, crop, crop_type, plc_yield, plc_yield_units, enrolled_base, program_year, crop_year, rma_crop_code, rma_type_code |
 
@@ -533,10 +537,12 @@ head(fsaCropAcreageCC)
 # Get summary of available crops
 unique(fsaCropAcreageCC$crop)
 #>  [1] "canola"        "corn"          "cotton"        "grain sorghum"
-#>  [5] "oats"          "peanuts"       "rapeseed"      "sesame"       
-#>  [9] "soybeans"      "sunflower"     "wheat"         "rice"         
-#> [13] "dry peas"      "barley"        "chickpeas"     "mustard"      
-#> [17] "safflower"     "flaxseed"      "lentils"       "crambe"
+#>  [5] "millet"        "oats"          "peanuts"       "rapeseed"     
+#>  [9] "rye"           "sesame"        "soybeans"      "sunflower"    
+#> [13] "triticale"     "wheat"         "alfalfa"       "rice"         
+#> [17] "dry peas"      "barley"        "dry beans"     "chickpeas"    
+#> [21] "mustard"       "safflower"     "flaxseed"      "lentils"      
+#> [25] "crambe"
 ```
 
 ## Example: Analyze Corn Planted Acres by Irrigation Practice
@@ -598,7 +604,7 @@ ggplot(crop_trends, aes(x = crop_yr, y = total_planted / 1e6, color = crop)) +
 ``` r
 # Examine oats acres by intended use in 2024
 oats_by_use <- fsaCropAcreageCC %>%
-  filter(crop == "oats", crop_yr == 2024) %>%
+  filter(crop == "oats", crop_yr == 2025) %>%
   group_by(intended_use) %>%
   summarize(
     total_planted = sum(planted_acres, na.rm = TRUE),
@@ -613,12 +619,12 @@ print(oats_by_use)
 #> # A tibble: 6 × 4
 #>   intended_use  total_planted counties pct_of_total
 #>   <chr>                 <dbl>    <int>        <dbl>
-#> 1 Grain               843240.     1479        44.7 
-#> 2 Forage              755233.     1348        40.0 
-#> 3 Grazing             254396.      486        13.5 
-#> 4 Seed                 21040.      157         1.12
-#> 5 Left Standing        10035.       81         0.53
-#> 6 Green Manure          2440.       29         0.13
+#> 1 Grain              1032481.     1494        49.8 
+#> 2 Forage              742339.     1315        35.8 
+#> 3 Grazing             262345.      481        12.7 
+#> 4 Seed                 23913.      184         1.15
+#> 5 Left Standing         9527.       79         0.46
+#> 6 Green Manure          1382.       21         0.07
 ```
 
 ## Example: Plot Intended Use Distribution Across Multiple Crops
@@ -632,7 +638,7 @@ selected_crops <- c("corn", "oats", "wheat", "barley", "grain sorghum","cotton",
 
 # Calculate percentage of acres by intended use for each crop
 crop_use_summary <- fsaCropAcreageCC %>%
-  filter(crop %in% selected_crops, crop_yr == 2024, !is.na(intended_use)) %>%
+  filter(crop %in% selected_crops, crop_yr == 2025) %>%
   group_by(crop, intended_use) %>%
   summarize(total_planted = sum(planted_acres, na.rm = TRUE), .groups = "drop") %>%
   group_by(crop) %>%
@@ -644,7 +650,7 @@ ggplot(crop_use_summary, aes(x = reorder(intended_use, -pct_of_total), y = pct_o
   geom_bar(stat = "identity") +
   facet_wrap(~crop, scales = "free_x") +
   labs(
-    title = "Distribution of Planted Acres by Intended Use (2024)",
+    title = "Distribution of Planted Acres by Intended Use (2025)",
     x = "Intended Use",
     y = "Percent of Total Acres (%)"
   ) +
@@ -658,3 +664,14 @@ ggplot(crop_use_summary, aes(x = reorder(intended_use, -pct_of_total), y = pct_o
 ```
 
 <img src="man/figures/README-acreage-intended-use-plot-1.png" width="100%" />
+
+## Additional Crop Acreage Datasets
+
+In addition to `fsaCropAcreageCC`, the package also includes
+`fsaCropAcreage`, which contains the complete FSA crop acreage dataset
+for all crops (not limited to covered commodities). This dataset has not
+been scrutinized to the same extent as `fsaCropAcreageCC` in terms of
+standardizing crop names and classifications but includes all crops
+reported to FSA. The package also includes `fsaCoveredCommodityShares`,
+a county-level dataset that calculates the proportion of total planted
+acres consisting of covered commodities.

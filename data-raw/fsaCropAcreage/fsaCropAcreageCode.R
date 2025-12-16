@@ -161,7 +161,7 @@ data("fsaPlcYields")
 covered_commodities <- unique(fsaPlcYields$crop)
 
 # add a few more crops needed for other programs
-covered_commodities <- c(covered_commodities,
+expanded_covered_commodities <- c(covered_commodities,
                            "alfalfa",
                            "millet",
                            "rye",
@@ -312,8 +312,31 @@ fsaCropAcreage$crop[idx] <- "sunflower"
 fsaCropAcreage$intended_use <- gsub("Blank",NA,fsaCropAcreage$intended_use)
 fsaCropAcreage$fsa_crop_type <- gsub("null",NA,fsaCropAcreage$fsa_crop_type)
 
-# filter to covered commodities only
-fsaCropAcreage <- fsaCropAcreage %>% filter(crop %in% covered_commodities)
+# create a covered commodity indicator
+fsaCropAcreage$covered_commodity <- F
+fsaCropAcreage$covered_commodity[which(fsaCropAcreage$crop %in% covered_commodities)] <- T
+
+# create a dataframe tracking the share of covered commodities by crop year to total acres
+covered_commodity_share <- fsaCropAcreage %>%
+  group_by(crop_yr,state_cd,county_cd, fips) %>%
+  summarize(total_planted_acres = sum(planted_acres, na.rm = TRUE),
+            cc_planted_acres = sum(planted_acres[which(covered_commodity == T)], na.rm = TRUE)) %>%
+  mutate(cc_planted_share = cc_planted_acres / total_planted_acres)
+
+# convert the data to a tibble
+fsaCoveredCommodityShares <- dplyr::as_tibble(covered_commodity_share)
+
+# use the county level file in the package data folder
+usethis::use_data(fsaCoveredCommodityShares, overwrite = TRUE)
+
+
+# export fsaCropAcreage
+usethis::use_data(fsaCropAcreage, overwrite = TRUE)
+
+
+
+# filter to expanded commodities only for the rest of the script
+fsaCropAcreage <- fsaCropAcreage %>% filter(crop %in% expanded_covered_commodities)
 
 # for commodities where type doesn't matter, set type to NA
 fsaCropAcreage$fsa_crop_type[which(!fsaCropAcreage$crop %in% c("rice","chickpeas","cotton"))] <- NA
