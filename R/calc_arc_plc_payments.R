@@ -20,6 +20,7 @@
 #'     \item "plc": Price Loss Coverage only
 #'     \item "arc": Agriculture Risk Coverage only
 #'     \item "higher": Higher of ARC or PLC payments
+#'     \item "lower": Lower of ARC or PLC payments
 #'     \item "sum": Both ARC and PLC payments calculated separately and summed
 #'   }
 #' @param price Numeric vector, optional. Custom MYA price(s) to use instead
@@ -244,7 +245,7 @@ calc_arc_plc_payments <- function(data = NULL,
   }
 
   # Validate payment_type vector
-  valid_payment_types <- c("higher", "plc", "arc", "sum")
+  valid_payment_types <- c("higher", "lower", "plc", "arc", "sum")
   if (!all(payment_type %in% valid_payment_types)) {
     stop("payment_type must be one or more of: ", paste(valid_payment_types, collapse = ", "))
   }
@@ -443,7 +444,7 @@ calc_arc_plc_payments <- function(data = NULL,
 
       # Calculate payments based on payment_type
       # Initialize columns to ensure consistent structure
-      if (combo$payment_type %in% c("plc", "higher", "sum")) {
+      if (combo$payment_type %in% c("plc", "higher", "lower", "sum")) {
         combo_data$plc_payment_calc <- calc_plc_payment_vectorized(
           crop = combo_data$crop,
           crop_type = combo_data$crop_type,
@@ -466,7 +467,7 @@ calc_arc_plc_payments <- function(data = NULL,
         combo_data$plc_payment_calc <- NA_real_
       }
 
-      if (combo$payment_type %in% c("arc", "higher", "sum")) {
+      if (combo$payment_type %in% c("arc", "higher", "lower", "sum")) {
         combo_data$arc_payment_calc <- calc_arcco_payment_vectorized(
           crop = combo_data$crop,
           crop_type = combo_data$crop_type,
@@ -497,6 +498,8 @@ calc_arc_plc_payments <- function(data = NULL,
         combo_data$final_payment <- combo_data$arc_payment_calc
       } else if (combo$payment_type == "higher") {
         combo_data$final_payment <- pmax(combo_data$arc_payment_calc, combo_data$plc_payment_calc, na.rm = TRUE)
+      } else if (combo$payment_type == "lower") {
+        combo_data$final_payment <- pmin(combo_data$arc_payment_calc, combo_data$plc_payment_calc, na.rm = TRUE)
       } else if (combo$payment_type == "sum") {
         combo_data$final_payment <- (combo_data$plc_payment_calc * combo_data$enrolled_base_PLC) +
                                      (combo_data$arc_payment_calc * combo_data$enrolled_base_ARCCO)
@@ -552,7 +555,7 @@ calc_arc_plc_payments <- function(data = NULL,
   )
 
   # Calculate payments based on payment_type
-  if (payment_type %in% c("plc", "higher", "sum")) {
+  if (payment_type %in% c("plc", "higher", "lower", "sum")) {
     data$plc_payment_calc <- calc_plc_payment_vectorized(
       crop = data$crop,
       crop_type = data$crop_type,
@@ -572,7 +575,7 @@ calc_arc_plc_payments <- function(data = NULL,
     )
   }
 
-  if (payment_type %in% c("arc", "higher", "sum")) {
+  if (payment_type %in% c("arc", "higher", "lower", "sum")) {
     data$arc_payment_calc <- calc_arcco_payment_vectorized(
       crop = data$crop,
       crop_type = data$crop_type,
@@ -600,6 +603,8 @@ calc_arc_plc_payments <- function(data = NULL,
     data$final_payment <- data$arc_payment_calc
   } else if (payment_type == "higher") {
     data$final_payment <- pmax(data$arc_payment_calc, data$plc_payment_calc, na.rm = TRUE)
+  } else if (payment_type == "lower") {
+    data$final_payment <- pmin(data$arc_payment_calc, data$plc_payment_calc, na.rm = TRUE)
   } else if (payment_type == "sum") {
     data$final_payment <- (data$plc_payment_calc * data$enrolled_base_PLC) +
                           (data$arc_payment_calc * data$enrolled_base_ARCCO)
@@ -633,6 +638,7 @@ aggregate_multi_param_results <- function(results, aggregate_level) {
         payment_type == "plc" ~ final_payment * enrolled_base_PLC,
         payment_type == "arc" ~ final_payment * enrolled_base_ARCCO,
         payment_type == "higher" ~ final_payment * (enrolled_base_PLC + enrolled_base_ARCCO),
+        payment_type == "lower" ~ final_payment * (enrolled_base_PLC + enrolled_base_ARCCO),
         payment_type == "sum" ~ final_payment,  # Already calculated with enrolled acres in helper
         TRUE ~ NA_real_
       )

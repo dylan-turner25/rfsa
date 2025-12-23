@@ -40,6 +40,7 @@ available crops and aggregates them.}
 \item "plc": Price Loss Coverage only
 \item "arc": Agriculture Risk Coverage only
 \item "higher": Higher of ARC or PLC payments
+\item "lower": Lower of ARC or PLC payments
 \item "sum": Both ARC and PLC payments calculated separately and summed
 }}
 

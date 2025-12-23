@@ -118,7 +118,7 @@ setup_obbb_parameters <- function(data) {
 #' @param data_subset Filtered data for specific crop and year
 #' @param test_price MYA price to test. If NULL, uses current_mya_price from data
 #' @param policy_environment Either "fb18" or "obbb"
-#' @param payment_type Either "plc", "arc", "higher", or "sum"
+#' @param payment_type Either "plc", "arc", "higher", "lower", or "sum"
 #' @param sequestration_rate Sequestration rate to apply as percentage
 #' @param quiet Logical. If TRUE, suppresses warning messages
 #' @return Data frame with payment calculations
@@ -161,7 +161,7 @@ calc_payments_for_price <- function(data_subset, test_price = NULL, policy_envir
   )
 
   # Calculate payments based on payment_type
-  if (payment_type %in% c("plc", "higher", "sum")) {
+  if (payment_type %in% c("plc", "higher", "lower", "sum")) {
     # Calculate PLC payments using vectorized function
     data_subset$plc_payment_calc <- calc_plc_payment_vectorized(
       crop = data_subset$crop,
@@ -182,7 +182,7 @@ calc_payments_for_price <- function(data_subset, test_price = NULL, policy_envir
     )
   }
 
-  if (payment_type %in% c("arc", "higher", "sum")) {
+  if (payment_type %in% c("arc", "higher", "lower", "sum")) {
     # Calculate ARC payments
     data_subset$arc_payment_calc <- calc_arcco_payment_vectorized(
       crop = data_subset$crop,
@@ -211,6 +211,8 @@ calc_payments_for_price <- function(data_subset, test_price = NULL, policy_envir
     data_subset$final_payment <- data_subset$arc_payment_calc
   } else if (payment_type == "higher") {
     data_subset$final_payment <- pmax(data_subset$arc_payment_calc, data_subset$plc_payment_calc, na.rm = TRUE)
+  } else if (payment_type == "lower") {
+    data_subset$final_payment <- pmin(data_subset$arc_payment_calc, data_subset$plc_payment_calc, na.rm = TRUE)
   } else if (payment_type == "sum") {
     # Calculate sum: (plc_payment * enrolled_base_PLC) + (arc_payment * enrolled_base_ARCCO)
     data_subset$final_payment <- (data_subset$plc_payment_calc * data_subset$enrolled_base_PLC) +
