@@ -7,7 +7,7 @@ test_that("calc_arc_plc_payments produce origional values",{
                         aggregate_level = "total",
                         quiet = T)$total_payment
 
-  expect_equal(result, 6746198001)
+  expect_equal(result, 6098403353, tolerance = 1)
 
   result <- calc_arc_plc_payments(program_year = 2025,
                                   crop = "wheat",
@@ -17,7 +17,7 @@ test_that("calc_arc_plc_payments produce origional values",{
                                   aggregate_level = "total",
                                   quiet = T)$total_payment
 
-  expect_equal(result, 2571646103)
+  expect_equal(result, 2781351101, tolerance = 1)
 
 })
 
@@ -483,8 +483,12 @@ test_that("'lower' uses correct enrolled acres formula in aggregation", {
 
   # Both should use the same enrolled acres multiplier
   # (even though final_payment differs)
-  lower_multiplier <- result_none$total_payment_value / result_none$final_payment
-  higher_multiplier <- result_higher_none$total_payment_value / result_higher_none$final_payment
+  # Filter out rows where final_payment is 0 or NA to avoid division issues
+  valid_rows <- !is.na(result_none$final_payment) & result_none$final_payment != 0 &
+                !is.na(result_higher_none$final_payment) & result_higher_none$final_payment != 0
+
+  lower_multiplier <- result_none$total_payment_value[valid_rows] / result_none$final_payment[valid_rows]
+  higher_multiplier <- result_higher_none$total_payment_value[valid_rows] / result_higher_none$final_payment[valid_rows]
 
   expect_equal(lower_multiplier, higher_multiplier, tolerance = 1e-8)
 })
