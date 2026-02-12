@@ -18,6 +18,7 @@ source("./data-raw/fsaArcPlc/supplementary_files/fsaCountyBaseAcres.R")
 source("./data-raw/fsaArcPlc/supplementary_files/fsaEnrolledCountyBaseAcres.R")
 
 # clean MYA Prices -------------------------------------------------------------
+current_year = 2025
 source("./data-raw/fsaArcPlc/supplementary_files/fsaMyaPrice.R")
 
 # clean PLC payment rates ------------------------------------------------------
@@ -46,8 +47,8 @@ source("./data-raw/fsaArcPlc/Suplementary Files/fsaArcPlcBaseAcres.R") # updated
 # source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcPlcElections.R")
 
 # clean arc benchmarks ---------------------------------------------
-source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcCoBenchmarks.R")
-
+current_year = 2025
+source("./data-raw/fsaArcPlc/supplementary_files/fsaArcCoBenchmarks.R")
 # # clean plc benchmarks ---------------------------------------------
 # source("./data-raw/fsaArcPlc/Supplementary Files/fsaPlcGuarantee.R")
 

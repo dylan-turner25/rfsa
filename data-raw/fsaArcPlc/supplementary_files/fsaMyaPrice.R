@@ -68,6 +68,10 @@ mya_prices$Commodity <- gsub("[0-9]/","",mya_prices$Commodity)
 # type convert the columns
 mya_prices <- readr::type_convert(mya_prices)
 
+# ensure all price columns are numeric (guards against text-formatted Excel cells)
+price_cols <- grep("Final T - \\d+ MYA Price", names(mya_prices), value = TRUE)
+mya_prices[price_cols] <- lapply(mya_prices[price_cols], as.numeric)
+
 # rename columns
 names(mya_prices) <- c("crop","marketing_year_dates","marketing_year",
                        "publishing_dates_for_final_mya_price",

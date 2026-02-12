@@ -5,9 +5,6 @@ library(janitor)
 library(readr)
 library(usethis)
 
-# get current year
-current_year <- as.numeric(format(Sys.Date(), "%Y"))
-
 # load helper functions
 source("R/helpers.R")
 
