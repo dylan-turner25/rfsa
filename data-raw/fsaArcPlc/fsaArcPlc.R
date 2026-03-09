@@ -7,6 +7,12 @@ current_year <- as.numeric(substr(Sys.Date(),1,4))
 # define range of years to download data for
 years <- 2014:current_year
 
+# Note: for up-to-date arc/plc projections, fsaMyaPrice.R and fsaArcCoBenchmarks.R
+# are the most frequently updated and critical files that get updated monthly.
+#The other data are generally not updated frequently.Those two files also feed into fsaArcPlcData.R
+
+# full arc plc data used for arc/plc projections
+source("./data-raw/fsaArcPlc/supplementary_files/fsaArcPlcData.R")
 
 # plc yields ----------------------------------------------------------------
 source("./data-raw/fsaArcPlc/supplementary_files/fsaPlcYields.R")
