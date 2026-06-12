@@ -71,7 +71,7 @@ data <- left_join(data %>% select(-current_mya_price), prices)
 # add statutory_reference_prices
 srp <- distinct(
   fsaEffectiveRefPrices %>%
-    select(statutory_reference_price, crop, crop_type)
+    select(statutory_reference_price, crop, crop_type,program_year)
 )
 data <- left_join(data, srp)
 
@@ -102,9 +102,12 @@ data$erp_calc <- unlist(lapply(1:nrow(data), function(i) {
       )
 
       # Calculate ERP
+      # OBBBA changes the olympic average multiplier from 85% to 88%
+      # beginning with the 2026 crop year (ERP cap remains 115% of SRP)
       rfsa:::calc_effective_reference_price(
         mya_prices = mya_prices,
-        srp = data$statutory_reference_price[i]
+        srp = data$statutory_reference_price[i],
+        oa_pct = ifelse(data$program_year[i] >= 2026, 0.88, 0.85)
       )
     },
     error = function(e) {
@@ -114,8 +117,10 @@ data$erp_calc <- unlist(lapply(1:nrow(data), function(i) {
   )
 }))
 
+# published ERPs are rounded, so compare with a 0.5% relative tolerance
+# rather than exact equality
 data$erp_calc_check <- as.numeric(
-  data$erp_calc == data$effective_reference_price
+  abs(data$erp_calc / data$effective_reference_price - 1) < 0.005
 )
 summary(data$erp_calc_check)
 
@@ -192,10 +197,11 @@ base2022 <- base %>% filter(program_year == 2022)
 base2023 <- base %>% filter(program_year == 2023)
 base2024 <- base %>% filter(program_year == 2023) %>% mutate(program_year = 2024)
 base2025 <- base %>% filter(program_year == 2023) %>% mutate(program_year = 2025)
+base2026 <- base %>% filter(program_year == 2023) %>% mutate(program_year = 2026)
 
 # bind together all base data frames
 base <- bind_rows(base2014, base2015, base2016, base2017, base2018, base2019,
-                  base2020, base2021, base2022, base2023, base2024, base2025)
+                  base2020, base2021, base2022, base2023, base2024, base2025, base2026)
 
 # merge in with data
 data <- left_join(data, base)
@@ -437,7 +443,7 @@ nass_commodity_mapping <- list(
 #' @param years vector of years to collect data for
 #' @param commodity_mapping list mapping crop names to NASS commodity descriptions
 #' @return dataframe with national NASS yields by commodity and year
-get_nass_yields_national <- function(years = 2014:2025, commodity_mapping = nass_commodity_mapping) {
+get_nass_yields_national <- function(years = 2014:2026, commodity_mapping = nass_commodity_mapping) {
   cat("Collecting national NASS yield data...\n")
 
   all_nass_national <- data.frame()
@@ -497,7 +503,7 @@ get_nass_yields_national <- function(years = 2014:2025, commodity_mapping = nass
 #' @param years vector of years to collect data for
 #' @param commodity_mapping list mapping crop names to NASS commodity descriptions
 #' @return dataframe with state NASS yields by commodity, state, and year
-get_nass_yields_state <- function(years = 2014:2025, commodity_mapping = nass_commodity_mapping) {
+get_nass_yields_state <- function(years = 2014:2026, commodity_mapping = nass_commodity_mapping) {
   cat("Collecting state NASS yield data...\n")
 
   all_nass_state <- data.frame()

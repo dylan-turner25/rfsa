@@ -704,7 +704,7 @@ calc_effective_reference_price <- function(mya_prices, srp, oa_pct = 0.85, cap =
   if(oa_pct * olympic_avg < srp) {
     erp <- srp
   } else if(oa_pct * olympic_avg >= cap * srp) {
-    erp <- srp * 1.15
+    erp <- srp * cap
   } else {
     erp <- oa_pct * olympic_avg
   }

@@ -24,7 +24,7 @@ source("./data-raw/fsaArcPlc/supplementary_files/fsaCountyBaseAcres.R")
 source("./data-raw/fsaArcPlc/supplementary_files/fsaEnrolledCountyBaseAcres.R")
 
 # clean MYA Prices -------------------------------------------------------------
-current_year = 2025
+current_year = 2026
 source("./data-raw/fsaArcPlc/supplementary_files/fsaMyaPrice.R")
 
 # clean PLC payment rates ------------------------------------------------------
@@ -34,7 +34,7 @@ source("./data-raw/fsaArcPlc/supplementary_files/fsaPlcPaymentRates.R")
 source("./data-raw/fsaArcPlc/supplementary_files/fsaArcIcPrice.R")
 
 # clean ARC-CO Prices ----------------------------------------------------------
-source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcCoPrice.R")
+source("./data-raw/fsaArcPlc/supplementary_files/fsaArcCoPrice.R")
 
 # clean base acres -------------------------------------------------------------
 # https://farmdocdaily.illinois.edu/2021/09/2021-commodity-program-enrollment-dashboard.html
@@ -53,7 +53,7 @@ source("./data-raw/fsaArcPlc/Suplementary Files/fsaArcPlcBaseAcres.R") # updated
 # source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcPlcElections.R")
 
 # clean arc benchmarks ---------------------------------------------
-current_year = 2025
+current_year = 2026
 source("./data-raw/fsaArcPlc/supplementary_files/fsaArcCoBenchmarks.R")
 # # clean plc benchmarks ---------------------------------------------
 # source("./data-raw/fsaArcPlc/Supplementary Files/fsaPlcGuarantee.R")
