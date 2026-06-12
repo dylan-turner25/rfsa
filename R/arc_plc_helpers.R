@@ -91,9 +91,11 @@ setup_obbb_parameters <- function(data) {
   data$obbb_srps[which(
     data$crop == "chickpeas" & data$crop_type == "large"
   )] <- new_srps$chickpeas_large
+  # FSA-published 2026 statutory reference price for temperate japonica
+  # under the OBBBA (the pre-OBBBA value was 0.1730)
   data$obbb_srps[which(
     data$crop == "rice" & data$crop_type == "temperate japonica"
-  )] <- 0.1730
+  )] <- 0.2433
 
   data$obbb_nmlr[which(
     data$crop == "chickpeas" & data$crop_type == "small"
@@ -106,6 +108,62 @@ setup_obbb_parameters <- function(data) {
   )] <- data$current_national_loan_rate[which(
     data$crop == "rice" & data$crop_type == "temperate japonica"
   )]
+
+  return(data)
+}
+
+#' Setup FB18 Policy Parameters
+#'
+#' This internal helper function adds an \code{fb18_srps} column holding the
+#' 2018 Farm Bill statutory reference prices. The published
+#' \code{statutory_reference_price} column in \code{fsaArcPlcData} reflects
+#' whatever FSA published for each year, and beginning with program year 2026
+#' FSA publishes the OBBBA-raised statutory prices. Using the published column
+#' directly would therefore contaminate the fb18 counterfactual for 2026 and
+#' later. For program years through 2025 the published values are the 2018
+#' Farm Bill schedule and are used as is. For 2026 and later, each crop and
+#' crop type carries forward its published 2025 statutory price (the last
+#' pre-OBBBA schedule). Loan rates are not modified: the fb18 environment
+#' continues to use \code{current_national_loan_rate}.
+#'
+#' @param data Input data frame
+#' @return Data frame with an fb18_srps column added
+#' @keywords internal
+setup_fb18_parameters <- function(data) {
+  data$fb18_srps <- data$statutory_reference_price
+
+  future_idx <- which(!is.na(data$program_year) & data$program_year >= 2026)
+  if (length(future_idx) == 0) {
+    return(data)
+  }
+
+  data("fsaEffectiveRefPrices", envir = environment())
+  fb18_schedule <- fsaEffectiveRefPrices %>%
+    dplyr::filter(.data$program_year == 2025) %>%
+    dplyr::distinct(.data$crop, .data$crop_type,
+                    fb18_srp = .data$statutory_reference_price)
+
+  # Guard against the published 2025 schedule ever being revised to OBBBA
+  # values: these are the 2018 Farm Bill statutory prices
+  chk <- c(corn = 3.70, soybeans = 8.40, wheat = 5.50, peanuts = 0.2675)
+  for (cr in names(chk)) {
+    v <- fb18_schedule$fb18_srp[fb18_schedule$crop == cr][1]
+    stopifnot(
+      "published 2025 SRP no longer matches the 2018 Farm Bill schedule" =
+        isTRUE(abs(v - chk[[cr]]) < 1e-6)
+    )
+  }
+
+  future <- dplyr::left_join(
+    data[future_idx, c("crop", "crop_type")],
+    fb18_schedule,
+    by = c("crop", "crop_type")
+  )
+
+  # Crops absent from the published 2025 schedule keep the published value
+  data$fb18_srps[future_idx] <- dplyr::coalesce(
+    future$fb18_srp, data$fb18_srps[future_idx]
+  )
 
   return(data)
 }
@@ -142,8 +200,12 @@ calc_payments_for_price <- function(data_subset, test_price = NULL, policy_envir
     max_payment_level <- 0.1
     payment_trigger_level <- 0.9
   } else {
-    # Use FB18 parameters
-    srp_col <- "statutory_reference_price"
+    # Use FB18 parameters. fb18_srps holds the 2018 Farm Bill statutory
+    # schedule (the published column reflects OBBBA values from 2026 on)
+    if (!"fb18_srps" %in% names(data_subset)) {
+      data_subset <- setup_fb18_parameters(data_subset)
+    }
+    srp_col <- "fb18_srps"
     nmlr_col <- "current_national_loan_rate"
     oa_pct <- 0.85
     cap <- 1.15

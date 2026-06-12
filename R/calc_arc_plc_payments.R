@@ -262,6 +262,13 @@ calc_arc_plc_payments <- function(data = NULL,
     data <- setup_obbb_parameters(data)
   }
 
+  # Setup FB18 parameters if needed (fb18_srps: the 2018 Farm Bill statutory
+  # schedule; the published statutory_reference_price column reflects OBBBA
+  # values from program year 2026 on)
+  if (any(policy_environment == "fb18")) {
+    data <- setup_fb18_parameters(data)
+  }
+
   # Filter data by location parameters
   if (!is.null(fips)) {
     data <- data %>% filter(fips %in% !!fips)
@@ -425,7 +432,9 @@ calc_arc_plc_payments <- function(data = NULL,
         max_payment_level <- 0.12
         payment_trigger_level <- 0.9
       } else {
-        srp_col <- "statutory_reference_price"
+        # fb18_srps holds the 2018 Farm Bill statutory schedule (the
+        # published column reflects OBBBA values from 2026 on)
+        srp_col <- "fb18_srps"
         nmlr_col <- "current_national_loan_rate"
         oa_pct <- 0.85
         cap <- 1.15
@@ -537,7 +546,9 @@ calc_arc_plc_payments <- function(data = NULL,
     max_payment_level <- 0.12
     payment_trigger_level <- 0.9
   } else {
-    srp_col <- "statutory_reference_price"
+    # fb18_srps holds the 2018 Farm Bill statutory schedule (the published
+    # column reflects OBBBA values from 2026 on)
+    srp_col <- "fb18_srps"
     nmlr_col <- "current_national_loan_rate"
     oa_pct <- 0.85
     cap <- 1.15
