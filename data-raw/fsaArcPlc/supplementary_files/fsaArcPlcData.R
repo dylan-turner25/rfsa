@@ -9,6 +9,8 @@ data("fsaCountyBaseAcres")
 data("fsaCropAcreageCC")
 library(rnassqs)
 library(stringr)
+library(dplyr)
+library(tidyr)
 
 data <- fsaArcCoBenchmarks %>%
   mutate(marketing_year = paste0(program_year, "-", program_year + 1))
@@ -30,6 +32,26 @@ unique_years <- data %>%
 # create a data frame that is every combination of unique fips, crop, yield_type, and year
 data <- tidyr::crossing(unique_fips, unique_crops, unique_years)
 
+# Carry the most recent observed year of a source table forward to any program
+# years present in the data skeleton but missing from the source. Used for
+# slow-moving farm attributes (PLC yields, base acres) and for pre-election
+# future-year assumptions (enrollment elections, irrigated planting mix).
+# Self-superseding: once a real FSA release is added to input_data/ and the
+# upstream script is rerun, the source table contains that year and nothing
+# is carried forward for it.
+extend_to_skeleton_years <- function(df, year_col = "program_year",
+                                     skeleton_years = unique_years$program_year) {
+  max_yr <- max(df[[year_col]], na.rm = TRUE)
+  future <- sort(unique(skeleton_years[skeleton_years > max_yr]))
+  if (length(future) == 0) return(df)
+  carried <- lapply(future, function(y) {
+    out <- df[df[[year_col]] == max_yr, , drop = FALSE]
+    out[[year_col]] <- y
+    out
+  })
+  dplyr::bind_rows(df, carried)
+}
+
 # start with arc co benchmarks
 benchmarks <- fsaArcCoBenchmarks %>%
   mutate(marketing_year = paste0(program_year, "-", program_year + 1))
@@ -38,8 +60,11 @@ data <- left_join(data, benchmarks)
 
 
 # merge in plc yield
+# PLC yields are fixed farm attributes; carry the latest published year forward
+# to future program years until FSA releases updated yield files
 plc_yields <- fsaPlcYields %>%
-  select(fips, crop, crop_type, plc_yield, program_year)
+  select(fips, crop, crop_type, plc_yield, program_year) %>%
+  extend_to_skeleton_years()
 data <- left_join(data, plc_yields)
 
 
@@ -195,20 +220,25 @@ base2020 <- base %>% filter(program_year == 2021) %>% mutate(program_year = 2020
 base2021 <- base %>% filter(program_year == 2021)
 base2022 <- base %>% filter(program_year == 2022)
 base2023 <- base %>% filter(program_year == 2023)
-base2024 <- base %>% filter(program_year == 2023) %>% mutate(program_year = 2024)
-base2025 <- base %>% filter(program_year == 2023) %>% mutate(program_year = 2025)
-base2026 <- base %>% filter(program_year == 2023) %>% mutate(program_year = 2026)
 
 # bind together all base data frames
 base <- bind_rows(base2014, base2015, base2016, base2017, base2018, base2019,
-                  base2020, base2021, base2022, base2023, base2024, base2025, base2026)
+                  base2020, base2021, base2022, base2023)
+
+# carry the most recent base acre release forward to any later skeleton years
+# (currently 2023 -> 2024+, until FSA publishes updated county base acre files)
+base <- extend_to_skeleton_years(base)
 
 # merge in with data
 data <- left_join(data, base)
 
 # merge in enrolled base acres (current year)
+# For program years where elections have not yet occurred, carry forward the
+# most recent year's ARC/PLC elections as the pre-election assumption
+# (i.e. producers are assumed to keep their existing elections)
 enrolled_base <- fsaEnrolledCountyBaseAcres %>%
-  select(fips, program_year, crop, crop_type, contains("enrolled"))
+  select(fips, program_year, crop, crop_type, contains("enrolled")) %>%
+  extend_to_skeleton_years()
 
 data <- left_join(data, enrolled_base)
 
@@ -227,8 +257,16 @@ planted_acres <- fsaCropAcreageCC %>%
     .groups = "drop"
   )
 
+# Carry the most recent planting mix forward for irrigation SHARE calculations
+# only. The planted/prevented/failed acre OUTCOME columns are intentionally NOT
+# carried forward (they are realized outcomes, not farm attributes, and feed no
+# payment calculation); only the irrigated vs non-irrigated shares carry into
+# future years so the base acre irrigation adjustment below does not NA-out
+# future-year rows.
+planted_acres_ext <- extend_to_skeleton_years(planted_acres, year_col = "crop_yr")
+
 # Create detailed irrigation summary by year, crop, crop_type, and county
-irrigation_summary <- planted_acres %>%
+irrigation_summary <- planted_acres_ext %>%
   group_by(crop_yr, crop, crop_type, fips, irrigation_practice) %>%
   summarize(
     irrigation_acres = sum(planted_and_failed_acres, na.rm = TRUE),
@@ -264,7 +302,7 @@ data <- left_join(
   by = c("program_year" = "crop_yr", "crop", "crop_type", "fips")
 )
 
-irrigation_summary_crop <- planted_acres %>%
+irrigation_summary_crop <- planted_acres_ext %>%
   group_by(crop_yr, crop, crop_type, irrigation_practice) %>%
   summarize(
     irrigation_acres = sum(planted_and_failed_acres, na.rm = TRUE),
