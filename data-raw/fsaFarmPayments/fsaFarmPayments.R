@@ -82,7 +82,7 @@ program_files <- list.files("data-raw/fsaFarmPayments/output_data/program_year_f
 
 
 
-options(piggyback.verbose = F)
+options(piggyback.verbose = T)
 
 # Upload fiscal year files
 piggyback::pb_upload(

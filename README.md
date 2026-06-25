@@ -87,13 +87,13 @@ data("fsaMyaPrice")
 head(fsaMyaPrice)
 #> # A tibble: 6 × 15
 #>   crop          marketing_year marketing_year_dates publishing_dates_for…¹ unit 
-#>   <chr>         <chr>          <chr>                <chr>                  <chr>
-#> 1 wheat         2014-2015      Jun. 1-May 31        Jun. 29, 2015          Bush…
-#> 2 barley        2014-2015      Jun. 1-May 31        Jun. 29, 2015          Bush…
-#> 3 oats          2014-2015      Jun. 1-May 31        Jun. 29, 2015          Bush…
-#> 4 peanuts       2014-2015      Aug. 1-Jul. 31       Aug. 31, 2015          Pound
-#> 5 corn          2014-2015      Sep. 1-Aug. 31       Sep. 29, 2015          Bush…
-#> 6 grain sorghum 2014-2015      Sep. 1-Aug. 31       Sep. 29, 2015          Bush…
+#>   <chr>         <chr>          <chr>                                 <dbl> <chr>
+#> 1 wheat         2014-2015      Jun. 1-May 31                            NA Bush…
+#> 2 barley        2014-2015      Jun. 1-May 31                            NA Bush…
+#> 3 oats          2014-2015      Jun. 1-May 31                            NA Bush…
+#> 4 peanuts       2014-2015      Aug. 1-Jul. 31                           NA Pound
+#> 5 corn          2014-2015      Sep. 1-Aug. 31                           NA Bush…
+#> 6 grain sorghum 2014-2015      Sep. 1-Aug. 31                           NA Bush…
 #> # ℹ abbreviated name: ¹​publishing_dates_for_final_mya_price
 #> # ℹ 10 more variables: current_mya_price <dbl>, final_mya_price_lag1 <dbl>,
 #> #   final_mya_price_lag2 <dbl>, final_mya_price_lag3 <dbl>,
@@ -112,21 +112,21 @@ progress marketing years).
 
 | Dataset | Description | Rows | Years | Last Updated | Data Download Date | Included Columns |
 |:---|:---|---:|:---|:---|:---|:---|
-| fsaArcCoBenchmarks | ARC-CO Benchmark Data | 404626 | 2014-2025 | 08/28/2025 | 08/26/2025 | fips, state_name, county_name, crop, unit, yield_type, program_year, oa_bench_mark_years, rma_crop_code, rma_type_code, crop_type, county_yield_type, benchmark_revenue, guarantee_revenue, maximum_payment_rate, actual_yield, national_price, actual_revenue, formula_payment_rate, payment_rate, oa_bench_mark_price, oa_bench_mark_yield |
-| fsaArcCoPrice | ARC-CO Benchmark and Actual Price Data | 272 | 2014-2025 | 08/28/2025 | 08/28/2025 | crop, marketing_year_dates, publishing_dates_for_final_mya_price, unit, reference_price_combined, annual_benchmark_price_lag5, annual_benchmark_price_lag4, annual_benchmark_price_lag3, annual_benchmark_price_lag2, annual_benchmark_price_lag1, current_arcco_benchmark_price, current_mya_price, current_national_loan_rate, current_arcco_actual_price, marketing_year, program_year, crop_type, rma_type_code, rma_crop_code |
-| fsaArcIcPrice | Commodity-specific ARC-IC benchmark prices, MYA prices, and statutory reference prices. | 227 | 2015-2024 | 05/05/2025 | 05/05/2025 | crop, marketing_year_dates, publishing_dates_for_final_mya_price, unit, reference_price_combined, annual_benchmark_price_lag5, annual_benchmark_price_lag4, annual_benchmark_price_lag3, annual_benchmark_price_lag2, annual_benchmark_price_lag1, current_mya_price, current_national_loan_rate, current_arcic_actual_price, marketing_year, program_year, crop_type, rma_type_code, rma_crop_code |
+| fsaArcCoBenchmarks | ARC-CO Benchmark Data | 425233 | 2014-2026 | 06/11/2026 | 06/11/2026 | fips, state_name, county_name, crop, unit, yield_type, program_year, oa_bench_mark_years, rma_crop_code, rma_type_code, crop_type, county_yield_type, benchmark_revenue, guarantee_revenue, maximum_payment_rate, actual_yield, national_price, actual_revenue, formula_payment_rate, payment_rate, oa_bench_mark_price, oa_bench_mark_yield |
+| fsaArcCoPrice | ARC-CO Benchmark and Actual Price Data | 295 | 2014-2026 | 06/11/2026 | 06/11/2026 | crop, marketing_year_dates, publishing_dates_for_final_mya_price, unit, reference_price_combined, annual_benchmark_price_lag5, annual_benchmark_price_lag4, annual_benchmark_price_lag3, annual_benchmark_price_lag2, annual_benchmark_price_lag1, current_arcco_benchmark_price, current_mya_price, current_national_loan_rate, current_arcco_actual_price, marketing_year, program_year, crop_type, rma_type_code, rma_crop_code |
+| fsaArcIcPrice | Commodity-specific ARC-IC benchmark prices, MYA prices, and statutory reference prices. | 250 | 2015-2025 | 06/11/2026 | 06/11/2026 | crop, marketing_year_dates, publishing_dates_for_final_mya_price, unit, reference_price_combined, annual_benchmark_price_lag5, annual_benchmark_price_lag4, annual_benchmark_price_lag3, annual_benchmark_price_lag2, annual_benchmark_price_lag1, current_mya_price, current_national_loan_rate, current_arcic_actual_price, marketing_year, program_year, crop_type, rma_type_code, rma_crop_code |
 | fsaArcPlcBaseAcres | ARC/PLC enrolled base acres by commodity | 225 | 2015-2024 | 05/21/2025 | 05/05/2025 | covered_commodity, plc_covered_commodity_contract_base, plc_plantings_attributed_to_generic_base, arc_co_covered_commodity_contract_base, arc_co_plantings_attributed_to_generic_base, arc_ic_enrolled_base_covered_commodity_contract_base, total, plc_total, arc_co_total, arc_ic_total, program_year, arc_co_all, arc_co_irrigated, arc_co_nonirrigated, crop_type, rma_type_code, rma_crop_code, crop |
-| fsaArcPlcData | Comprehensive ARC/PLC Payment Analysis Dataset | 1288552 | 2014-2025 | 12/01/2025 | 05/05/2025 | fips, state_name, crop, crop_type, program_year, county_name, unit, yield_type, oa_bench_mark_years, rma_crop_code, rma_type_code, county_yield_type, benchmark_revenue, guarantee_revenue, maximum_payment_rate, actual_yield, national_price, actual_revenue, formula_payment_rate, payment_rate, oa_bench_mark_price, oa_bench_mark_yield, marketing_year, plc_yield, annual_benchmark_price_lag5, annual_benchmark_price_lag4, annual_benchmark_price_lag3, annual_benchmark_price_lag2, annual_benchmark_price_lag1, current_arcco_benchmark_price, current_national_loan_rate, current_mya_price, final_mya_price_lag1, final_mya_price_lag2, final_mya_price_lag3, final_mya_price_lag4, final_mya_price_lag5, final_mya_price_lag6, statutory_reference_price, effective_reference_price, erp_calc, erp_calc_check, oa_bench_mark_price_calc, base_acres, enrolled_base_ARCCO, enrolled_base_PLC, planted_irrigated_share, planted_non_irrigated_share, planted_irrigated_share_national, planted_non_irrigated_share_national, planted_and_failed_acres, prevented_acres, planted_acres, failed_acres, nass_yield_national, nass_yield_state, yield_imputed, imputation_method, nass_pct_change_applied, actual_yield_5yr_avg, nass_5yr_avg, years_used_in_avg, rma_yield_amount, rma_trended_yield, rma_detrended_yield, rma_practice_count |
+| fsaArcPlcData | Comprehensive ARC/PLC Payment Analysis Dataset | 1356569 | 2014-2026 | 06/12/2026 | 05/05/2025 | fips, state_name, crop, crop_type, program_year, county_name, unit, yield_type, oa_bench_mark_years, rma_crop_code, rma_type_code, county_yield_type, benchmark_revenue, guarantee_revenue, maximum_payment_rate, actual_yield, national_price, actual_revenue, formula_payment_rate, payment_rate, oa_bench_mark_price, oa_bench_mark_yield, marketing_year, plc_yield, annual_benchmark_price_lag5, annual_benchmark_price_lag4, annual_benchmark_price_lag3, annual_benchmark_price_lag2, annual_benchmark_price_lag1, current_arcco_benchmark_price, current_national_loan_rate, current_mya_price, final_mya_price_lag1, final_mya_price_lag2, final_mya_price_lag3, final_mya_price_lag4, final_mya_price_lag5, final_mya_price_lag6, statutory_reference_price, effective_reference_price, erp_calc, erp_calc_check, oa_bench_mark_price_calc, base_acres, enrolled_base_ARCCO, enrolled_base_PLC, planted_irrigated_share, planted_non_irrigated_share, planted_irrigated_share_national, planted_non_irrigated_share_national, planted_and_failed_acres, prevented_acres, planted_acres, failed_acres, nass_yield_national, nass_yield_state, yield_imputed, imputation_method, nass_pct_change_applied, actual_yield_5yr_avg, nass_5yr_avg, years_used_in_avg, rma_yield_amount, rma_trended_yield, rma_detrended_yield, rma_practice_count |
 | fsaArcPlcPayments | ARC/PLC Program Payments by Crop and Year | 481 | 2014-2023 | 05/05/2025 | 05/05/2025 | program, crop, program_year, payments, crop_type, rma_type_code, rma_crop_code |
 | fsaCountyBaseAcres | County‐level base acres and average PLC yields by crop | 99307 | 2014-2023 | 08/25/2025 | 05/05/2025 | state, county, state_code, county_code, crop, crop_type, base_acres, avg_plc_yield, program_year, rma_type_code, rma_crop_code, fips |
-| fsaCoveredCommodityShares | County-Level Covered Commodity Shares | 39767 | Inf–Inf | 12/16/2025 | 05/05/2025 | crop_yr, state_cd, county_cd, fips, total_planted_acres, cc_planted_acres, cc_planted_share |
-| fsaCropAcreage | FSA County-Level Crop Acreage Data - All Crops | 3223484 | Inf–Inf | 12/16/2025 | 05/05/2025 | state_cd, county_cd, crop_cd, state, county, fips, crop, fsa_crop_type, intended_use, irrigation_practice, planted_acres, volunteer_acres, failed_acres, prevented_acres, not_planted_acres, planted_and_failed_acres, crop_yr, release_date, release_month, release_yr, release_day, current_release, covered_commodity |
-| fsaCropAcreageCC | FSA County-Level Crop Acreage Data - Covered Commodities Only | 538946 | Inf–Inf | 12/16/2025 | 05/05/2025 | fips, state, county, crop, crop_type, irrigation_practice, crop_yr, intended_use, planted_acres, volunteer_acres, failed_acres, prevented_acres, not_planted_acres, planted_and_failed_acres, rma_crop_code, rma_type_code |
-| fsaEffectiveRefPrices | Effective Reference Prices for ARC/PLC Commodities | 161 | 2019-2025 | 07/05/2025 | 05/05/2025 | crop, marketing_year_dates, marketing_year, program_year, unit, statutory_reference_price, 115_statutory_reference_price, mya_price_lag5, mya_price_lag4, mya_price_lag3, mya_price_lag2, mya_price_lag1, 85_olympic_average_mya, effective_reference_price, crop_type, rma_type_code, rma_crop_code |
+| fsaCoveredCommodityShares | County-Level Covered Commodity Shares | 39771 | Inf–Inf | 03/27/2026 | 05/05/2025 | crop_yr, state_cd, county_cd, fips, total_planted_acres, cc_planted_acres, cc_planted_share |
+| fsaCropAcreage | FSA County-Level Crop Acreage Data - All Crops | 3231328 | Inf–Inf | 03/27/2026 | 05/05/2025 | state_cd, county_cd, crop_cd, state, county, fips, crop, fsa_crop_type, intended_use, irrigation_practice, planted_acres, volunteer_acres, failed_acres, prevented_acres, not_planted_acres, planted_and_failed_acres, crop_yr, release_date, release_month, release_yr, release_day, current_release, covered_commodity |
+| fsaCropAcreageCC | FSA County-Level Crop Acreage Data - Covered Commodities Only | 540364 | Inf–Inf | 03/27/2026 | 05/05/2025 | fips, state, county, crop, crop_type, irrigation_practice, crop_yr, intended_use, planted_acres, volunteer_acres, failed_acres, prevented_acres, not_planted_acres, planted_and_failed_acres, rma_crop_code, rma_type_code |
+| fsaEffectiveRefPrices | Effective Reference Prices for ARC/PLC Commodities | 184 | 2019-2026 | 06/11/2026 | 06/11/2026 | crop, marketing_year_dates, marketing_year, program_year, unit, statutory_reference_price, 115_statutory_reference_price, mya_price_lag5, mya_price_lag4, mya_price_lag3, mya_price_lag2, mya_price_lag1, 85_olympic_average_mya, effective_reference_price, crop_type, rma_type_code, rma_crop_code |
 | fsaEnrolledCountyBaseAcres | County-level enrolled base acres by program and commodity | 100489 | 2019-2025 | 08/27/2025 | 08/27/2025 | fips, state, county, crop, program_year, crop_type, rma_type_code, rma_crop_code, enrolled_base_ARCCO, enrolled_base_PLC |
-| fsaMyaPrice | FSA Marketing Year Average Prices | 272 | 2014-2025 | 11/17/2025 | 11/17/2025 | crop, marketing_year, marketing_year_dates, publishing_dates_for_final_mya_price, unit, current_mya_price, final_mya_price_lag1, final_mya_price_lag2, final_mya_price_lag3, final_mya_price_lag4, final_mya_price_lag5, final_mya_price_lag6, rma_crop_code, crop_type, rma_type_code |
-| fsaPlcPaymentRate | Price Loss Coverage (PLC) Payment Rates by Crop and Program Year | 249 | 2014-2024 | 07/05/2025 | 05/05/2025 | crop, marketing_year_dates, marketing_year, program_year, publishing_dates_for_final_mya_price, statutory_reference_price, effective_reference_price, combined_reference_price, unit, current_mya_price, current_national_loan_rate, plc_price, plc_payment_rate, max_plc_payment_rate, crop_type, rma_type_code, rma_crop_code |
-| fsaPlcYields | County-level PLC yields by commodity and program year | 152375 | 2018-2025 | 07/14/2025 | 06/24/2025 | fips, state, county, crop, crop_type, plc_yield, plc_yield_units, enrolled_base, program_year, crop_year, rma_crop_code, rma_type_code |
+| fsaMyaPrice | FSA Marketing Year Average Prices | 295 | 2014-2026 | 06/11/2026 | 06/11/2026 | crop, marketing_year, marketing_year_dates, publishing_dates_for_final_mya_price, unit, current_mya_price, final_mya_price_lag1, final_mya_price_lag2, final_mya_price_lag3, final_mya_price_lag4, final_mya_price_lag5, final_mya_price_lag6, rma_crop_code, crop_type, rma_type_code |
+| fsaPlcPaymentRate | Price Loss Coverage (PLC) Payment Rates by Crop and Program Year | 272 | 2014-2025 | 06/11/2026 | 06/11/2026 | crop, marketing_year_dates, marketing_year, program_year, publishing_dates_for_final_mya_price, statutory_reference_price, effective_reference_price, combined_reference_price, unit, current_mya_price, current_national_loan_rate, plc_price, plc_payment_rate, max_plc_payment_rate, crop_type, rma_type_code, rma_crop_code |
+| fsaPlcYields | County-level PLC yields by commodity and program year | 152375 | 2018-2025 | 06/11/2026 | 06/24/2025 | fips, state, county, crop, crop_type, plc_yield, plc_yield_units, enrolled_base, program_year, crop_year, rma_crop_code, rma_type_code |
 
 ## PLC Payment Calculations
 
@@ -246,6 +246,8 @@ data <- get_fsa_payments(year = 2023,
                          program = c("CRP"), 
                          year_type = "program", 
                          aggregation = "national")
+#> Downloading 'program_2023_CRP.rds' from GitHub...
+#> 'program_2023_CRP.rds' downloaded successfully
 ```
 
 The following table provides a list of all the program abbreviations
@@ -317,6 +319,9 @@ file](https://github.com/dylan-turner25/rfsa/blob/main/data-raw/fsaFarmPayments/
 | TIP | Tree Indemnity Program |
 | TTPP | Tobacco Transition Payment Program |
 | WHIP | Wildfires and Hurricanes Indemnity Program |
+| SDRP | Supplemental Disaster Relief Program |
+| LFDP | Livestock Forage Disaster Program |
+| ECAP | Emergency Commodity Assistance Program |
 
 # Data Validation Checks
 
@@ -332,6 +337,9 @@ a value of interest that you would like to see added to this table,
 please open an issue on the GitHub repository with the relevant
 information including code to generate the value using the `rfsa`
 package as well as an external source to validate the value against.
+
+    #> Downloading 'program_2023_ARC-CO.rds' from GitHub...
+    #> 'program_2023_ARC-CO.rds' downloaded successfully
 
 | value | code | package_value | external_value | external_source | percentage_difference | check_passed |
 |:---|:---|---:|---:|:---|:---|:---|
@@ -524,12 +532,12 @@ head(fsaCropAcreageCC)
 #> # A tibble: 6 × 16
 #>    fips state   county  crop  crop_type irrigation_practice crop_yr intended_use
 #>   <dbl> <chr>   <chr>   <chr> <chr>     <chr>                 <dbl> <chr>       
-#> 1  1001 Alabama Autauga cano… <NA>      N                      2015 Processed   
-#> 2  1001 Alabama Autauga cano… <NA>      N                      2016 Processed   
-#> 3  1001 Alabama Autauga cano… <NA>      N                      2017 Processed   
-#> 4  1001 Alabama Autauga corn  <NA>      I                      2013 Grain       
-#> 5  1001 Alabama Autauga corn  <NA>      I                      2014 Forage      
-#> 6  1001 Alabama Autauga corn  <NA>      I                      2014 Grain       
+#> 1  1001 Alabama Autauga cano… <NA>      N                      2016 Processed   
+#> 2  1001 Alabama Autauga cano… <NA>      N                      2017 Processed   
+#> 3  1001 Alabama Autauga corn  <NA>      I                      2013 Grain       
+#> 4  1001 Alabama Autauga corn  <NA>      I                      2014 Forage      
+#> 5  1001 Alabama Autauga corn  <NA>      I                      2014 Grain       
+#> 6  1001 Alabama Autauga corn  <NA>      I                      2015 Grain       
 #> # ℹ 8 more variables: planted_acres <dbl>, volunteer_acres <dbl>,
 #> #   failed_acres <dbl>, prevented_acres <dbl>, not_planted_acres <dbl>,
 #> #   planted_and_failed_acres <dbl>, rma_crop_code <dbl>, rma_type_code <chr>
@@ -539,9 +547,9 @@ unique(fsaCropAcreageCC$crop)
 #>  [1] "canola"        "corn"          "cotton"        "grain sorghum"
 #>  [5] "millet"        "oats"          "peanuts"       "rapeseed"     
 #>  [9] "rye"           "sesame"        "soybeans"      "sunflower"    
-#> [13] "triticale"     "wheat"         "alfalfa"       "rice"         
-#> [17] "dry peas"      "barley"        "dry beans"     "chickpeas"    
-#> [21] "mustard"       "safflower"     "flaxseed"      "lentils"      
+#> [13] "triticale"     "wheat"         "barley"        "alfalfa"      
+#> [17] "rice"          "dry peas"      "dry beans"     "mustard"      
+#> [21] "chickpeas"     "safflower"     "flaxseed"      "lentils"      
 #> [25] "crambe"
 ```
 
@@ -592,12 +600,12 @@ ggplot(crop_trends, aes(x = crop_yr, y = total_planted / 1e6, color = crop)) +
   theme(legend.position = "bottom")
 #> Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
 #> ℹ Please use `linewidth` instead.
-#> This warning is displayed once every 8 hours.
+#> This warning is displayed once per session.
 #> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
 #> generated.
 ```
 
-<img src="man/figures/README-acreage-time-series-1.png" width="100%" />
+<img src="man/figures/README-acreage-time-series-1.png" alt="" width="100%" />
 
 ## Example: Analyze Oats by Intended Use
 
@@ -619,12 +627,12 @@ print(oats_by_use)
 #> # A tibble: 6 × 4
 #>   intended_use  total_planted counties pct_of_total
 #>   <chr>                 <dbl>    <int>        <dbl>
-#> 1 Grain              1032481.     1494        49.8 
-#> 2 Forage              742339.     1315        35.8 
-#> 3 Grazing             262345.      481        12.7 
-#> 4 Seed                 23913.      184         1.15
+#> 1 Grain              1039737.     1509        49.8 
+#> 2 Forage              749476.     1327        35.9 
+#> 3 Grazing             264419.      484        12.6 
+#> 4 Seed                 25212.      188         1.21
 #> 5 Left Standing         9527.       79         0.46
-#> 6 Green Manure          1382.       21         0.07
+#> 6 Green Manure          1412.       22         0.07
 ```
 
 ## Example: Plot Intended Use Distribution Across Multiple Crops
@@ -663,7 +671,7 @@ ggplot(crop_use_summary, aes(x = reorder(intended_use, -pct_of_total), y = pct_o
   scale_fill_viridis_d()
 ```
 
-<img src="man/figures/README-acreage-intended-use-plot-1.png" width="100%" />
+<img src="man/figures/README-acreage-intended-use-plot-1.png" alt="" width="100%" />
 
 ## Additional Crop Acreage Datasets
 

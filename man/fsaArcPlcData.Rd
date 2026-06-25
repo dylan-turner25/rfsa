@@ -116,9 +116,23 @@ The dataset includes calculated values for missing effective reference prices
 and benchmark prices using the Olympic average methodology. Historical loan rates
 are forward-filled to handle missing values in recent years.
 
+\strong{Future Program Years (Carry-Forward Convention):}
+Rows for program years beyond the latest available FSA releases carry forward
+the most recent observed values for slow-moving farm attributes and
+pre-election assumptions: PLC yields, county base acres, ARC/PLC enrollment
+elections (producers assumed to keep their existing elections), and the
+irrigated vs. non-irrigated planting mix used in the irrigation adjustment.
+Realized outcomes (planted, prevented, and failed acres; NASS/RMA observed
+yields) are NOT carried forward. MYA prices for future years are projections.
+Payment calculations for such years are therefore projections conditional on
+these assumptions. The carry-forward is self-superseding: when actual FSA
+releases for a year are added to the data-raw inputs and the build is rerun,
+the real values replace the carried-forward ones automatically.
+
 \strong{Program Years:}
-Currently includes data for program years 2019-2025, covering the period with
-comprehensive enrolled base acre data.
+Currently includes data for program years 2009-2026. Enrolled base acre data
+is comprehensive for 2019 onward; the most recent program year may rely on
+the carry-forward convention described above.
 }
 \examples{
 \dontrun{
