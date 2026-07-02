@@ -50,6 +50,15 @@
 #'     \item "none": No aggregation, return all records
 #'     \item Multiple values: e.g., c("crop", "state") aggregates by both crop and state
 #'   }
+#' @param updated_base_acres Logical. If TRUE, expand the enrolled base that
+#'   payments are scaled on by the additional base acres allocated under the 2026
+#'   OBBBA base-acre update (from \code{\link{fsaUpdatedBaseAcres}}). The
+#'   additional base is added only for program years >= 2026, distributed across
+#'   crop types in proportion to each county-crop's enrolled base and inheriting
+#'   its ARC-CO/PLC election split. Default FALSE (existing base only).
+#' @param base_acre_scenario Character scalar. Which base-acre update scenario to
+#'   use when \code{updated_base_acres = TRUE}; one of the scenarios in
+#'   \code{\link{fsaUpdatedBaseAcres}} ("s1"-"s8"). Default "s1" (main scenario).
 #' @param quiet Logical. If TRUE, suppresses warning messages and progress output
 #'   (default: FALSE).
 #'
@@ -211,6 +220,8 @@ calc_arc_plc_payments <- function(data = NULL,
                                  state = NULL,
                                  county = NULL,
                                  aggregate_level = "total",
+                                 updated_base_acres = FALSE,
+                                 base_acre_scenario = "s1",
                                  quiet = FALSE) {
 
   # Validate inputs
@@ -342,6 +353,55 @@ calc_arc_plc_payments <- function(data = NULL,
 
   if (nrow(data) == 0) {
     stop("No data found matching the specified criteria")
+  }
+
+  # Add the 2026 OBBBA base-acre update to the enrolled base -------------------
+  # When updated_base_acres = TRUE, expand the enrolled base that payments are
+  # scaled on by the additional base acres allocated under the OBBBA base-acre
+  # update (effective the 2026 crop year). The additional base is a county x crop
+  # figure (fsaUpdatedBaseAcres); distribute it across the crop_type rows of each
+  # fips x crop x program_year in proportion to each row's enrolled base, which
+  # also inherits the existing ARC-CO/PLC election split. Because we modify the
+  # enrolled_base_* columns in place, both the multi-parameter and single-
+  # parameter payment paths (and both scaling sites) pick it up unchanged. With
+  # the default (FALSE) this block is skipped and behavior is unchanged.
+  if (isTRUE(updated_base_acres)) {
+    data("fsaUpdatedBaseAcres", envir = environment())
+    valid_scenarios <- unique(fsaUpdatedBaseAcres$scenario)
+    if (length(base_acre_scenario) != 1 || !base_acre_scenario %in% valid_scenarios) {
+      stop("base_acre_scenario must be one of: ",
+           paste(valid_scenarios, collapse = ", "))
+    }
+
+    updated_base <- fsaUpdatedBaseAcres %>%
+      filter(scenario == base_acre_scenario) %>%
+      select(fips, crop, additional_base_acres) %>%
+      mutate(fips = as.numeric(fips))
+
+    data <- data %>%
+      mutate(fips = as.numeric(fips)) %>%
+      left_join(updated_base, by = c("fips", "crop")) %>%
+      # OBBBA base expansion applies to the 2026 crop year onward; no additional
+      # base (and no match) means zero.
+      mutate(additional_base_acres = ifelse(
+        is.na(additional_base_acres) | program_year < 2026, 0, additional_base_acres)) %>%
+      group_by(fips, crop, program_year) %>%
+      mutate(
+        .grp_enrolled = sum(enrolled_base_ARCCO + enrolled_base_PLC, na.rm = TRUE),
+        .n_grp = dplyr::n(),
+        # Row share of the county x crop additional base, weighted by enrolled
+        # base; even split across crop_type rows if the group has no enrolled base.
+        enrolled_base_ARCCO = enrolled_base_ARCCO + dplyr::if_else(
+          .grp_enrolled > 0,
+          additional_base_acres * enrolled_base_ARCCO / .grp_enrolled,
+          additional_base_acres / .n_grp / 2),
+        enrolled_base_PLC = enrolled_base_PLC + dplyr::if_else(
+          .grp_enrolled > 0,
+          additional_base_acres * enrolled_base_PLC / .grp_enrolled,
+          additional_base_acres / .n_grp / 2)
+      ) %>%
+      ungroup() %>%
+      select(-additional_base_acres, -.grp_enrolled, -.n_grp)
   }
 
   # Validate price parameter

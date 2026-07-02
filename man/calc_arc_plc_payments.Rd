@@ -16,6 +16,8 @@ calc_arc_plc_payments(
   state = NULL,
   county = NULL,
   aggregate_level = "total",
+  updated_base_acres = FALSE,
+  base_acre_scenario = "s1",
   quiet = FALSE
 )
 }
@@ -76,6 +78,17 @@ Requires state to also be specified.}
 \item "none": No aggregation, return all records
 \item Multiple values: e.g., c("crop", "state") aggregates by both crop and state
 }}
+
+\item{updated_base_acres}{Logical. If TRUE, expand the enrolled base that
+payments are scaled on by the additional base acres allocated under the 2026
+OBBBA base-acre update (from \code{\link{fsaUpdatedBaseAcres}}). The
+additional base is added only for program years >= 2026, distributed across
+crop types in proportion to each county-crop's enrolled base and inheriting
+its ARC-CO/PLC election split. Default FALSE (existing base only).}
+
+\item{base_acre_scenario}{Character scalar. Which base-acre update scenario to
+use when \code{updated_base_acres = TRUE}; one of the scenarios in
+\code{\link{fsaUpdatedBaseAcres}} ("s1"-"s8"). Default "s1" (main scenario).}
 
 \item{quiet}{Logical. If TRUE, suppresses warning messages and progress output
 (default: FALSE).}
