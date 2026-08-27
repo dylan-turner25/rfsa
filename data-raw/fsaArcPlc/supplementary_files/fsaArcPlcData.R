@@ -834,37 +834,33 @@ get_rma_county_yields <- function(years,
 
     cat("Retrieved", nrow(rma_data), "county yield history records\n")
 
-    # Add expected data for 2025 and 2026 if needed
-    if (any(required_years >= 2025)) {
-      cat("Adding expected yield data for 2025-2026...\n")
+    # For years beyond county_yield_history, use expected yields from the price dataset
+    max_history_year <- max(rma_data$commodity_year, na.rm = TRUE)
+    future_years <- required_years[required_years > max_history_year]
 
-      if (2025 %in% required_years) {
-        price2025 <- distinct(rfcip::get_adm_data(year = 2025, dataset = "price") %>%
-                                select(commodity_year, commodity_code, state_code, county_code, commodity_type_code, practice_code,
-                                       expected_index_value, insurance_plan_code) %>%
-                                rename(yield_amount = expected_index_value) %>%
-                                mutate(type_code = as.numeric(as.character(commodity_type_code))) %>%
-                                na.omit())
+    if (length(future_years) > 0) {
+      cat("Adding expected yield data for years beyond county_yield_history (",
+          paste(future_years, collapse = ", "), ")...\n")
 
-        rma_data <- bind_rows(rma_data, price2025)
-        cat("Added", nrow(price2025), "records for 2025\n")
-      }
+      for (yr in future_years) {
+        tryCatch({
+          price_yr <- distinct(rfcip::get_adm_data(year = yr, dataset = "price") %>%
+                                 select(commodity_year, commodity_code, state_code, county_code,
+                                        commodity_type_code, practice_code, expected_index_value) %>%
+                                 rename(yield_amount = expected_index_value,
+                                        type_code = commodity_type_code) %>%
+                                 mutate(state_code = as.numeric(as.character(state_code)),
+                                        county_code = as.numeric(as.character(county_code)),
+                                        commodity_code = as.numeric(as.character(commodity_code)),
+                                        type_code = as.numeric(as.character(type_code)),
+                                        practice_code = as.numeric(as.character(practice_code))) %>%
+                                 na.omit())
 
-      if (2026 %in% required_years) {
-        price2026 <- distinct(rfcip::get_adm_data(year = 2026, dataset = "price") %>%
-                                select(commodity_year, commodity_code, state_code, county_code, commodity_type_code, practice_code,
-                                       expected_index_value) %>%
-                                rename(yield_amount = expected_index_value,
-                                       type_code = commodity_type_code) %>%
-                                mutate(state_code = as.numeric(as.character(state_code)),
-                                       county_code= as.numeric(as.character(county_code)),
-                                       commodity_code = as.numeric(as.character(commodity_code)),
-                                       type_code = as.numeric(as.character(type_code)),
-                                       practice_code = as.numeric(as.character(practice_code))) %>%
-                                na.omit())
-
-        rma_data <- bind_rows(rma_data, price2026)
-        cat("Added", nrow(price2026), "records for 2026\n")
+          rma_data <- bind_rows(rma_data, price_yr)
+          cat("  Added", nrow(price_yr), "records for", yr, "\n")
+        }, error = function(e) {
+          cat("  Warning: Could not retrieve price data for", yr, ":", e$message, "\n")
+        })
       }
     }
 
@@ -929,10 +925,12 @@ get_rma_county_yields <- function(years,
     FALSE  # Failure
   })
 
-  # If fetch failed, return empty dataframe
+  # If fetch failed, return empty dataframe with expected columns
   if (!fetch_success || nrow(rma_data) == 0) {
     cat("No RMA data retrieved. Returning empty dataframe.\n")
-    return(data.frame())
+    return(data.frame(fips = numeric(), crop = character(), program_year = numeric(),
+                      rma_yield_amount = numeric(), rma_trended_yield = numeric(),
+                      rma_detrended_yield = numeric(), rma_practice_count = integer()))
   }
 
   # Map RMA commodity names to FSA crop names (reverse mapping)
