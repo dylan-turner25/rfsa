@@ -493,12 +493,14 @@ The `rfsa` package includes the `fsaCropAcreageCC` dataset, which contains count
 
 The dataset includes:
 
-- **391,596 observations** across **2,937 counties**
-- **20 covered commodities** (barley, canola, chickpeas, corn, cotton, crambe, dry peas, flaxseed, grain sorghum, lentils, mustard, oats, peanuts, rapeseed, rice, safflower, sesame, soybeans, sunflower, wheat)
-- **Years: 2013-2025**
+- **580,619 observations** across **2,971 counties**
+- **25 crops** (alfalfa, barley, canola, chickpeas, corn, cotton, crambe, dry beans, dry peas, flaxseed, grain sorghum, lentils, millet, mustard, oats, peanuts, rapeseed, rice, rye, safflower, sesame, soybeans, sunflower, triticale, wheat) -- the ARC/PLC covered commodities plus alfalfa, dry beans, millet, rye, and triticale, which are used by other FSA programs
+- **Years: 2013-2026**
 - Separated by irrigation practice (irrigated vs non-irrigated)
 - Crop subtypes where applicable (rice varieties, cotton types, chickpea sizes)
 - Intended use categories (e.g., grain, silage, grazing, dry edible)
+
+For each crop year the data reflect FSA's most recent acreage release. Crop years 2013-2025 use the final January release; crop year 2026 uses the in-season release dated September 11, 2026, so 2026 acres are preliminary and will be revised.
 
 ## Loading and Using the Data
 
@@ -518,16 +520,16 @@ unique(fsaCropAcreageCC$crop)
 ```{r acreage-corn-example}
 library(dplyr)
 
-# Filter to corn in 2024
-corn_2024 <- fsaCropAcreageCC %>%
-  filter(crop == "corn", crop_yr == 2024) %>%
+# Filter to corn in 2026
+corn_2026 <- fsaCropAcreageCC %>%
+  filter(crop == "corn", crop_yr == 2026) %>%
   group_by(irrigation_practice) %>%
   summarize(
     total_planted = sum(planted_acres, na.rm = TRUE),
     counties = n_distinct(fips)
   )
 
-print(corn_2024)
+print(corn_2026)
 ```
 
 ## Example: Plot Planted Acres Over Time
@@ -546,7 +548,7 @@ crop_trends <- fsaCropAcreageCC %>%
 ggplot(crop_trends, aes(x = crop_yr, y = total_planted / 1e6, color = crop)) +
   geom_line(size = 1) +
   labs(
-    title = "Planted Acres for Major Covered Commodities (2013-2025)",
+    title = "Planted Acres for Major Covered Commodities (2013-2026)",
     x = "Crop Year",
     y = "Total Planted Acres (Millions)",
     color = "Crop"
@@ -558,9 +560,9 @@ ggplot(crop_trends, aes(x = crop_yr, y = total_planted / 1e6, color = crop)) +
 ## Example: Analyze Oats by Intended Use
 
 ```{r acreage-intended-use}
-# Examine oats acres by intended use in 2024
+# Examine oats acres by intended use in 2026
 oats_by_use <- fsaCropAcreageCC %>%
-  filter(crop == "oats", crop_yr == 2025) %>%
+  filter(crop == "oats", crop_yr == 2026) %>%
   group_by(intended_use) %>%
   summarize(
     total_planted = sum(planted_acres, na.rm = TRUE),
@@ -585,7 +587,7 @@ selected_crops <- c("corn", "oats", "wheat", "barley", "grain sorghum","cotton",
 
 # Calculate percentage of acres by intended use for each crop
 crop_use_summary <- fsaCropAcreageCC %>%
-  filter(crop %in% selected_crops, crop_yr == 2025) %>%
+  filter(crop %in% selected_crops, crop_yr == 2026) %>%
   group_by(crop, intended_use) %>%
   summarize(total_planted = sum(planted_acres, na.rm = TRUE), .groups = "drop") %>%
   group_by(crop) %>%
@@ -597,7 +599,7 @@ ggplot(crop_use_summary, aes(x = reorder(intended_use, -pct_of_total), y = pct_o
   geom_bar(stat = "identity") +
   facet_wrap(~crop, scales = "free_x") +
   labs(
-    title = "Distribution of Planted Acres by Intended Use (2025)",
+    title = "Distribution of Planted Acres by Intended Use (2026)",
     x = "Intended Use",
     y = "Percent of Total Acres (%)"
   ) +
