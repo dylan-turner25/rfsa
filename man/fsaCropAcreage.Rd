@@ -17,7 +17,7 @@ A tibble with 16 variables:
 \item{volunteer_acres}{numeric. Acres of volunteer crop (self-seeded from previous season).}
 \item{failed_acres}{numeric. Acres that were planted but failed to produce a crop.}
 \item{prevented_acres}{numeric. Acres where planting was prevented due to weather or other conditions.}
-\item{not_planted_acres}{numeric. Base acres that were not planted.}
+\item{not_planted_acres}{numeric. Acres reported under FSA's Not Planted category, which was available in 2011 and 2012 only.}
 \item{planted_and_failed_acres}{numeric. Total of planted plus failed acres.}
 \item{crop_yr}{numeric. Crop year.}
 \item{intended_use}{character. Intended use category for the crop (e.g., "Grain", "Silage", "Grazing", "Dry Edible"). May be NA if not specified.}
@@ -41,6 +41,16 @@ decisions and agricultural land use.
 This dataset includes all crops reported to FSA, not just covered commodities. For a
 dataset filtered to only covered commodities eligible for ARC/PLC programs, see
 \code{fsaCropAcreageCC}.
+
+Coverage begins with crop year 2012. Only the latest release for each crop year
+is included; the 2012 observations use the final January 2013 release. All six
+published 2012 releases are retained separately in the data-raw download and
+cleaned-data caches.
+
+FSA's Not Planted reporting category was available in 2011 and 2012 only.
+Values are preserved as reported. This reporting change affects comparisons
+of total planted acreage and covered-commodity shares between 2012 and later
+years, especially for grass and other non-crop land uses.
 
 To view code used to generate this dataset, see \code{./data-raw/fsaCropAcreage/fsaCropAcreageCode.R}
 }

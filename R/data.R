@@ -530,7 +530,7 @@
 #'   \item{volunteer_acres}{numeric. Acres of volunteer crop (self-seeded from previous season).}
 #'   \item{failed_acres}{numeric. Acres that were planted but failed to produce a crop.}
 #'   \item{prevented_acres}{numeric. Acres where planting was prevented due to weather or other conditions.}
-#'   \item{not_planted_acres}{numeric. Base acres that were not planted.}
+#'   \item{not_planted_acres}{numeric. Acres reported under FSA's Not Planted category, which was available in 2011 and 2012 only.}
 #'   \item{planted_and_failed_acres}{numeric. Total of planted plus failed acres.}
 #'   \item{crop_yr}{numeric. Crop year.}
 #'   \item{intended_use}{character. Intended use category for the crop (e.g., "Grain", "Silage", "Grazing", "Dry Edible"). May be NA if not specified.}
@@ -542,6 +542,16 @@
 #' This dataset includes all crops reported to FSA, not just covered commodities. For a
 #' dataset filtered to only covered commodities eligible for ARC/PLC programs, see
 #' \code{fsaCropAcreageCC}.
+#'
+#' Coverage begins with crop year 2012. Only the latest release for each crop year
+#' is included; the 2012 observations use the final January 2013 release. All six
+#' published 2012 releases are retained separately in the data-raw download and
+#' cleaned-data caches.
+#'
+#' FSA's Not Planted reporting category was available in 2011 and 2012 only.
+#' Values are preserved as reported. This reporting change affects comparisons
+#' of total planted acreage and covered-commodity shares between 2012 and later
+#' years, especially for grass and other non-crop land uses.
 #'
 #' To view code used to generate this dataset, see `./data-raw/fsaCropAcreage/fsaCropAcreageCode.R`
 #'
@@ -569,7 +579,7 @@
 #'   \item{volunteer_acres}{numeric. Acres of volunteer crop (self-seeded from previous season).}
 #'   \item{failed_acres}{numeric. Acres that were planted but failed to produce a crop.}
 #'   \item{prevented_acres}{numeric. Acres where planting was prevented due to weather or other conditions.}
-#'   \item{not_planted_acres}{numeric. Base acres that were not planted.}
+#'   \item{not_planted_acres}{numeric. Acres reported under FSA's Not Planted category, which was available in 2011 and 2012 only.}
 #'   \item{planted_and_failed_acres}{numeric. Total of planted plus failed acres.}
 #'   \item{crop_yr}{numeric. Crop year.}
 #'   \item{intended_use}{character. Intended use category for the crop (e.g., "Grain", "Silage", "Grazing", "Dry Edible"). May be NA if not specified.}
@@ -580,6 +590,11 @@
 #' @details
 #' This dataset is filtered to include only covered commodities. For the complete dataset
 #' including all crops, see \code{fsaCropAcreage}.
+#'
+#' Coverage begins with crop year 2012 and uses the latest release for each crop
+#' year. The 2012 observations use the final January 2013 release. See
+#' \code{fsaCropAcreage} for the historical reporting-category caveat. The covered
+#' commodity classification does not imply that ARC/PLC operated before 2014.
 #'
 #' To view code used to generate this dataset, see `./data-raw/fsaCropAcreage/fsaCropAcreageCode.R`
 #'
@@ -613,6 +628,12 @@
 #' total planted acres in each county that consist of covered commodities. Covered
 #' commodities are those eligible for ARC and PLC programs and include major crops
 #' like corn, soybeans, wheat, cotton, rice, and others.
+#'
+#' Coverage begins with crop year 2012. FSA's Not Planted reporting category was
+#' available in 2011 and 2012 only. Because the denominator uses reported planted
+#' acres, the reporting change affects comparisons of 2012 shares with later
+#' years. The source categories are preserved without reallocating not-planted
+#' acres to planted acres. See \code{fsaCropAcreage} for details.
 #'
 #' The covered commodity share can be used as an indicator of:
 #' \itemize{
@@ -661,5 +682,4 @@
 #' @usage data(fsaUpdatedBaseAcres)
 #' @source \url{https://www.congress.gov/bill/119th-congress/house-bill/1}
 "fsaUpdatedBaseAcres"
-
 

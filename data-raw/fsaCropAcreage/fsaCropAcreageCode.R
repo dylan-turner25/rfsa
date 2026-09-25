@@ -16,8 +16,8 @@ dir.create(paste0("./Raw_Data")) # to store raw data
 # set timeout (i.e. howlong R will try to download a file before aborting)
 options(timeout = max(300, getOption("timeout")))
 
-# define years to get data for
-start_year <- 2014
+# Define release years to download. January releases contain the previous crop year.
+start_year <- 2012
 end_year <- as.numeric(substr(Sys.Date(),1,4)) # automatically set to current year
 
 # load excel file with acreage urls
@@ -29,8 +29,9 @@ acreage_urls$date <- as.Date(acreage_urls$date, origin = "1970-01-01")
 # remove any missing observations (there should't be any)
 acreage_urls <- acreage_urls %>% na.omit() %>% distinct()
 
-# fix old urls to be in the format of new FSA website structure
-acreage_urls$url <- gsub("/Assets/USDA-FSA-Public/usdafiles/NewsRoom/eFOIA/crop-acre-data/zips/+[0-9]+-crop-acre-data/","https://www.fsa.usda.gov/sites/default/files/documents/",acreage_urls$url)
+# Update relative legacy paths, preserving complete URLs (including the intact
+# September 2012 archive on USDA's legacy host).
+acreage_urls$url <- gsub("^/Assets/USDA-FSA-Public/usdafiles/NewsRoom/eFOIA/crop-acre-data/zips/+[0-9]+-crop-acre-data/","https://www.fsa.usda.gov/sites/default/files/documents/",acreage_urls$url)
 
 # add prefix to urls (this can be updated if it ever chagnes)
 #acreage_urls$url <- paste0("https://www.fsa.usda.gov",acreage_urls$url)
@@ -74,8 +75,8 @@ for(i in 1:nrow(acreage_urls)){
 # download the intended use codes
 # Not necessary, but may be helpful to reference.
 # can be wrapped in a try statement since failure isn't critical
-try({
-  download.file("https://www.fsa.usda.gov/Assets/USDA-FSA-Public/usdafiles/NewsRoom/eFOIA/crop-acre-data/pdfs/intended_use_codes.pdf",
+if(!file.exists("./Raw_Data/intended_use_codes.pdf")) try({
+  download.file("https://www.fsa.usda.gov/sites/default/files/documents/intended_use_codes.pdf",
                 destfile=paste0("./Raw_Data/","intended_use_codes.pdf"),mode="wb")
 })
 
@@ -117,6 +118,12 @@ for(i in unique(acreage_urls$date)){
     names(acres) <- tolower(gsub(" ","_",names(acres)))
     names(acres) <- gsub("crop_codes","crop_code",names(acres))
     names(acres) <- gsub("state_county_code","fips",names(acres))
+    # FSA misspelled this header in September/October 2012 and January 2013.
+    names(acres)[names(acres) == "failded_acres"] <- "failed_acres"
+
+    # The 2012 files use literal NULL for missing types. Normalize before the
+    # crop-name fallback so labels such as COTTON- Upland retain their type.
+    acres$crop_type[toupper(trimws(acres$crop_type)) %in% "NULL"] <- NA_character_
 
     # clean the state and county codes
     acres$state_cd <- stringr::str_pad(as.numeric(as.character(acres$state_code)),2,pad="0")
@@ -347,7 +354,7 @@ fsaCropAcreage <- fsaCropAcreage %>% filter(crop %in% expanded_covered_commoditi
 fsaCropAcreage$fsa_crop_type[which(!fsaCropAcreage$crop %in% c("rice","chickpeas","cotton"))] <- NA
 
 
-View(distinct(fsaCropAcreage  %>% select(crop, fsa_crop_type)) )
+if(interactive()) View(distinct(fsaCropAcreage %>% select(crop, fsa_crop_type)))
 
 # filter to neccesary columns and apply some more cleaning opperations
 fsaCropAcreage <- fsaCropAcreage %>%
@@ -375,7 +382,7 @@ fsaCropAcreage$rma_type_code <- unlist(lapply(paste(fsaCropAcreage$crop,fsaCropA
 
 # export the final fsaCropAcreage for covered commodities dataset -----------------------------------------
 
-View(distinct(fsaCropAcreage %>% select(crop, crop_type, rma_crop_code, rma_type_code)))
+if(interactive()) View(distinct(fsaCropAcreage %>% select(crop, crop_type, rma_crop_code, rma_type_code)))
 
 # convert the data to a tibble
 fsaCropAcreageCC <- dplyr::as_tibble(fsaCropAcreage)
@@ -385,12 +392,6 @@ saveRDS(fsaCropAcreageCC, file = "./fsaCropAcreageCC.rds")
 
 # use the county level file in the package data folder
 usethis::use_data(fsaCropAcreageCC, overwrite = TRUE)
-
-
-
-
-
-
 
 
 

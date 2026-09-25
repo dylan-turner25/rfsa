@@ -36,6 +36,12 @@ total planted acres in each county that consist of covered commodities. Covered
 commodities are those eligible for ARC and PLC programs and include major crops
 like corn, soybeans, wheat, cotton, rice, and others.
 
+Coverage begins with crop year 2012. FSA's Not Planted reporting category was
+available in 2011 and 2012 only. Because the denominator uses reported planted
+acres, the reporting change affects comparisons of 2012 shares with later
+years. The source categories are preserved without reallocating not-planted
+acres to planted acres. See \code{fsaCropAcreage} for details.
+
 The covered commodity share can be used as an indicator of:
 \itemize{
 \item Program exposure at the county level
