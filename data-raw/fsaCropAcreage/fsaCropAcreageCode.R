@@ -27,7 +27,7 @@ acreage_urls <- readxl::read_xlsx("./fsa_acreage_urls.xlsx")
 acreage_urls$date <- as.Date(acreage_urls$date, origin = "1970-01-01")
 
 # remove any missing observations (there should't be any)
-acreage_urls <- acreage_urls %>% na.omit()
+acreage_urls <- acreage_urls %>% na.omit() %>% distinct()
 
 # fix old urls to be in the format of new FSA website structure
 acreage_urls$url <- gsub("/Assets/USDA-FSA-Public/usdafiles/NewsRoom/eFOIA/crop-acre-data/zips/+[0-9]+-crop-acre-data/","https://www.fsa.usda.gov/sites/default/files/documents/",acreage_urls$url)
@@ -96,6 +96,11 @@ for(i in unique(acreage_urls$date)){
     year <- meta_data$year
     if(meta_data$month == 1){
       year <- year - 1 # adjust to previous year if month is january
+    }
+
+    # Reject a workbook from the wrong crop year before assigning release metadata.
+    if(!grepl(paste0("(^|[^0-9])", year, "_fsa_acres"), basename(meta_data$file_name), ignore.case = TRUE)){
+      stop("Workbook crop year does not match release metadata: ", meta_data$file_name)
     }
 
     # load the acreage file
