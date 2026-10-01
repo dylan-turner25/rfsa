@@ -54,8 +54,11 @@
 #'   payments are scaled on by the additional base acres allocated under the 2026
 #'   OBBBA base-acre update (from \code{\link{fsaUpdatedBaseAcres}}). The
 #'   additional base is added only for program years >= 2026, distributed across
-#'   crop types in proportion to each county-crop's enrolled base and inheriting
-#'   its ARC-CO/PLC election split. Default FALSE (existing base only).
+#'   rows in proportion to each county-crop's enrolled base and inheriting its
+#'   ARC-CO/PLC election split. A county-crop with no enrolled base takes the
+#'   state-crop election split (50/50 if none) and is flagged in the
+#'   \code{base_split_imputed} column. Additional base on county-crops with no
+#'   panel row is dropped with a warning. Default FALSE (existing base only).
 #' @param base_acre_scenario Character scalar. Which base-acre update scenario to
 #'   use when \code{updated_base_acres = TRUE}; one of the scenarios in
 #'   \code{\link{fsaUpdatedBaseAcres}} ("s1"-"s8"). Default "s1" (main scenario).
@@ -280,6 +283,10 @@ calc_arc_plc_payments <- function(data = NULL,
     data <- setup_fb18_parameters(data)
   }
 
+  # Unfiltered panel, for the state-crop election shares and the unmatched
+  # check of the base-acre update below
+  full_data <- data
+
   # Filter data by location parameters
   if (!is.null(fips)) {
     data <- data %>% filter(fips %in% !!fips)
@@ -359,12 +366,16 @@ calc_arc_plc_payments <- function(data = NULL,
   # When updated_base_acres = TRUE, expand the enrolled base that payments are
   # scaled on by the additional base acres allocated under the OBBBA base-acre
   # update (effective the 2026 crop year). The additional base is a county x crop
-  # figure (fsaUpdatedBaseAcres); distribute it across the crop_type rows of each
+  # figure (fsaUpdatedBaseAcres); distribute it across the rows of each
   # fips x crop x program_year in proportion to each row's enrolled base, which
-  # also inherits the existing ARC-CO/PLC election split. Because we modify the
-  # enrolled_base_* columns in place, both the multi-parameter and single-
-  # parameter payment paths (and both scaling sites) pick it up unchanged. With
-  # the default (FALSE) this block is skipped and behavior is unchanged.
+  # also inherits the existing ARC-CO/PLC election split. A county-crop with no
+  # enrolled base takes the state-crop ARC-CO/PLC split for that year (50/50 if
+  # the state has none), spread over its rows by base acres, else over its
+  # benchmarked rows, else evenly; those rows are flagged base_split_imputed.
+  # Because we modify the enrolled_base_* columns in place, both the
+  # multi-parameter and single-parameter payment paths (and both scaling sites)
+  # pick it up unchanged. With the default (FALSE) this block is skipped and
+  # behavior is unchanged.
   if (isTRUE(updated_base_acres)) {
     data("fsaUpdatedBaseAcres", envir = environment())
     valid_scenarios <- unique(fsaUpdatedBaseAcres$scenario)
@@ -378,30 +389,75 @@ calc_arc_plc_payments <- function(data = NULL,
       select(fips, crop, additional_base_acres) %>%
       mutate(fips = as.numeric(fips))
 
-    data <- data %>%
+    full_data <- full_data %>%
       mutate(fips = as.numeric(fips)) %>%
+      filter(crop %in% !!crop, program_year %in% !!program_year)
+
+    # warn about additional base on county-crops with no panel row, within the
+    # requested geography
+    scope_fips <- unique(as.numeric(data$fips))
+    for (yr in program_year[program_year >= 2026]) {
+      unmatched <- updated_base %>%
+        filter(crop %in% !!crop) %>%
+        anti_join(full_data %>% filter(program_year == yr) %>% distinct(fips, crop),
+                  by = c("fips", "crop"))
+      if (!is.null(fips) || !is.null(county)) {
+        unmatched <- unmatched %>% filter(fips %in% scope_fips)
+      } else if (!is.null(state)) {
+        unmatched <- unmatched %>% filter(fips %/% 1000 %in% unique(scope_fips %/% 1000))
+      }
+      if (nrow(unmatched) > 0 && !quiet) {
+        cli::cli_warn(c(
+          "{format(round(sum(unmatched$additional_base_acres)), big.mark = ',')} additional base acres in {nrow(unmatched)} county-crop{?s} have no {yr} panel row and are dropped.",
+          "i" = "Crops: {paste(sort(unique(unmatched$crop)), collapse = ', ')}"))
+      }
+    }
+
+    # state x crop x year ARC-CO share of enrolled base, from the unfiltered panel
+    state_arc_share <- full_data %>%
+      group_by(.state_fips = fips %/% 1000, crop, program_year) %>%
+      summarize(
+        .state_arc_share = sum(enrolled_base_ARCCO, na.rm = TRUE) /
+          sum(enrolled_base_ARCCO + enrolled_base_PLC, na.rm = TRUE),
+        .groups = "drop")
+
+    data <- data %>%
+      mutate(fips = as.numeric(fips), .state_fips = fips %/% 1000) %>%
       left_join(updated_base, by = c("fips", "crop")) %>%
+      left_join(state_arc_share, by = c(".state_fips", "crop", "program_year")) %>%
       # OBBBA base expansion applies to the 2026 crop year onward; no additional
       # base (and no match) means zero.
-      mutate(additional_base_acres = ifelse(
-        is.na(additional_base_acres) | program_year < 2026, 0, additional_base_acres)) %>%
+      mutate(
+        additional_base_acres = ifelse(
+          is.na(additional_base_acres) | program_year < 2026, 0, additional_base_acres),
+        .state_arc_share = ifelse(is.finite(.state_arc_share), .state_arc_share, 0.5)) %>%
       group_by(fips, crop, program_year) %>%
       mutate(
         .grp_enrolled = sum(enrolled_base_ARCCO + enrolled_base_PLC, na.rm = TRUE),
-        .n_grp = dplyr::n(),
-        # Row share of the county x crop additional base, weighted by enrolled
-        # base; even split across crop_type rows if the group has no enrolled base.
-        enrolled_base_ARCCO = enrolled_base_ARCCO + dplyr::if_else(
+        # fallback weights for a group with no enrolled base
+        .w = dplyr::case_when(
+          sum(base_acres, na.rm = TRUE) > 0 ~ dplyr::coalesce(base_acres, 0),
+          any(!is.na(oa_bench_mark_yield)) ~ as.numeric(!is.na(oa_bench_mark_yield)),
+          TRUE ~ 1),
+        .fallback_add = additional_base_acres * .w / sum(.w),
+        .add_ARCCO = dplyr::if_else(
           .grp_enrolled > 0,
-          additional_base_acres * enrolled_base_ARCCO / .grp_enrolled,
-          additional_base_acres / .n_grp / 2),
-        enrolled_base_PLC = enrolled_base_PLC + dplyr::if_else(
+          additional_base_acres * dplyr::coalesce(enrolled_base_ARCCO, 0) / .grp_enrolled,
+          .fallback_add * .state_arc_share),
+        .add_PLC = dplyr::if_else(
           .grp_enrolled > 0,
-          additional_base_acres * enrolled_base_PLC / .grp_enrolled,
-          additional_base_acres / .n_grp / 2)
+          additional_base_acres * dplyr::coalesce(enrolled_base_PLC, 0) / .grp_enrolled,
+          .fallback_add * (1 - .state_arc_share)),
+        base_split_imputed = .grp_enrolled == 0 & .fallback_add > 0,
+        # a missing enrollment counts as zero only where base is added
+        enrolled_base_ARCCO = dplyr::if_else(
+          .add_ARCCO > 0, dplyr::coalesce(enrolled_base_ARCCO, 0) + .add_ARCCO, enrolled_base_ARCCO),
+        enrolled_base_PLC = dplyr::if_else(
+          .add_PLC > 0, dplyr::coalesce(enrolled_base_PLC, 0) + .add_PLC, enrolled_base_PLC)
       ) %>%
       ungroup() %>%
-      select(-additional_base_acres, -.grp_enrolled, -.n_grp)
+      select(-additional_base_acres, -.state_fips, -.state_arc_share, -.grp_enrolled,
+             -.w, -.fallback_add, -.add_ARCCO, -.add_PLC)
   }
 
   # Validate price parameter

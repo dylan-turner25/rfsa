@@ -83,8 +83,11 @@ Requires state to also be specified.}
 payments are scaled on by the additional base acres allocated under the 2026
 OBBBA base-acre update (from \code{\link{fsaUpdatedBaseAcres}}). The
 additional base is added only for program years >= 2026, distributed across
-crop types in proportion to each county-crop's enrolled base and inheriting
-its ARC-CO/PLC election split. Default FALSE (existing base only).}
+rows in proportion to each county-crop's enrolled base and inheriting its
+ARC-CO/PLC election split. A county-crop with no enrolled base takes the
+state-crop election split (50/50 if none) and is flagged in the
+\code{base_split_imputed} column. Additional base on county-crops with no
+panel row is dropped with a warning. Default FALSE (existing base only).}
 
 \item{base_acre_scenario}{Character scalar. Which base-acre update scenario to
 use when \code{updated_base_acres = TRUE}; one of the scenarios in

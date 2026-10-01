@@ -9,6 +9,7 @@ utils::globalVariables(c(
   "fsaPlcYields",
   "fsaArcCoBenchmarks",
   "fsaArcPlcData",
+  "fsaUpdatedBaseAcres",
 
   # Column names from datasets
   "current_mya_price",
@@ -29,6 +30,16 @@ utils::globalVariables(c(
   "enrolled_base_ARCCO",
   "final_payment",
   "sequestration_rate",
+  "scenario",
+  "additional_base_acres",
+  "base_acres",
+  ".grp_enrolled",
+  ".state_fips",
+  ".state_arc_share",
+  ".w",
+  ".fallback_add",
+  ".add_ARCCO",
+  ".add_PLC",
 
   # dplyr/tidyverse variables
   ".data",

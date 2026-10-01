@@ -640,3 +640,55 @@ test_that("payment_type = 'sum' equals plc + arc", {
   expect_equal(get("sum"), get("plc") + get("arc"))
   expect_equal(get("sum"), tot("sum")$total_payment)
 })
+
+test_that("updated_base_acres adds the scenario's base, less unmatched county-crops", {
+  data("fsaUpdatedBaseAcres", envir = environment())
+  data("fsaArcPlcData", envir = environment())
+  ub <- fsaUpdatedBaseAcres %>%
+    dplyr::filter(scenario == "s1") %>%
+    dplyr::mutate(fips = as.numeric(fips))
+  unmatched <- ub %>%
+    dplyr::anti_join(fsaArcPlcData %>%
+                       dplyr::filter(program_year == 2026) %>%
+                       dplyr::distinct(fips = as.numeric(fips), crop),
+                     by = c("fips", "crop"))
+  enrolled <- function(r) {
+    sum(r$enrolled_base_ARCCO, na.rm = TRUE) + sum(r$enrolled_base_PLC, na.rm = TRUE)
+  }
+
+  base <- calc_arc_plc_payments(program_year = 2026, aggregate_level = "none",
+                                quiet = TRUE)
+  expect_warning(
+    updated <- calc_arc_plc_payments(program_year = 2026, aggregate_level = "none",
+                                     updated_base_acres = TRUE),
+    if (nrow(unmatched) > 0) "no 2026 panel row" else NA)
+
+  expect_equal(enrolled(updated) - enrolled(base),
+               sum(ub$additional_base_acres) - sum(unmatched$additional_base_acres),
+               tolerance = 1e-6)
+  expect_equal(nrow(updated), nrow(base))
+})
+
+test_that("updated_base_acres places base on county-crops with no enrollment", {
+  data("fsaUpdatedBaseAcres", envir = environment())
+  data("fsaArcPlcData", envir = environment())
+  no_enrollment <- fsaArcPlcData %>%
+    dplyr::filter(program_year == 2026) %>%
+    dplyr::group_by(fips = as.numeric(fips), crop) %>%
+    dplyr::filter(all(is.na(enrolled_base_ARCCO) & is.na(enrolled_base_PLC))) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(fips, crop) %>%
+    dplyr::inner_join(fsaUpdatedBaseAcres %>%
+                        dplyr::filter(scenario == "s1", additional_base_acres > 0) %>%
+                        dplyr::mutate(fips = as.numeric(fips)),
+    dplyr::slice(1)
+  skip_if(nrow(no_enrollment) == 0, "every county-crop with additional base has enrollment")
+
+  r <- calc_arc_plc_payments(program_year = 2026, crop = no_enrollment$crop,
+                             fips = no_enrollment$fips, aggregate_level = "none",
+                             updated_base_acres = TRUE, quiet = TRUE)
+  expect_equal(sum(r$enrolled_base_ARCCO, na.rm = TRUE) +
+                 sum(r$enrolled_base_PLC, na.rm = TRUE),
+               no_enrollment$additional_base_acres, tolerance = 1e-6)
+  expect_true(any(r$base_split_imputed))
+})
