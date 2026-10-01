@@ -241,10 +241,28 @@ arc_co_benchmarks <- arc_co_benchmarks %>%
   mutate(across(c("actual_yield","national_price","actual_revenue","formula_payment_rate"), as.numeric))
 
 # aggregate to remove missing values for duplicate rows
+# Collapse on the true key only. FSA's files spell some county names two ways
+# (DeKalb/Dekalb) and label unit and county_yield_type inconsistently, so
+# grouping on those labels left duplicate keys whose enrolled base the panel
+# build then counted twice. Labels come from the most complete row.
+benchmark_key <- c("fips", "crop", "crop_type", "yield_type", "program_year")
 arc_co_benchmarks <- arc_co_benchmarks %>%
-  group_by(fips, state_name, county_name, crop, unit, yield_type, program_year,
-           oa_bench_mark_years, rma_crop_code, rma_type_code, crop_type, county_yield_type) %>%
-  summarise(across(where(is.numeric), ~ mean(.x, na.rm = TRUE)), .groups = "drop")
+  mutate(.n_values = rowSums(!is.na(across(where(is.numeric))))) %>%
+  group_by(across(all_of(benchmark_key))) %>%
+  arrange(desc(.n_values), .by_group = TRUE) %>%
+  summarise(
+    across(where(is.character), first),
+    across(where(is.numeric) & !".n_values", ~ mean(.x, na.rm = TRUE)),
+    .groups = "drop"
+  )
+
+dup_keys <- arc_co_benchmarks %>%
+  count(across(all_of(benchmark_key))) %>%
+  filter(n > 1)
+if (nrow(dup_keys) > 0) {
+  stop(nrow(dup_keys), " duplicate fips-crop-crop_type-yield_type-year keys ",
+       "remain in fsaArcCoBenchmarks")
+}
 
 # replace all NaN with NA
 arc_co_benchmarks <- arc_co_benchmarks %>%

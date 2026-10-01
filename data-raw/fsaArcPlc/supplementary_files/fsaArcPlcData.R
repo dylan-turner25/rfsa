@@ -62,8 +62,12 @@ data <- left_join(data, benchmarks)
 # merge in plc yield
 # PLC yields are fixed farm attributes; carry the latest published year forward
 # to future program years until FSA releases updated yield files
+# one row per key: a county listed under two names (e.g. Henrico /
+# Henrico-Richmond City, VA in 2024-2025) gets the average of its PLC yields
 plc_yields <- fsaPlcYields %>%
-  select(fips, crop, crop_type, plc_yield, program_year) %>%
+  group_by(fips, crop, crop_type, program_year) %>%
+  summarize(plc_yield = mean(plc_yield, na.rm = TRUE), .groups = "drop") %>%
+  mutate(plc_yield = ifelse(is.nan(plc_yield), NA, plc_yield)) %>%
   extend_to_skeleton_years()
 data <- left_join(data, plc_yields)
 
@@ -236,8 +240,11 @@ data <- left_join(data, base)
 # For program years where elections have not yet occurred, carry forward the
 # most recent year's ARC/PLC elections as the pre-election assumption
 # (i.e. producers are assumed to keep their existing elections)
+# distinct() drops repeat records of one county listed under two names
+# (e.g. Henrico / Henrico-Richmond City, VA in 2023-2024)
 enrolled_base <- fsaEnrolledCountyBaseAcres %>%
   select(fips, program_year, crop, crop_type, contains("enrolled")) %>%
+  distinct() %>%
   extend_to_skeleton_years()
 
 data <- left_join(data, enrolled_base)
@@ -352,32 +359,66 @@ data <- data %>%
     )
   )
 
-# adjust base acres by irrigation status (vectorized)
+# adjust base acres by irrigation status
+# Base and enrollment are county x crop figures, joined in full onto every
+# yield_type row of a county-crop-year, so only one representation may carry
+# them. FSA's benchmark files sometimes list All alongside Irrigated and
+# Nonirrigated rows, with only one of the two benchmarked (2020-2024 has
+# blank split rows next to a benchmarked All row). Base goes to whichever rows
+# FSA benchmarked that year: the split rows if any has a benchmark, otherwise
+# the All row, otherwise (no All row) the split rows. Split rows then share the
+# base by planted share, rescaled over the split rows present so a county with
+# only one split row keeps all of its base. Rows with no yield_type keep theirs.
 data <- data %>%
+  group_by(fips, crop, crop_type, program_year) %>%
   mutate(
-    base_acres = case_when(
-      yield_type == "Nonirrigated" ~ base_acres * planted_non_irrigated_share,
-      yield_type == "Irrigated" ~ base_acres * planted_irrigated_share,
-      TRUE ~ base_acres
+    .is_split = yield_type %in% c("Irrigated", "Nonirrigated"),
+    .split_bm = any(.is_split & !is.na(oa_bench_mark_yield)),
+    .has_all = any(yield_type %in% "All"),
+    .carries = case_when(
+      is.na(yield_type) ~ TRUE,
+      .is_split ~ .split_bm | !.has_all,
+      TRUE ~ !.split_bm
     ),
-    enrolled_base_ARCCO = case_when(
-      yield_type == "Nonirrigated" ~
-        enrolled_base_ARCCO * planted_non_irrigated_share,
-      yield_type == "Irrigated" ~ enrolled_base_ARCCO * planted_irrigated_share,
-      TRUE ~ enrolled_base_ARCCO
+    .share = case_when(
+      yield_type == "Irrigated" ~ planted_irrigated_share,
+      yield_type == "Nonirrigated" ~ planted_non_irrigated_share,
+      TRUE ~ 1
     ),
-    enrolled_base_PLC = case_when(
-      yield_type == "Nonirrigated" ~
-        enrolled_base_PLC * planted_non_irrigated_share,
-      yield_type == "Irrigated" ~ enrolled_base_PLC * planted_irrigated_share,
-      TRUE ~ enrolled_base_PLC
-    )
-  )
+    .split_total = sum(.share[.is_split & .carries]),
+    .n_split = sum(.is_split & .carries),
+    # even split if planted shares are missing or zero
+    .share = case_when(
+      !.carries ~ 0,
+      !.is_split ~ 1,
+      is.na(.split_total) | .split_total == 0 ~ 1 / .n_split,
+      TRUE ~ .share / .split_total
+    ),
+    .src_enrolled = first(enrolled_base_ARCCO + enrolled_base_PLC),
+    base_acres = base_acres * .share,
+    enrolled_base_ARCCO = enrolled_base_ARCCO * .share,
+    enrolled_base_PLC = enrolled_base_PLC * .share
+  ) %>%
+  ungroup()
 
+# each county-crop-year must carry its enrolled base exactly once
+base_check <- data %>%
+  filter(!is.na(yield_type)) %>%
+  group_by(fips, crop, crop_type, program_year) %>%
+  summarize(
+    src = first(.src_enrolled),
+    panel = sum(enrolled_base_ARCCO + enrolled_base_PLC),
+    .groups = "drop"
+  ) %>%
+  filter(!is.na(src), abs(panel - src) > 0.01)
+if (nrow(base_check) > 0) {
+  stop(nrow(base_check), " county-crop-years carry enrolled base more or ",
+       "less than once after the irrigation split")
+}
 
-test <- data %>%
-  group_by(program_year, crop, crop_type) %>%
-  summarize(across(contains("base"), sum, na.rm = TRUE), .groups = "drop")
+data <- data %>%
+  select(-.is_split, -.split_bm, -.has_all, -.carries, -.share,
+         -.split_total, -.n_split, -.src_enrolled)
 
 
 
