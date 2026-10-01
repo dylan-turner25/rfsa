@@ -681,6 +681,7 @@ test_that("updated_base_acres places base on county-crops with no enrollment", {
     dplyr::inner_join(fsaUpdatedBaseAcres %>%
                         dplyr::filter(scenario == "s1", additional_base_acres > 0) %>%
                         dplyr::mutate(fips = as.numeric(fips)),
+                      by = c("fips", "crop")) %>%
     dplyr::slice(1)
   skip_if(nrow(no_enrollment) == 0, "every county-crop with additional base has enrollment")
 
@@ -691,4 +692,44 @@ test_that("updated_base_acres places base on county-crops with no enrollment", {
                  sum(r$enrolled_base_PLC, na.rm = TRUE),
                no_enrollment$additional_base_acres, tolerance = 1e-6)
   expect_true(any(r$base_split_imputed))
+})
+
+test_that("ERP from MYA lags 2-6 equals the published ERP under the published policy", {
+  data("fsaArcPlcData", envir = environment())
+  d <- fsaArcPlcData %>%
+    dplyr::filter(program_year >= 2019, !is.na(effective_reference_price),
+                  # flaxseed 2026 statutory price is issue #9
+                  !(crop == "flaxseed" & program_year >= 2026)) %>%
+    setup_fb18_parameters() %>%
+    setup_obbb_parameters()
+  prices <- arc_plc_price_matrix(d)
+
+  # FSA published 2019-2025 under the 2018 Farm Bill and 2026 under the OBBBA
+  fb <- d$program_year <= 2025
+  erp_fb18 <- calc_policy_erp(prices[fb, ], d$fb18_srps[fb], 0.85, 1.15,
+                              d$crop[fb], d$crop_type[fb], d$program_year[fb])
+  erp_obbb <- calc_policy_erp(prices[!fb, ], d$obbb_srps[!fb], 0.88, 1.15,
+                              d$crop[!fb], d$crop_type[!fb], d$program_year[!fb])
+
+  expect_equal(erp_fb18, d$effective_reference_price[fb], tolerance = 1e-9)
+  expect_equal(erp_obbb, d$effective_reference_price[!fb], tolerance = 1e-9)
+})
+
+test_that("the fb18 ERP for 2026 does not inherit the OBBBA benchmark-price floor", {
+  data("fsaArcPlcData", envir = environment())
+  wheat <- fsaArcPlcData %>%
+    dplyr::filter(crop == "wheat", program_year == 2026,
+                  !is.na(final_mya_price_lag2)) %>%
+    dplyr::slice(1) %>%
+    setup_fb18_parameters()
+  mya <- c(wheat$final_mya_price_lag2, wheat$final_mya_price_lag3,
+           wheat$final_mya_price_lag4, wheat$final_mya_price_lag5,
+           wheat$final_mya_price_lag6)
+
+  erp <- calc_policy_erp(arc_plc_price_matrix(wheat), wheat$fb18_srps, 0.85, 1.15,
+                         wheat$crop, wheat$crop_type, wheat$program_year)
+  expected <- round(calc_effective_reference_price(mya, 5.50, 0.85, 1.15), 2)
+  expect_equal(erp, expected)
+  # the OBBBA wheat statutory price, which floors FSA's 2026 benchmark prices
+  expect_lt(erp, 6.35)
 })
