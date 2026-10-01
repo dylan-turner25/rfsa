@@ -32,6 +32,11 @@ unique_years <- data %>%
 # create a data frame that is every combination of unique fips, crop, yield_type, and year
 data <- tidyr::crossing(unique_fips, unique_crops, unique_years)
 
+# marketing year goes on the skeleton itself so the price joins below match
+# county-crops that FSA did not benchmark that year (PLC needs no benchmark)
+data <- data %>%
+  mutate(marketing_year = paste0(program_year, "-", program_year + 1))
+
 # Carry the most recent observed year of a source table forward to any program
 # years present in the data skeleton but missing from the source. Used for
 # slow-moving farm attributes (PLC yields, base acres) and for pre-election
@@ -419,6 +424,17 @@ if (nrow(base_check) > 0) {
 data <- data %>%
   select(-.is_split, -.split_bm, -.has_all, -.carries, -.share,
          -.split_total, -.n_split, -.src_enrolled)
+
+# every row with PLC enrolled base needs an MYA price, benchmarked or not
+plc_check <- data %>%
+  filter(coalesce(enrolled_base_PLC, 0) > 0)
+if (any(is.na(plc_check$current_mya_price))) {
+  stop(sum(is.na(plc_check$current_mya_price)), " rows with PLC enrolled ",
+       "base have no MYA price")
+}
+# missing PLC yields are left to the yield fallbacks; report them here
+message(sum(is.na(plc_check$plc_yield)), " rows with PLC enrolled base ",
+        "have no PLC yield")
 
 
 
