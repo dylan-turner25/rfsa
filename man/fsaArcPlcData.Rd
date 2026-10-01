@@ -61,10 +61,10 @@ A data frame with comprehensive variables for ARC/PLC analysis:
 \item{planted_acres}{Successfully planted acres}
 \item{failed_acres}{Acres that failed after planting}
 \item{actual_revenue}{Actual revenue (actual_yield × national_price)}
-\item{actual_yield_5yr_avg}{Five-year average of actual yields used for imputation}
-\item{imputation_method}{Method used to impute missing yields (e.g., "state_5yr_avg", "national_5yr_avg", "not_imputed")}
-\item{nass_5yr_avg}{Five-year average of NASS yields used in imputation calculations}
-\item{nass_pct_change_applied}{Percentage change applied during yield imputation}
+\item{actual_yield_5yr_avg}{Average of FSA actual yields in the five prior program years (NA if fewer than three)}
+\item{imputation_method}{Source of \code{actual_yield}, in priority order: "not_imputed" (FSA published), "state_5yr_avg" and "national_5yr_avg" (own five-year average times the NASS state or national ratio), "benchmark_state" and "benchmark_national" (benchmark yield times the NASS ratio), "rma_yield" (RMA county yield), "benchmark_yield" (benchmark yield, unscaled), "missing" (no benchmark, so no ARC-CO payment)}
+\item{nass_5yr_avg}{Five-year average of the NASS yield used in the ratio}
+\item{nass_pct_change_applied}{NASS yield over its five-year average, minus one}
 \item{nass_yield_national}{National NASS yield for the crop and year}
 \item{nass_yield_state}{State-level NASS yield for the crop and year}
 \item{rma_detrended_yield}{RMA detrended yield amount}

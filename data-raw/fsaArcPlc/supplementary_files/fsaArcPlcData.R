@@ -528,7 +528,25 @@ nass_commodity_mapping <- list(
   rice = "RICE",
   peanuts = "PEANUTS",
   cotton = "COTTON",
-  oats = "OATS"
+  oats = "OATS",
+  sunflower = "SUNFLOWER",
+  canola = "CANOLA",
+  flaxseed = "FLAXSEED",
+  "dry peas" = "PEAS",
+  lentils = "LENTILS",
+  chickpeas = "CHICKPEAS",
+  safflower = "SAFFLOWER"
+)
+
+# NASS series to keep where a commodity has several (regex on short_desc).
+# Applied before picking the latest load so another series' later release
+# cannot crowd out the one we want. Green peas are in CWT; sunflower and
+# chickpeas also publish by-class series next to the all-class total.
+nass_series_filter <- list(
+  cotton = "UPLAND",
+  "dry peas" = "^PEAS, DRY EDIBLE - ",
+  sunflower = "^SUNFLOWER - ",
+  chickpeas = "^CHICKPEAS - "
 )
 
 #' Get National NASS Yields
@@ -555,7 +573,14 @@ get_nass_yields_national <- function(years = 2014:2026, commodity_mapping = nass
           year = years,
           agg_level_desc = "NATIONAL"
         ) %>%
-          filter(source_desc == "SURVEY") %>%
+          filter(source_desc == "SURVEY")
+
+        if (!is.null(nass_series_filter[[crop_name]])) {
+          yields <- yields %>%
+            filter(grepl(nass_series_filter[[crop_name]], short_desc))
+        }
+
+        yields <- yields %>%
           # Find most recent load_time for each year
           group_by(year) %>%
           filter(load_time == max(load_time, na.rm = TRUE)) %>%
@@ -568,11 +593,6 @@ get_nass_yields_national <- function(years = 2014:2026, commodity_mapping = nass
             commodity_desc = commodity,
             nass_yield_national = Value
           )
-
-        if(commodity == "COTTON"){
-          yields <- yields %>%
-            filter(grepl("upland", tolower(short_desc)))
-        }
 
         yields <- yields %>%
           select(crop, commodity_desc, year, nass_yield_national,short_desc) %>%
@@ -615,7 +635,14 @@ get_nass_yields_state <- function(years = 2014:2026, commodity_mapping = nass_co
           year = years,
           agg_level_desc = "STATE"
         ) %>%
-          filter(source_desc == "SURVEY") %>%
+          filter(source_desc == "SURVEY")
+
+        if (!is.null(nass_series_filter[[crop_name]])) {
+          yields <- yields %>%
+            filter(grepl(nass_series_filter[[crop_name]], short_desc))
+        }
+
+        yields <- yields %>%
           # Find most recent load_time for each year and state
           group_by(year, state_name) %>%
           filter(load_time == max(load_time, na.rm = TRUE)) %>%
@@ -628,11 +655,6 @@ get_nass_yields_state <- function(years = 2014:2026, commodity_mapping = nass_co
             commodity_desc = commodity,
             nass_yield_state = Value
           )
-
-        if(commodity == "COTTON"){
-          yields <- yields %>%
-            filter(grepl("upland", tolower(short_desc)))
-        }
 
         yields <- yields %>%
           select(crop, commodity_desc, state_name, year, nass_yield_state, short_desc) %>%
@@ -653,187 +675,112 @@ get_nass_yields_state <- function(years = 2014:2026, commodity_mapping = nass_co
 
 # Collect NASS yield data
 cat("Starting NASS yield data collection...\n")
-nass_yields_national <- get_nass_yields_national() %>%
+# five years before the first program year, for the NASS ratios
+nass_years <- (min(data$program_year, na.rm = TRUE) - 5):max(data$program_year, na.rm = TRUE)
+nass_yields_national <- get_nass_yields_national(years = nass_years) %>%
   mutate(year = as.integer(year)) %>%
   filter(!grepl("silage", tolower(short_desc))) %>%
   group_by(crop, year) %>%
   summarise(nass_yield_national = mean(nass_yield_national, na.rm = TRUE), .groups = 'drop')
 
-nass_yields_state <- get_nass_yields_state() %>%
+nass_yields_state <- get_nass_yields_state(years = nass_years) %>%
   mutate(year = as.integer(year)) %>%
   filter(!grepl("silage", tolower(short_desc))) %>%
   group_by(crop, state_name, year) %>%
   summarise(nass_yield_state = mean(nass_yield_state, na.rm = TRUE), .groups = 'drop')
 
-# For national yields - join by crop and program_year
-data <- data %>%
-  left_join(
-    nass_yields_national %>%
-      # Handle cotton special case - for cotton, use average of upland and pima
-      group_by(crop, year) %>%
-      summarise(nass_yield_national = mean(nass_yield_national, na.rm = TRUE), .groups = 'drop'),
-    by = c("crop", "program_year" = "year")
-  )
-
-# For state yields - join by crop, state_name, and program_year
-data <- data %>%
-  left_join(
-    nass_yields_state %>%
-      # Handle cotton special case - for cotton, use average of upland and pima
-      group_by(crop, state_name, year) %>%
-      summarise(nass_yield_state = mean(nass_yield_state, na.rm = TRUE), .groups = 'drop') %>%
-      mutate(state_name = str_to_title(state_name)),
-    by = c("crop", "state_name", "program_year" = "year")
-  )
-
-
-
-# NASS-based yield imputation using 5-year averages
-impute_yields_with_nass <- function(data, max_lookback = 5) {
-  cat("Starting NASS-based yield imputation using 5-year averages...\n")
-
-  # Sort data for proper lagging
-  data <- data %>%
-    arrange(fips, crop, crop_type, yield_type, program_year)
-
-  # Create lag variables for multiple years (only past data needed)
-  cat("Creating lag variables for", max_lookback, "years...\n")
-  for(i in 1:max_lookback) {
-    data <- data %>%
-      group_by(fips, crop, crop_type, yield_type) %>%
-      mutate(
-        !!paste0("actual_yield_lag", i) := lag(actual_yield, i),
-        !!paste0("nass_state_lag", i) := lag(nass_yield_state, i),
-        !!paste0("nass_national_lag", i) := lag(nass_yield_national, i)
-      ) %>%
-      ungroup()
-  }
-
-  # Store original actual_yield for tracking and initialize tracking columns
-  data_imputed <- data %>%
+# NASS ratio: a year's yield over its average in the five prior years, with
+# at least three of those years reported. Built from the NASS tables, not the
+# panel, so a row without earlier panel rows (e.g. a split row FSA first
+# benchmarks this year) still gets one.
+add_nass_ratio <- function(nass, value_col, keys) {
+  nass %>%
+    rename(.y = all_of(value_col)) %>%
+    group_by(across(all_of(keys))) %>%
     mutate(
-      original_actual_yield = actual_yield,
-      # Initialize tracking columns
-      yield_imputed = FALSE,
-      imputation_method = "not_imputed",
-      nass_pct_change_applied = NA_real_,
-      actual_yield_5yr_avg = NA_real_,
-      nass_5yr_avg = NA_real_,
-      years_used_in_avg = NA_real_
-    )
-
-  cat("Calculating 5-year averages...\n")
-
-  # Calculate 5-year averages for actual yields and NASS data
-  data_imputed <- data_imputed %>%
-    rowwise() %>%
-    mutate(
-      # Calculate 5-year average of actual yields (excluding NAs)
-      actual_yield_5yr_avg = mean(c(actual_yield_lag1, actual_yield_lag2, actual_yield_lag3,
-                                    actual_yield_lag4, actual_yield_lag5), na.rm = TRUE),
-      # Count how many years were used in the average
-      years_used_in_avg = sum(!is.na(c(actual_yield_lag1, actual_yield_lag2, actual_yield_lag3,
-                                       actual_yield_lag4, actual_yield_lag5))),
-      # Calculate 5-year average of state NASS yields
-      nass_state_5yr_avg = mean(c(nass_state_lag1, nass_state_lag2, nass_state_lag3,
-                                  nass_state_lag4, nass_state_lag5), na.rm = TRUE),
-      # Calculate 5-year average of national NASS yields
-      nass_national_5yr_avg = mean(c(nass_national_lag1, nass_national_lag2, nass_national_lag3,
-                                     nass_national_lag4, nass_national_lag5), na.rm = TRUE)
+      .n_prior = sapply(year, function(t) sum(year %in% (t - 5):(t - 1))),
+      .avg = sapply(year, function(t) mean(.y[year %in% (t - 5):(t - 1)])),
+      .avg = ifelse(.n_prior >= 3, .avg, NA_real_)
     ) %>%
     ungroup() %>%
-    # Handle cases where no data exists (mean of empty set returns NaN)
-    mutate(
-      actual_yield_5yr_avg = ifelse(is.nan(actual_yield_5yr_avg), NA, actual_yield_5yr_avg),
-      nass_state_5yr_avg = ifelse(is.nan(nass_state_5yr_avg), NA, nass_state_5yr_avg),
-      nass_national_5yr_avg = ifelse(is.nan(nass_national_5yr_avg), NA, nass_national_5yr_avg)
+    mutate(.ratio = .y / .avg) %>%
+    select(-.n_prior) %>%
+    rename(
+      !!value_col := .y,
+      !!paste0(value_col, "_5yr_avg") := .avg,
+      !!paste0(value_col, "_ratio") := .ratio
     )
-
-  cat("Applying imputation logic...\n")
-
-  # Find records that need imputation and have sufficient data
-  missing_indices <- which(
-    is.na(data_imputed$actual_yield) &
-      !is.na(data_imputed$actual_yield_5yr_avg) &
-      data_imputed$years_used_in_avg >= 3  # Require at least 3 years for reliable average
-  )
-
-  cat("Processing", length(missing_indices), "missing yield values...\n")
-
-  for(i in missing_indices) {
-    row_data <- data_imputed[i, ]
-    imputed <- FALSE
-
-    # Try state-level NASS comparison first (preferred method)
-    if (!is.na(row_data$nass_yield_state) && !is.na(row_data$nass_state_5yr_avg) && row_data$nass_state_5yr_avg > 0) {
-      pct_change <- (row_data$nass_yield_state - row_data$nass_state_5yr_avg) / row_data$nass_state_5yr_avg
-      imputed_yield <- row_data$actual_yield_5yr_avg * (1 + pct_change)
-
-      # Quality control: ensure positive yield
-      if (imputed_yield > 0) {
-        data_imputed$actual_yield[i] <- imputed_yield
-        data_imputed$yield_imputed[i] <- TRUE
-        data_imputed$imputation_method[i] <- "state_5yr_avg"
-        data_imputed$nass_pct_change_applied[i] <- pct_change
-        data_imputed$nass_5yr_avg[i] <- row_data$nass_state_5yr_avg
-        imputed <- TRUE
-      }
-    }
-
-    # If state-level failed, try national-level NASS comparison (fallback)
-    if (!imputed && !is.na(row_data$nass_yield_national) && !is.na(row_data$nass_national_5yr_avg) && row_data$nass_national_5yr_avg > 0) {
-      pct_change <- (row_data$nass_yield_national - row_data$nass_national_5yr_avg) / row_data$nass_national_5yr_avg
-      imputed_yield <- row_data$actual_yield_5yr_avg * (1 + pct_change)
-
-      # Quality control: ensure positive yield
-      if (imputed_yield > 0) {
-        data_imputed$actual_yield[i] <- imputed_yield
-        data_imputed$yield_imputed[i] <- TRUE
-        data_imputed$imputation_method[i] <- "national_5yr_avg"
-        data_imputed$nass_pct_change_applied[i] <- pct_change
-        data_imputed$nass_5yr_avg[i] <- row_data$nass_national_5yr_avg
-        imputed <- TRUE
-      }
-    }
-  }
-
-  # Clean up temporary lag columns
-  lag_cols <- paste0(rep(c("actual_yield_lag", "nass_state_lag", "nass_national_lag"), each = max_lookback), 1:max_lookback)
-  temp_cols <- c(lag_cols, "nass_state_5yr_avg", "nass_national_5yr_avg")
-
-  data_imputed <- data_imputed %>%
-    select(-all_of(temp_cols))
-
-  # Summary statistics
-  n_imputed <- sum(data_imputed$yield_imputed, na.rm = TRUE)
-  n_missing_before <- sum(is.na(data$original_actual_yield))
-  n_missing_after <- sum(is.na(data_imputed$actual_yield))
-  n_insufficient_data <- sum(is.na(data_imputed$actual_yield) &
-                               !is.na(data_imputed$original_actual_yield) == FALSE &
-                               data_imputed$years_used_in_avg < 3, na.rm = TRUE)
-
-  cat("Imputation complete:\n")
-  cat("  Records with missing yields (before):", n_missing_before, "\n")
-  cat("  Records successfully imputed:", n_imputed, "\n")
-  cat("  Records still missing (after):", n_missing_after, "\n")
-  cat("  Records with insufficient historical data (< 3 years):", n_insufficient_data, "\n")
-
-  # Method breakdown
-  if (n_imputed > 0) {
-    method_summary <- data_imputed %>%
-      filter(yield_imputed) %>%
-      count(imputation_method, sort = TRUE)
-    cat("  Imputation methods used:\n")
-    for(i in 1:nrow(method_summary)) {
-      cat("    ", method_summary$imputation_method[i], ":", method_summary$n[i], "records\n")
-    }
-  }
-
-  return(data_imputed %>% select(-original_actual_yield))
 }
 
-# Apply NASS-based imputation
-data <- impute_yields_with_nass(data, max_lookback = 5)
+nass_national <- nass_yields_national %>%
+  group_by(crop, year) %>%
+  summarise(nass_yield_national = mean(nass_yield_national, na.rm = TRUE), .groups = "drop") %>%
+  filter(!is.na(nass_yield_national)) %>%
+  add_nass_ratio("nass_yield_national", "crop")
+
+nass_state <- nass_yields_state %>%
+  mutate(state_name = str_to_title(state_name)) %>%
+  group_by(crop, state_name, year) %>%
+  summarise(nass_yield_state = mean(nass_yield_state, na.rm = TRUE), .groups = "drop") %>%
+  filter(!is.na(nass_yield_state)) %>%
+  add_nass_ratio("nass_yield_state", c("crop", "state_name"))
+
+data <- data %>%
+  left_join(nass_national, by = c("crop", "program_year" = "year")) %>%
+  left_join(nass_state, by = c("crop", "state_name", "program_year" = "year"))
+
+# Yield cascade. Where FSA published no actual yield, take the first of:
+#   1 state_5yr_avg       own 5-yr average of FSA actuals x NASS state ratio
+#   2 national_5yr_avg    own 5-yr average x NASS national ratio
+#   3 benchmark_state     FSA benchmark yield x NASS state ratio
+#   4 benchmark_national  FSA benchmark yield x NASS national ratio
+#   5 rma_yield           RMA county yield (below)
+#   6 benchmark_yield     FSA benchmark yield, unscaled (below)
+# Steps 1-2 need FSA actuals in at least three of the five prior program
+# years, matched by year rather than row position. Rows left without a yield
+# have no benchmark, so they cannot pay ARC-CO.
+data <- data %>%
+  arrange(fips, crop, crop_type, yield_type, program_year) %>%
+  group_by(fips, crop, crop_type, yield_type) %>%
+  mutate(
+    .lag1 = actual_yield[match(program_year - 1, program_year)],
+    .lag2 = actual_yield[match(program_year - 2, program_year)],
+    .lag3 = actual_yield[match(program_year - 3, program_year)],
+    .lag4 = actual_yield[match(program_year - 4, program_year)],
+    .lag5 = actual_yield[match(program_year - 5, program_year)]
+  ) %>%
+  ungroup() %>%
+  mutate(
+    years_used_in_avg = rowSums(!is.na(across(.lag1:.lag5))),
+    actual_yield_5yr_avg = ifelse(years_used_in_avg >= 3,
+                                  rowMeans(across(.lag1:.lag5), na.rm = TRUE),
+                                  NA_real_),
+    imputation_method = case_when(
+      !is.na(actual_yield) ~ "not_imputed",
+      !is.na(actual_yield_5yr_avg) & !is.na(nass_yield_state_ratio) ~ "state_5yr_avg",
+      !is.na(actual_yield_5yr_avg) & !is.na(nass_yield_national_ratio) ~ "national_5yr_avg",
+      !is.na(oa_bench_mark_yield) & !is.na(nass_yield_state_ratio) ~ "benchmark_state",
+      !is.na(oa_bench_mark_yield) & !is.na(nass_yield_national_ratio) ~ "benchmark_national",
+      TRUE ~ "missing"
+    ),
+    nass_ratio = case_when(
+      imputation_method %in% c("state_5yr_avg", "benchmark_state") ~ nass_yield_state_ratio,
+      imputation_method %in% c("national_5yr_avg", "benchmark_national") ~ nass_yield_national_ratio
+    ),
+    nass_5yr_avg = case_when(
+      imputation_method %in% c("state_5yr_avg", "benchmark_state") ~ nass_yield_state_5yr_avg,
+      imputation_method %in% c("national_5yr_avg", "benchmark_national") ~ nass_yield_national_5yr_avg
+    ),
+    nass_pct_change_applied = nass_ratio - 1,
+    actual_yield = case_when(
+      imputation_method %in% c("state_5yr_avg", "national_5yr_avg") ~ actual_yield_5yr_avg * nass_ratio,
+      imputation_method %in% c("benchmark_state", "benchmark_national") ~ oa_bench_mark_yield * nass_ratio,
+      TRUE ~ actual_yield
+    )
+  ) %>%
+  select(-.lag1, -.lag2, -.lag3, -.lag4, -.lag5, -nass_ratio,
+         -nass_yield_state_5yr_avg, -nass_yield_state_ratio,
+         -nass_yield_national_5yr_avg, -nass_yield_national_ratio)
 
 #' Get RMA (Risk Management Agency) county yield data
 #'
@@ -1053,36 +1000,35 @@ rma_yields <- get_rma_county_yields(years = 2011:max(data$program_year, na.rm = 
 data <- data %>%
   left_join(rma_yields %>% mutate(fips = as.numeric(fips)), by = c("fips", "crop", "program_year"))
 
-# if actual yield is still missing, fill in with rma_yield_amount
+# cascade step 5: RMA county yield
 data <- data %>%
   mutate(
-    actual_yield = ifelse(
-      is.na(actual_yield) & !is.na(rma_yield_amount),
-      rma_yield_amount,
-      actual_yield
-    )
-  )
-
-
-# if actual yield is still missing, fill in with plc_yield
-data <- data %>%
-  mutate(
-    actual_yield = ifelse(
-      is.na(actual_yield) & !is.na(plc_yield),
-      plc_yield,
-      actual_yield
-    )
-  )
-
-
-# linearly interpolate any still missing actual_yields
-data <- data %>%
-  group_by(fips, crop, crop_type) %>%
-  arrange(fips, crop, crop_type, program_year) %>%
-  mutate(
-    actual_yield = zoo::na.approx(actual_yield, na.rm = FALSE, rule = 2)
+    .use = imputation_method == "missing" & !is.na(rma_yield_amount),
+    actual_yield = ifelse(.use, rma_yield_amount, actual_yield),
+    imputation_method = ifelse(.use, "rma_yield", imputation_method)
   ) %>%
-  ungroup()
+  select(-.use)
+
+# cascade step 6: FSA benchmark yield, unscaled (the county's expected yield)
+data <- data %>%
+  mutate(
+    .use = imputation_method == "missing" & !is.na(oa_bench_mark_yield),
+    actual_yield = ifelse(.use, oa_bench_mark_yield, actual_yield),
+    imputation_method = ifelse(.use, "benchmark_yield", imputation_method)
+  ) %>%
+  select(-.use) %>%
+  mutate(yield_imputed = !imputation_method %in% c("not_imputed", "missing"))
+
+print(count(data, imputation_method))
+
+# every row that can pay ARC-CO needs an actual yield
+arc_check <- data %>%
+  filter(coalesce(enrolled_base_ARCCO, 0) > 0, !is.na(oa_bench_mark_yield),
+         is.na(actual_yield))
+if (nrow(arc_check) > 0) {
+  stop(nrow(arc_check), " rows with ARC-CO base and a benchmark have no ",
+       "actual yield")
+}
 
 
 # fill in national_price with current_mya_price where missing
