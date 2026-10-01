@@ -12,11 +12,11 @@ A tibble with one row per crop, marketing year, and crop type (if applicable). V
 \item{publishing_dates_for_final_mya_price}{Date the final MYA and ARC-CO actual prices were published.}
 \item{unit}{Unit of measure for the commodity (e.g., Bushel, Pound).}
 \item{reference_price_combined}{Statutory reference price up untill effective reference prices were introduced (following 2018 farm bill), at which point effective reference prices are reported}
-\item{annual_benchmark_price_lag5}{Price from five years prior to the marketing year (T-5), used in ARC-CO benchmark calculation.}
-\item{annual_benchmark_price_lag4}{Price from four years prior (T-4), used in ARC-CO benchmark calculation.}
-\item{annual_benchmark_price_lag3}{Price from three years prior (T-3), used in ARC-CO benchmark calculation.}
-\item{annual_benchmark_price_lag2}{Price from two years prior (T-2), used in ARC-CO benchmark calculation.}
-\item{annual_benchmark_price_lag1}{Price from one year prior (T-1), used in ARC-CO benchmark calculation.}
+\item{annual_benchmark_price_lag5}{Benchmark price from 6 years before the program year (T-6; the column name understates the lag by one), floored at the program year's published effective reference price. Used in the ARC-CO benchmark price.}
+\item{annual_benchmark_price_lag4}{Benchmark price from 5 years before the program year (T-5; the column name understates the lag by one), floored at the program year's published effective reference price. Used in the ARC-CO benchmark price.}
+\item{annual_benchmark_price_lag3}{Benchmark price from 4 years before the program year (T-4; the column name understates the lag by one), floored at the program year's published effective reference price. Used in the ARC-CO benchmark price.}
+\item{annual_benchmark_price_lag2}{Benchmark price from 3 years before the program year (T-3; the column name understates the lag by one), floored at the program year's published effective reference price. Used in the ARC-CO benchmark price.}
+\item{annual_benchmark_price_lag1}{Benchmark price from 2 years before the program year (T-2; the column name understates the lag by one), floored at the program year's published effective reference price. Used in the ARC-CO benchmark price.}
 \item{current_arcco_benchmark_price}{ARC-CO benchmark price for the current marketing year (T-0).}
 \item{current_mya_price}{Marketing Year Average price for the current year (T-0).}
 \item{current_national_loan_rate}{National loan rate for the current marketing year.}

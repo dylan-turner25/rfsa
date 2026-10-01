@@ -558,14 +558,11 @@ calc_arc_plc_payments <- function(data = NULL,
         payment_trigger_level <- 0.86
       }
 
-      # Prepare historical prices matrix
-      historical_prices_matrix <- cbind(
-        combo_data$annual_benchmark_price_lag1,
-        combo_data$annual_benchmark_price_lag2,
-        combo_data$annual_benchmark_price_lag3,
-        combo_data$annual_benchmark_price_lag4,
-        combo_data$annual_benchmark_price_lag5
-      )
+      # Historic prices (MYA lags 2-6) and the ERP under this policy, shared by
+      # PLC and by the ARC-CO benchmark-price floor
+      historical_prices_matrix <- arc_plc_price_matrix(combo_data)
+      erp <- calc_policy_erp(historical_prices_matrix, combo_data[[srp_col]], oa_pct, cap,
+                             combo_data$crop, combo_data$crop_type, combo_data$program_year)
 
       # Calculate payments based on payment_type
       # Initialize columns to ensure consistent structure
@@ -578,7 +575,7 @@ calc_arc_plc_payments <- function(data = NULL,
           mya_price = combo_data$current_mya_price,
           historic_mya_prices = historical_prices_matrix,
           srp = combo_data[[srp_col]],
-          erp = NULL,
+          erp = erp,
           nmlr = combo_data[[nmlr_col]],
           plc_yield = combo_data$plc_yield,
           cov_lvl = 0.85,
@@ -603,6 +600,7 @@ calc_arc_plc_payments <- function(data = NULL,
           srp = combo_data[[srp_col]],
           oa_benchmark_yield = combo_data$oa_bench_mark_yield,
           nmlr = combo_data[[nmlr_col]],
+          erp = erp,
           historic_mya_prices = historical_prices_matrix,
           fips = combo_data$fips,
           quiet = quiet,
@@ -672,14 +670,11 @@ calc_arc_plc_payments <- function(data = NULL,
     payment_trigger_level <- 0.86
   }
 
-  # Prepare historical prices matrix
-  historical_prices_matrix <- cbind(
-    data$annual_benchmark_price_lag1,
-    data$annual_benchmark_price_lag2,
-    data$annual_benchmark_price_lag3,
-    data$annual_benchmark_price_lag4,
-    data$annual_benchmark_price_lag5
-  )
+  # Historic prices (MYA lags 2-6) and the ERP under this policy, shared by
+  # PLC and by the ARC-CO benchmark-price floor
+  historical_prices_matrix <- arc_plc_price_matrix(data)
+  erp <- calc_policy_erp(historical_prices_matrix, data[[srp_col]], oa_pct, cap,
+                         data$crop, data$crop_type, data$program_year)
 
   # Calculate payments based on payment_type
   if (payment_type %in% c("plc", "higher", "lower", "sum")) {
@@ -691,7 +686,7 @@ calc_arc_plc_payments <- function(data = NULL,
       mya_price = data$current_mya_price,
       historic_mya_prices = historical_prices_matrix,
       srp = data[[srp_col]],
-      erp = NULL,
+      erp = erp,
       nmlr = data[[nmlr_col]],
       plc_yield = data$plc_yield,
       cov_lvl = 0.85,
@@ -713,6 +708,7 @@ calc_arc_plc_payments <- function(data = NULL,
       srp = data[[srp_col]],
       oa_benchmark_yield = data$oa_bench_mark_yield,
       nmlr = data[[nmlr_col]],
+      erp = erp,
       historic_mya_prices = historical_prices_matrix,
       fips = data$fips,
       quiet = quiet,

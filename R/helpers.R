@@ -712,6 +712,62 @@ calc_effective_reference_price <- function(mya_prices, srp, oa_pct = 0.85, cap =
   return(erp)
 }
 
+#' Historic Price Matrix for ARC/PLC (Internal Function)
+#'
+#' Builds the five-column price matrix that sets the effective reference price
+#' and the ARC-CO benchmark price. The statute uses MYA prices lagged two to
+#' six years (2020-2024 for program year 2026), so rows with all of
+#' \code{final_mya_price_lag2..lag6} use those. FSA's
+#' \code{annual_benchmark_price_lag1..lag5} hold the same years but are already
+#' floored at the ERP of the policy FSA applied, so they are used only where the
+#' MYA lags are incomplete (program years before 2019).
+#'
+#' @param data Data frame with the MYA lag and benchmark price columns.
+#' @return Numeric matrix with five columns, one row per row of \code{data}.
+#' @keywords internal
+arc_plc_price_matrix <- function(data) {
+  bm <- cbind(data$annual_benchmark_price_lag1, data$annual_benchmark_price_lag2,
+              data$annual_benchmark_price_lag3, data$annual_benchmark_price_lag4,
+              data$annual_benchmark_price_lag5)
+  mya <- cbind(data$final_mya_price_lag2, data$final_mya_price_lag3,
+               data$final_mya_price_lag4, data$final_mya_price_lag5,
+               data$final_mya_price_lag6)
+  use_mya <- stats::complete.cases(mya)
+  bm[use_mya, ] <- mya[use_mya, ]
+  bm
+}
+
+#' Vectorized Effective Reference Price for a Policy (Internal Function)
+#'
+#' Computes the ERP for each row from its five historic prices under the given
+#' policy: the larger of the statutory reference price and \code{oa_pct} times
+#' the Olympic average, capped at \code{cap} times the statutory price. Results
+#' are rounded as FSA publishes them: four decimals for crops priced per pound
+#' (statutory price below 1) and for flaxseed, two decimals otherwise. Rows
+#' without five prices take the ERP of another row with the same crop, crop
+#' type and program year, else the statutory price.
+#'
+#' @param prices Numeric matrix with five columns (see \code{arc_plc_price_matrix}).
+#' @param srp Numeric vector of statutory reference prices.
+#' @param oa_pct Numeric. Share of the Olympic average compared with the statutory price.
+#' @param cap Numeric. Cap on the ERP as a multiple of the statutory price.
+#' @param crop,crop_type,program_year Vectors identifying each row.
+#' @return Numeric vector of effective reference prices.
+#' @keywords internal
+calc_policy_erp <- function(prices, srp, oa_pct, cap, crop, crop_type, program_year) {
+  olympic_avg <- (rowSums(prices) - apply(prices, 1, max) - apply(prices, 1, min)) / 3
+  erp <- pmin(pmax(srp, oa_pct * olympic_avg), cap * srp)
+  digits <- ifelse(srp < 1 | crop == "flaxseed", 4, 2)
+  # half up; the epsilon keeps exact halves such as 1.15 * 0.173 from rounding down
+  erp <- floor(erp * 10^digits + 0.5 + 1e-6) / 10^digits
+
+  erp <- dplyr::tibble(crop, crop_type, program_year, erp) %>%
+    dplyr::group_by(crop, crop_type, program_year) %>%
+    dplyr::mutate(erp = dplyr::coalesce(erp, dplyr::first(stats::na.omit(erp)))) %>%
+    dplyr::pull(erp)
+  dplyr::coalesce(erp, srp)
+}
+
 #' List asset names from the latest GitHub release
 #'
 #' Retrieves the metadata for the most recent release of the **rfsa** repository
