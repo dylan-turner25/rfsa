@@ -11,3 +11,6 @@ README_cache
 ^\.claude$
 ^\.DS_Store$
 ^CITATION\.cff$
+^ISSUE_TRACKER\.md$
+^KNOWN_ISSUES_.*\.md$
+^BUG_REPORT_.*\.md$

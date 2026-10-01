@@ -570,8 +570,8 @@ calc_arc_plc_payments <- function(data = NULL,
       } else if (combo$payment_type == "lower") {
         combo_data$final_payment <- pmin(combo_data$arc_payment_calc, combo_data$plc_payment_calc, na.rm = TRUE)
       } else if (combo$payment_type == "sum") {
-        combo_data$final_payment <- (combo_data$plc_payment_calc * combo_data$enrolled_base_PLC) +
-                                     (combo_data$arc_payment_calc * combo_data$enrolled_base_ARCCO)
+        combo_data$final_payment <- sum_arc_plc(combo_data$plc_payment_calc, combo_data$arc_payment_calc,
+                                                combo_data$enrolled_base_PLC, combo_data$enrolled_base_ARCCO)
       }
 
       # Add parameter metadata
@@ -677,8 +677,8 @@ calc_arc_plc_payments <- function(data = NULL,
   } else if (payment_type == "lower") {
     data$final_payment <- pmin(data$arc_payment_calc, data$plc_payment_calc, na.rm = TRUE)
   } else if (payment_type == "sum") {
-    data$final_payment <- (data$plc_payment_calc * data$enrolled_base_PLC) +
-                          (data$arc_payment_calc * data$enrolled_base_ARCCO)
+    data$final_payment <- sum_arc_plc(data$plc_payment_calc, data$arc_payment_calc,
+                                      data$enrolled_base_PLC, data$enrolled_base_ARCCO)
   }
 
   results <- data
@@ -760,3 +760,18 @@ aggregate_multi_param_results <- function(results, aggregate_level) {
   return(summary_results)
 }
 
+#' Helper function to sum PLC and ARC-CO dollars per row
+#'
+#' A program whose payment is missing (no rate or no enrolled acres) counts as
+#' zero, so it can't wipe out the other program's payment. The result is NA
+#' only when both programs are missing.
+#' @param plc_rate,arc_rate Per-base-acre payment rates
+#' @param plc_base,arc_base Enrolled base acres in PLC and ARC-CO
+#' @keywords internal
+sum_arc_plc <- function(plc_rate, arc_rate, plc_base, arc_base) {
+  plc <- plc_rate * plc_base
+  arc <- arc_rate * arc_base
+  out <- dplyr::coalesce(plc, 0) + dplyr::coalesce(arc, 0)
+  out[is.na(plc) & is.na(arc)] <- NA_real_
+  out
+}

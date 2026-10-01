@@ -597,3 +597,46 @@ test_that("'lower' works with sequestration rates", {
   # Should be exactly 94.3% of no sequestration (100% - 5.7%)
   expect_equal(result_with_seq, result_no_seq * 0.943, tolerance = 1e-8)
 })
+
+test_that("sum_arc_plc keeps one program's dollars when the other is missing", {
+  out <- sum_arc_plc(plc_rate = c(10, NA, 10, NA, 10),
+                     arc_rate = c(5, 5, NA, NA, 5),
+                     plc_base = c(100, 100, 100, 100, NA),
+                     arc_base = c(100, 100, 100, 100, 100))
+  expect_equal(out, c(1500, 500, 1000, NA, 500))
+})
+
+test_that("payment_type = 'sum' equals plc + arc", {
+  tot <- function(pt, ...) {
+    calc_arc_plc_payments(crop = "peanuts", program_year = 2020,
+                          policy_environment = "fb18", payment_type = pt,
+                          quiet = TRUE, ...)
+  }
+
+  # single-parameter path, total and county levels
+  expect_equal(tot("sum")$total_payment,
+               tot("plc")$total_payment + tot("arc")$total_payment)
+  expect_gt(tot("sum")$total_payment, tot("plc")$total_payment)
+
+  by_county <- function(pt) {
+    tot(pt, aggregate_level = "county") %>%
+      dplyr::select(fips, total_payment)
+  }
+  county <- by_county("sum") %>%
+    dplyr::left_join(by_county("plc"), by = "fips", suffix = c("", "_plc")) %>%
+    dplyr::left_join(by_county("arc"), by = "fips", suffix = c("", "_arc"))
+  expect_equal(county$total_payment,
+               dplyr::coalesce(county$total_payment_plc, 0) +
+                 dplyr::coalesce(county$total_payment_arc, 0))
+
+  # nonzero sequestration
+  expect_equal(tot("sum", sequestration_rate = 5.7)$total_payment,
+               tot("plc", sequestration_rate = 5.7)$total_payment +
+                 tot("arc", sequestration_rate = 5.7)$total_payment)
+
+  # multi-parameter path: several payment types in one call
+  multi <- tot(c("sum", "plc", "arc"))
+  get <- function(pt) multi$total_payment[multi$payment_type == pt]
+  expect_equal(get("sum"), get("plc") + get("arc"))
+  expect_equal(get("sum"), tot("sum")$total_payment)
+})
