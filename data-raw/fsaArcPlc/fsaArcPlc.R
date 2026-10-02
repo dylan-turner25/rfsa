@@ -10,9 +10,8 @@ years <- 2014:current_year
 # Note: for up-to-date arc/plc projections, fsaMyaPrice.R and fsaArcCoBenchmarks.R
 # are the most frequently updated and critical files that get updated monthly.
 #The other data are generally not updated frequently.Those two files also feed into fsaArcPlcData.R
-
-# full arc plc data used for arc/plc projections
-source("./data-raw/fsaArcPlc/supplementary_files/fsaArcPlcData.R")
+# Run from the package root after devtools::load_all(".") so each script's
+# data() calls read the .rda files the scripts above it just saved.
 
 # plc yields ----------------------------------------------------------------
 source("./data-raw/fsaArcPlc/supplementary_files/fsaPlcYields.R")
@@ -40,25 +39,26 @@ source("./data-raw/fsaArcPlc/supplementary_files/fsaArcCoPrice.R")
 # https://farmdocdaily.illinois.edu/2021/09/2021-commodity-program-enrollment-dashboard.html
 
 # clean arc-plc payments
-source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcPlcPayments.R")
+source("./data-raw/fsaArcPlc/supplementary_files/fsaArcPlcPayments.R")
 
 # clean effective reference prices
 source("./data-raw/fsaArcPlc/supplementary_files/fsaEffectiveRefPrices.R")
 
 # clean arc/plc base acres
-source("./data-raw/fsaArcPlc/Suplementary Files/fsaArcPlcBaseAcres.R") # updated 2/03/2025
+source("./data-raw/fsaArcPlc/supplementary_files/fsaArcPlcBaseAcres.R") # updated 2/03/2025
 
 
 # clean arc/plc elections ------------------------------------------
-# source("./data-raw/fsaArcPlc/Supplementary Files/fsaArcPlcElections.R")
+# source("./data-raw/fsaArcPlc/supplementary_files/fsaArcPlcElection.R")
 
 # clean arc benchmarks ---------------------------------------------
 current_year = 2026
 source("./data-raw/fsaArcPlc/supplementary_files/fsaArcCoBenchmarks.R")
 # # clean plc benchmarks ---------------------------------------------
-# source("./data-raw/fsaArcPlc/Supplementary Files/fsaPlcGuarantee.R")
+# source("./data-raw/fsaArcPlc/supplementary_files/fsaPlcGuarantee.R")
 
-
-
-
-
+# full arc plc data used for arc/plc projections ------------------------------
+# runs last: it reads the datasets built above (benchmarks, MYA prices, PLC
+# yields, ERPs, ARC-CO prices, base and enrolled base) and fsaCropAcreageCC
+# (built in data-raw/fsaCropAcreage)
+source("./data-raw/fsaArcPlc/supplementary_files/fsaArcPlcData.R")

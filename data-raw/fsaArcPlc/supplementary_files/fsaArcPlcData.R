@@ -421,9 +421,10 @@ if (nrow(base_check) > 0) {
        "less than once after the irrigation split")
 }
 
+# .carries and .n_split are kept for the planted acre allocation below
 data <- data %>%
-  select(-.is_split, -.split_bm, -.has_all, -.carries, -.share,
-         -.split_total, -.n_split, -.src_enrolled)
+  select(-.is_split, -.split_bm, -.has_all, -.share, -.split_total,
+         -.src_enrolled)
 
 # every row with PLC enrolled base needs an MYA price, benchmarked or not
 plc_check <- data %>%
@@ -438,69 +439,73 @@ message(sum(is.na(plc_check$plc_yield)), " rows with PLC enrolled base ",
 
 
 
-# Transform planted_acres to match data structure with yield_type
+# Planted acres are county x crop outcomes, so like base they sit once per
+# county-crop-year on the rows that carry base: All rows and rows with no
+# benchmark take the county total, split rows their own practice, and a lone
+# split row the total. Future years get none (outcomes are not carried forward).
+acre_cols <- c("planted_and_failed_acres", "prevented_acres", "planted_acres",
+               "failed_acres")
+
 planted_acres_harmonized <- planted_acres %>%
-  # First transform irrigation_practice to yield_type
-  mutate(
-    yield_type = case_when(
-      irrigation_practice == "I" ~ "Irrigated",
-      irrigation_practice == "N" ~ "Nonirrigated",
-      TRUE ~ irrigation_practice
-    )
-  ) %>%
-  select(
-    crop_yr,
-    crop,
-    crop_type,
-    fips,
-    yield_type,
-    planted_and_failed_acres,
-    prevented_acres,
-    planted_acres,
-    failed_acres,
-  ) %>%
-  # Create "All" category by aggregating irrigated + non-irrigated
+  filter(irrigation_practice %in% c("I", "N")) %>%
+  mutate(.acre_type = ifelse(irrigation_practice == "I", "Irrigated",
+                             "Nonirrigated")) %>%
+  select(crop_yr, crop, crop_type, fips, .acre_type, all_of(acre_cols)) %>%
   bind_rows(
     planted_acres %>%
       group_by(crop_yr, crop, crop_type, fips) %>%
-      summarize(
-        planted_and_failed_acres = sum(planted_and_failed_acres, na.rm = TRUE),
-        prevented_acres = sum(prevented_acres, na.rm = TRUE),
-        planted_acres = sum(planted_acres, na.rm = TRUE),
-        failed_acres = sum(failed_acres, na.rm = TRUE),
-        .groups = "drop"
-      ) %>%
-      mutate(yield_type = "All")
+      summarize(across(all_of(acre_cols), ~ sum(.x, na.rm = TRUE)),
+                .groups = "drop") %>%
+      mutate(.acre_type = "All")
   )
 
-
-planted_acres_harmonized %>%
-  filter(crop == "peanuts") %>%
-  filter(yield_type == "All") %>%
-  group_by(crop_yr) %>%
-  summarize(
-    planted_acres = sum(planted_acres, na.rm = TRUE)
+data <- data %>%
+  mutate(.acre_type = case_when(
+    !.carries ~ NA_character_,
+    yield_type %in% c("Irrigated", "Nonirrigated") & .n_split > 1 ~ yield_type,
+    TRUE ~ "All"
+  )) %>%
+  left_join(
+    planted_acres_harmonized,
+    by = c("program_year" = "crop_yr", "crop", "crop_type", "fips",
+           ".acre_type")
   )
-
-
-
-# Merge in planted acres with yield_type matching
-data <- left_join(
-  data,
-  planted_acres_harmonized,
-  by = c("program_year" = "crop_yr", "crop", "crop_type", "fips", "yield_type")
-)
-
-
-
-# Base acre data, including total base acres and enrolled base acres are adjusted in accordance
-# with the share of planted acres that are irrigated vs non-irrigated in each county for each crop.
-# In cases where no planted acres data are avaliable (i.e. planted acres are zero for the county and crop),
-# the national level share of irrigated vs non-irrigated acres for that crop is used to adjust base acres proportionally.
-
 
 # if no planted acres are reported, set planted acres to zero
-data$planted_acres[is.na(data$planted_acres)] <- 0
+data <- data %>%
+  mutate(across(all_of(acre_cols), ~ coalesce(.x, 0)))
+
+# each county-crop-year must carry its planted acres exactly once. Acres with
+# no irrigation practice reach only the All total, so split rows may fall
+# short of the source by those acres and no more.
+acre_src <- planted_acres %>%
+  group_by(program_year = crop_yr, crop, crop_type, fips) %>%
+  summarize(
+    src = sum(planted_acres, na.rm = TRUE),
+    src_unknown = sum(planted_acres[!irrigation_practice %in% c("I", "N")],
+                      na.rm = TRUE),
+    .groups = "drop"
+  )
+acre_check <- data %>%
+  group_by(program_year, crop, crop_type, fips) %>%
+  summarize(panel = sum(planted_acres), .groups = "drop") %>%
+  inner_join(acre_src, by = c("program_year", "crop", "crop_type", "fips"))
+acre_bad <- acre_check %>%
+  filter(panel > src + 0.01 | panel < src - src_unknown - 0.01)
+if (nrow(acre_bad) > 0) {
+  stop(nrow(acre_bad), " county-crop-years carry planted acres more or ",
+       "less than once")
+}
+acre_off_panel <- acre_src %>%
+  semi_join(data, by = c("crop", "crop_type")) %>%
+  anti_join(acre_check, by = c("program_year", "crop", "crop_type", "fips"))
+message(round(sum(acre_check$src - acre_check$panel)), " planted acres with ",
+        "no irrigation practice left off split rows; ",
+        round(sum(acre_off_panel$src)), " planted acres of program crops on ",
+        "county-crops outside the panel")
+
+data <- data %>%
+  select(-.carries, -.n_split, -.acre_type)
 
 
 # fill in missing current loan rates with previous year's value

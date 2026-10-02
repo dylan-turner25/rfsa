@@ -214,7 +214,7 @@
 #'   \item{planted_non_irrigated_share}{Share of planted acres that are non-irrigated}
 #'   \item{planted_irrigated_share_national}{National share of irrigated acres for the crop}
 #'   \item{planted_non_irrigated_share_national}{National share of non-irrigated acres for the crop}
-#'   \item{planted_and_failed_acres}{Total planted and failed acres}
+#'   \item{planted_and_failed_acres}{Total planted and failed acres. This column and the three below come from \code{fsaCropAcreageCC} and are counted once per county-crop-year on the rows that carry base: \code{All} rows and rows with no \code{yield_type} hold the county total, split rows their own practice (a lone split row the total), and other rows zero. Zero in years with no FSA acreage report.}
 #'   \item{prevented_acres}{Acres prevented from planting}
 #'   \item{planted_acres}{Successfully planted acres}
 #'   \item{failed_acres}{Acres that failed after planting}

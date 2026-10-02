@@ -22,7 +22,8 @@ setup_obbb_parameters <- function(data) {
     "chickpeas_small" = 0.2265,
     "chickpeas_large" = 0.2565,
     "lentils" = 0.2375,
-    "flaxseed" = 13.10,
+    # flaxseed is an "other oilseed" set per cwt in statute but priced per bushel
+    "flaxseed" = 23.75 * 0.56, # $23.75/cwt x 56 lb/bu = 13.30 $/bu
     "canola" = 0.2375,
     "rapeseed" = 0.2375,
     "safflower" = 0.2375,
@@ -47,7 +48,7 @@ setup_obbb_parameters <- function(data) {
     "chickpeas_small" = 0.1100,
     "chickpeas_large" = 0.1540,
     "lentils" = 0.1430,
-    "flaxseed" = 0.1110,
+    "flaxseed" = 11.10 * 0.56, # $11.10/cwt x 56 lb/bu = 6.216 $/bu
     "canola" = 0.1110,
     "rapeseed" = 0.1110,
     "safflower" = 0.1110,

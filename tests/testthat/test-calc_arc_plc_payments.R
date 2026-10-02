@@ -697,9 +697,7 @@ test_that("updated_base_acres places base on county-crops with no enrollment", {
 test_that("ERP from MYA lags 2-6 equals the published ERP under the published policy", {
   data("fsaArcPlcData", envir = environment())
   d <- fsaArcPlcData %>%
-    dplyr::filter(program_year >= 2019, !is.na(effective_reference_price),
-                  # flaxseed 2026 statutory price is issue #9
-                  !(crop == "flaxseed" & program_year >= 2026)) %>%
+    dplyr::filter(program_year >= 2019, !is.na(effective_reference_price)) %>%
     setup_fb18_parameters() %>%
     setup_obbb_parameters()
   prices <- arc_plc_price_matrix(d)
