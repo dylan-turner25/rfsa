@@ -220,15 +220,13 @@
 #'   \item{failed_acres}{Acres that failed after planting}
 #'   \item{actual_revenue}{Actual revenue (actual_yield × national_price)}
 #'   \item{actual_yield_5yr_avg}{Average of FSA actual yields in the five prior program years (NA if fewer than three)}
-#'   \item{imputation_method}{Source of \code{actual_yield}, in priority order: "not_imputed" (FSA published), "state_5yr_avg" and "national_5yr_avg" (own five-year average times the NASS state or national ratio), "benchmark_state" and "benchmark_national" (benchmark yield times the NASS ratio), "rma_yield" (RMA county yield), "benchmark_yield" (benchmark yield, unscaled), "missing" (no benchmark, so no ARC-CO payment)}
+#'   \item{imputation_method}{Source of \code{actual_yield}, in priority order: "not_imputed" (FSA published), "state_5yr_avg" and "national_5yr_avg" (own five-year average times the NASS state or national ratio), "benchmark_state" and "benchmark_national" (benchmark yield times the NASS ratio), "rma_yield" (RMA realized county yield), "rma_expected" (RMA expected county yield for area plans, published before planting), "benchmark_yield" (benchmark yield, unscaled), "missing" (no benchmark, so no ARC-CO payment)}
 #'   \item{nass_5yr_avg}{Five-year average of the NASS yield used in the ratio}
 #'   \item{nass_pct_change_applied}{NASS yield over its five-year average, minus one}
 #'   \item{nass_yield_national}{National NASS yield for the crop and year}
 #'   \item{nass_yield_state}{State-level NASS yield for the crop and year}
-#'   \item{rma_detrended_yield}{RMA detrended yield amount}
-#'   \item{rma_practice_count}{Number of RMA practices aggregated for yield calculation}
-#'   \item{rma_trended_yield}{RMA trended yield amount}
-#'   \item{rma_yield_amount}{RMA reported yield amount}
+#'   \item{rma_yield_amount}{RMA county yield for the row's practice (irrigated, nonirrigated, or blended by planted share), in FSA units (cotton lint converted to seed cotton at 2.4)}
+#'   \item{rma_yield_source}{"realized" (RMA county yield history) or "expected" (RMA expected county yield), NA if RMA has neither}
 #'   \item{years_used_in_avg}{Number of years of data used in calculating 5-year average}
 #'   \item{yield_imputed}{Logical indicating whether the yield was imputed (TRUE/FALSE)}
 #' }

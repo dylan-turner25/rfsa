@@ -734,7 +734,8 @@ data <- data %>%
 #   2 national_5yr_avg    own 5-yr average x NASS national ratio
 #   3 benchmark_state     FSA benchmark yield x NASS state ratio
 #   4 benchmark_national  FSA benchmark yield x NASS national ratio
-#   5 rma_yield           RMA county yield (below)
+#   5 rma_yield           RMA realized county yield, else
+#     rma_expected        RMA expected county yield (below)
 #   6 benchmark_yield     FSA benchmark yield, unscaled (below)
 # Steps 1-2 need FSA actuals in at least three of the five prior program
 # years, matched by year rather than row position. Rows left without a yield
@@ -782,230 +783,179 @@ data <- data %>%
          -nass_yield_state_5yr_avg, -nass_yield_state_ratio,
          -nass_yield_national_5yr_avg, -nass_yield_national_ratio)
 
-#' Get RMA (Risk Management Agency) county yield data
-#'
-#' This function fetches RMA yield data directly from the rfcip package and returns
-#' a clean dataframe that can be merged with simulation data.
-#' Uses the same methods as process_yields_data.R to fetch and process RMA data.
-#' Type codes are fetched using rfcip::get_sob_data() API calls.
-#'
-#' @param years Vector of years to fetch RMA data for (e.g., 2018:2025)
-#' @param practice_filter Optional character vector to filter specific practices
-#' @param aggregation_method Method to aggregate multiple practices: "mean", "median", "max" (default: "mean")
-#'
-#' @return Dataframe with columns: fips, crop, program_year, rma_yield_amount, rma_trended_yield, rma_detrended_yield, rma_practice_count
-get_rma_county_yields <- function(years,
-                                  practice_filter = NULL,
-                                  aggregation_method = "mean") {
+# RMA county yields (cascade step 5) ===========================================
+# Step 5 fills rows that have no NASS ratio: minor oilseeds NASS does not
+# survey, or every crop when a projection is made before NASS publishes the
+# year. Two RMA sources, both at county x commodity x type x practice x year:
+#   realized: county yields from RMA's county yield history
+#   expected: the expected county yield RMA sets for area plans each crop year
+#             (expected_index_value in the ADM price file), published before
+#             planting
+# A realized yield is used where one exists, else the expected yield.
+# Practices: 002 maps to Irrigated rows and 003 to Nonirrigated rows; where a
+# county has no 003, the dryland practices 004-006 (continuous cropping,
+# summerfallow, water fallow) stand in, and 997 (no practice specified, used
+# for flax) fills either side. Organic practices (700s) repeat these values and
+# are ignored. All rows and rows with no yield_type take the irrigated and
+# nonirrigated yields blended by planted share.
+# Cotton: RMA reports lint; FSA covers seed cotton, 2.4 lb per lb of lint
+# (1 lb lint + 1.4 lb cottonseed). Sesame is left out: RMA's county yields
+# run about 35% below FSA's benchmarks (median 0.65), and crambe has no RMA
+# coverage.
 
-  require(dplyr)
-  require(arrow)
-  require(rfcip)
-  require(purrr)
+rma_crop_map <- bind_rows(
+  tibble(
+    commodity_code = c(41, 81, 11, 21, 51, 91, 16, 75, 15, 15, 78, 31, 49, 69),
+    crop = c("corn", "soybeans", "wheat", "cotton", "grain sorghum", "barley",
+             "oats", "peanuts", "canola", "rapeseed", "sunflower", "flaxseed",
+             "safflower", "mustard"),
+    crop_type = c(NA, NA, NA, "seed", rep(NA, 10)),
+    type_code = NA_real_
+  ),
+  # rice types: 451 short, 452 medium, 453 long grain
+  tibble(commodity_code = 18, type_code = c(453, 451, 452, 451, 452), crop = "rice",
+         crop_type = c("long grain", "short/medium grain", "short/medium grain",
+                       "temperate japonica", "temperate japonica")),
+  # dry peas types: peas, lentils, chickpeas (contract seed peas and fava
+  # beans are left out)
+  tibble(commodity_code = 67,
+         type_code = c(89, 95, 97, 189, 197, 99, 199, 90, 290, 91, 92),
+         crop = c(rep("dry peas", 5), "lentils", "lentils", rep("chickpeas", 4)),
+         crop_type = c(rep(NA, 7), "large", "large", "small", "small"))
+) %>%
+  mutate(lint_factor = ifelse(crop == "cotton", 2.4, 1))
 
-  cat("Fetching RMA yields from rfcip package...\n")
-
-  # Create crop mapping from FSA to RMA commodity names
-  rma_crop_mapping <- list(
-    "corn" = "CORN",
-    "soybeans" = "SOYBEANS",
-    "wheat" = "WHEAT",
-    "cotton" = "COTTON",
-    "rice" = "RICE",
-    "sorghum" = "GRAIN SORGHUM",
-    "barley" = "BARLEY",
-    "peanuts" = "PEANUTS"
-  )
-
-  # Validate and clean years parameter
-  required_years <- sort(unique(years[!is.na(years)]))
-
-  if (length(required_years) == 0) {
-    cat("No valid years provided. Returning empty dataframe.\n")
-    return(data.frame())
+get_rma_county_yields <- function(years) {
+  codes <- function(df) {
+    tibble::as_tibble(df) %>% mutate(across(any_of(c("state_code", "county_code", "commodity_code", "commodity_type_code",
+                                  "type_code", "practice_code", "commodity_year")),
+                         ~ as.numeric(as.character(.x))))
   }
 
-  cat("Fetching RMA data for years:", paste(required_years, collapse = ", "), "\n")
+  cat("Fetching RMA county yield history...\n")
+  realized <- rfcip::get_adm_data(dataset = "county_yield_history") %>%
+    codes() %>%
+    filter(commodity_year %in% years) %>%
+    transmute(year = commodity_year, state_code, county_code, commodity_code,
+              type_code, practice_code, yield = yield_amount, source = "realized")
+  if (nrow(realized) == 0) stop("RMA county yield history returned no rows for ",
+                                min(years), "-", max(years))
 
-  # Initialize rma_data as empty data frame in case of errors
-  rma_data <- data.frame()
-
-  fetch_success <- tryCatch({
-    # Fetch county yield history data (following process_yields_data.R)
-    cat("Fetching county yield history...\n")
-    rma_data <- rfcip::get_adm_data(dataset = "county_yield_history") %>%
-      filter(commodity_year >= min(required_years), commodity_year <= max(required_years))
-
-    cat("Retrieved", nrow(rma_data), "county yield history records\n")
-
-    # For years beyond county_yield_history, use expected yields from the price dataset
-    max_history_year <- max(rma_data$commodity_year, na.rm = TRUE)
-    future_years <- required_years[required_years > max_history_year]
-
-    if (length(future_years) > 0) {
-      cat("Adding expected yield data for years beyond county_yield_history (",
-          paste(future_years, collapse = ", "), ")...\n")
-
-      for (yr in future_years) {
-        tryCatch({
-          price_yr <- distinct(rfcip::get_adm_data(year = yr, dataset = "price") %>%
-                                 select(commodity_year, commodity_code, state_code, county_code,
-                                        commodity_type_code, practice_code, expected_index_value) %>%
-                                 rename(yield_amount = expected_index_value,
-                                        type_code = commodity_type_code) %>%
-                                 mutate(state_code = as.numeric(as.character(state_code)),
-                                        county_code = as.numeric(as.character(county_code)),
-                                        commodity_code = as.numeric(as.character(commodity_code)),
-                                        type_code = as.numeric(as.character(type_code)),
-                                        practice_code = as.numeric(as.character(practice_code))) %>%
-                                 na.omit())
-
-          rma_data <- bind_rows(rma_data, price_yr)
-          cat("  Added", nrow(price_yr), "records for", yr, "\n")
-        }, error = function(e) {
-          cat("  Warning: Could not retrieve price data for", yr, ":", e$message, "\n")
-        })
-      }
+  expected <- purrr::map_dfr(years, function(yr) {
+    price <- rfcip::get_adm_data(year = yr, dataset = "price", show_progress = FALSE)
+    if (!"expected_index_value" %in% names(price)) {
+      cat("  ", yr, ": no expected county yields in the RMA price file\n")
+      return(NULL)
     }
-
-    # Replace yields of 0 or 1 with NA (following process_yields_data.R)
-    rma_data$yield_amount <- ifelse(rma_data$yield_amount %in% c(0,1), NA, rma_data$yield_amount)
-
-    # Add crop names
-    cat("Adding crop names...\n")
-    cc <- rfcip::get_crop_codes(year = 2011:max(required_years)) %>%
-      mutate(commodity_code = as.numeric(commodity_code),
-             commodity_year = as.numeric(commodity_year))
-
-    rma_data <- left_join(rma_data, cc)
-
-    # Create FIPS codes
-    cat("Creating FIPS codes...\n")
-    rma_data$fips <- rfcip:::clean_fips(
-      state = rma_data$state_code,
-      county = rma_data$county_code
-    )
-
-    # Add state names
-    state <- distinct(rfcip::get_adm_data(year = 2024, dataset = "state", show_progress = F) %>%
-                        select(state_code, state_name) %>%
-                        mutate(
-                          state_code = as.numeric(state_code),
-                          state_name = as.character(state_name)
-                        ))
-
-    rma_data <- left_join(rma_data, state)
-
-    # Add state abbreviations
-    rma_data <- left_join(rma_data, data.frame(state.abb, state.name), by = c("state_name" = "state.name")) %>%
-      rename(state_abbrv = state.abb)
-
-    # Add county names
-    county <- distinct(rfcip::get_adm_data(year = 2024, dataset = "A00440_County") %>%
-                         select(state_code, county_code, county_name) %>%
-                         mutate(
-                           state_code = as.numeric(state_code),
-                           county_code = as.numeric(county_code),
-                           county_name = as.character(county_name)
-                         ))
-
-    rma_data <- left_join(rma_data, county)
-
-
-    # Add program_year column
-    rma_data$program_year <- as.numeric(rma_data$commodity_year)
-
-    # Filter to only required years
-    rma_data <- rma_data %>%
-      filter(program_year %in% required_years)
-
-    cat("Processed RMA data:", nrow(rma_data), "records\n")
-
-    TRUE  # Success
-
-  }, error = function(e) {
-    cat("Error fetching RMA data:", e$message, "\n")
-    cat("Returning original data unchanged.\n")
-    FALSE  # Failure
+    price %>%
+      codes() %>%
+      transmute(year = yr, state_code, county_code, commodity_code,
+                type_code = commodity_type_code, practice_code,
+                yield = as.numeric(expected_index_value), source = "expected") %>%
+      distinct()
   })
+  if (nrow(expected) == 0) stop("RMA price files returned no expected county yields")
 
-  # If fetch failed, return empty dataframe with expected columns
-  if (!fetch_success || nrow(rma_data) == 0) {
-    cat("No RMA data retrieved. Returning empty dataframe.\n")
-    return(data.frame(fips = numeric(), crop = character(), program_year = numeric(),
-                      rma_yield_amount = numeric(), rma_trended_yield = numeric(),
-                      rma_detrended_yield = numeric(), rma_practice_count = integer()))
-  }
-
-  # Map RMA commodity names to FSA crop names (reverse mapping)
-  fsa_crop_mapping <- setNames(names(rma_crop_mapping), unlist(rma_crop_mapping))
-
-  rma_data <- rma_data %>%
+  rma <- bind_rows(realized, expected) %>%
+    filter(!is.na(yield), !yield %in% c(0, 1)) %>%
     mutate(
-      crop = fsa_crop_mapping[commodity_name],
-      crop = ifelse(is.na(crop), tolower(commodity_name), crop)
+      fips = state_code * 1000 + county_code,
+      class = case_when(practice_code == 2 ~ "irr",
+                        practice_code == 3 ~ "non",
+                        practice_code %in% 4:6 ~ "non_alt",
+                        practice_code == 997 ~ "nips")
     ) %>%
-    filter(!is.na(crop))  # Remove unmapped commodities
+    filter(!is.na(class))
 
-  # Apply practice filter if specified
-  if (!is.null(practice_filter)) {
-    rma_data <- rma_data %>%
-      filter(grepl(paste(practice_filter, collapse = "|"), practice_name, ignore.case = TRUE))
-    cat("Applied practice filter. Remaining records:", nrow(rma_data), "\n")
+  # crops mapped by commodity alone, then rice and dry peas by type
+  by_crop <- rma %>%
+    inner_join(filter(rma_crop_map, is.na(type_code)) %>% select(-type_code),
+               by = "commodity_code", relationship = "many-to-many")
+  by_type <- rma %>%
+    inner_join(filter(rma_crop_map, !is.na(type_code)),
+               by = c("commodity_code", "type_code"), relationship = "many-to-many")
+
+  out <- bind_rows(by_crop, by_type) %>%
+    group_by(fips, crop, crop_type, year, source, class) %>%
+    summarise(yield = mean(yield * lint_factor), .groups = "drop") %>%
+    tidyr::pivot_wider(names_from = c(class, source), values_from = yield)
+  for (col in c("irr_realized", "non_realized", "non_alt_realized", "nips_realized",
+                "irr_expected", "non_expected", "non_alt_expected", "nips_expected")) {
+    if (!col %in% names(out)) out[[col]] <- NA_real_
   }
+  out <- out %>%
+    mutate(irr_realized = coalesce(irr_realized, nips_realized),
+           non_realized = coalesce(non_realized, non_alt_realized, nips_realized),
+           irr_expected = coalesce(irr_expected, nips_expected),
+           non_expected = coalesce(non_expected, non_alt_expected, nips_expected)) %>%
+    select(fips, crop, crop_type, program_year = year,
+           irr_realized, non_realized, irr_expected, non_expected)
 
-  # Aggregate yields by fips, crop, and program_year
-  rma_aggregated <- rma_data %>%
-    group_by(fips, crop, program_year) %>%
-    summarise(
-      rma_yield_amount = case_when(
-        aggregation_method == "mean" ~ mean(yield_amount, na.rm = TRUE),
-        aggregation_method == "median" ~ median(yield_amount, na.rm = TRUE),
-        aggregation_method == "max" ~ max(yield_amount, na.rm = TRUE),
-        TRUE ~ mean(yield_amount, na.rm = TRUE)
-      ),
-      rma_trended_yield = case_when(
-        aggregation_method == "mean" & "trended_yield_amount" %in% names(rma_data) ~ mean(trended_yield_amount, na.rm = TRUE),
-        aggregation_method == "median" & "trended_yield_amount" %in% names(rma_data) ~ median(trended_yield_amount, na.rm = TRUE),
-        aggregation_method == "max" & "trended_yield_amount" %in% names(rma_data) ~ max(trended_yield_amount, na.rm = TRUE),
-        TRUE ~ NA_real_
-      ),
-      rma_detrended_yield = case_when(
-        aggregation_method == "mean" & "detrended_yield_amount" %in% names(rma_data) ~ mean(detrended_yield_amount, na.rm = TRUE),
-        aggregation_method == "median" & "detrended_yield_amount" %in% names(rma_data) ~ median(detrended_yield_amount, na.rm = TRUE),
-        aggregation_method == "max" & "detrended_yield_amount" %in% names(rma_data) ~ max(detrended_yield_amount, na.rm = TRUE),
-        TRUE ~ NA_real_
-      ),
-      rma_practice_count = n(),
-      .groups = 'drop'
-    ) %>%
-    # Handle infinite/NaN values
-    mutate(
-      rma_yield_amount = ifelse(is.infinite(rma_yield_amount) | is.nan(rma_yield_amount), NA, rma_yield_amount),
-      rma_trended_yield = ifelse(is.infinite(rma_trended_yield) | is.nan(rma_trended_yield), NA, rma_trended_yield),
-      rma_detrended_yield = ifelse(is.infinite(rma_detrended_yield) | is.nan(rma_detrended_yield), NA, rma_detrended_yield)
-    ) %>%
-    # Select only the columns needed for merging
-    select(fips, crop, program_year, rma_yield_amount, rma_trended_yield, rma_detrended_yield, rma_practice_count)
-
-  cat("Returning RMA data:", nrow(rma_aggregated), "unique fips/crop/year combinations\n")
-
-  return(rma_aggregated)
+  cat("RMA county yields:", nrow(out), "county-crop-years\n")
+  print(out %>% group_by(program_year) %>%
+          summarise(realized = sum(!is.na(irr_realized) | !is.na(non_realized)),
+                    expected = sum(!is.na(irr_expected) | !is.na(non_expected))),
+        n = Inf)
+  out
 }
 
-# Get RMA yields data
-rma_yields <- get_rma_county_yields(years = 2011:max(data$program_year, na.rm = T))
+# yield for a row's yield_type; All and missing yield_type blend the two
+# practices by planted share (equal weights where shares are missing)
+rma_row_yield <- function(yield_type, irr, non, s_irr, s_non) {
+  s_irr <- coalesce(s_irr, 0.5)
+  s_non <- coalesce(s_non, 0.5)
+  blend <- ifelse(s_irr + s_non > 0,
+                  (s_irr * irr + s_non * non) / (s_irr + s_non),
+                  (irr + non) / 2)
+  case_when(
+    yield_type %in% "Irrigated" ~ irr,
+    yield_type %in% "Nonirrigated" ~ non,
+    !is.na(irr) & !is.na(non) ~ blend,
+    TRUE ~ coalesce(non, irr)
+  )
+}
 
-# Merge RMA yields with simulation data
+rma_yields <- get_rma_county_yields(years = 2014:max(data$program_year, na.rm = TRUE))
+
 data <- data %>%
-  left_join(rma_yields %>% mutate(fips = as.numeric(fips)), by = c("fips", "crop", "program_year"))
+  left_join(rma_yields, by = c("fips", "crop", "crop_type", "program_year")) %>%
+  mutate(
+    .rma_realized = rma_row_yield(yield_type, irr_realized, non_realized,
+                                  planted_irrigated_share, planted_non_irrigated_share),
+    .rma_expected = rma_row_yield(yield_type, irr_expected, non_expected,
+                                  planted_irrigated_share, planted_non_irrigated_share),
+    rma_yield_amount = coalesce(.rma_realized, .rma_expected),
+    rma_yield_source = case_when(!is.na(.rma_realized) ~ "realized",
+                                 !is.na(.rma_expected) ~ "expected")
+  ) %>%
+  select(-irr_realized, -non_realized, -irr_expected, -non_expected,
+         -.rma_realized, -.rma_expected)
 
-# cascade step 5: RMA county yield
+# RMA and FSA yields must be in the same units. A unit error (cotton lint
+# against seed cotton, pounds against bushels) moves the median ratio to the
+# benchmark far outside this band.
+rma_check <- data %>%
+  filter(!is.na(rma_yield_amount), coalesce(oa_bench_mark_yield, 0) > 0) %>%
+  group_by(crop) %>%
+  summarise(n = n(), ratio = median(rma_yield_amount / oa_bench_mark_yield),
+            .groups = "drop")
+print(rma_check, n = Inf)
+rma_bad <- filter(rma_check, n >= 20, ratio < 0.7 | ratio > 1.4)
+if (nrow(rma_bad) > 0) {
+  stop("RMA yields out of line with FSA benchmarks (median ratio) for: ",
+       paste0(rma_bad$crop, " ", round(rma_bad$ratio, 2), collapse = ", "))
+}
+
+# cascade step 5: RMA county yield, realized where published, else expected
 data <- data %>%
   mutate(
     .use = imputation_method == "missing" & !is.na(rma_yield_amount),
     actual_yield = ifelse(.use, rma_yield_amount, actual_yield),
-    imputation_method = ifelse(.use, "rma_yield", imputation_method)
+    imputation_method = case_when(
+      !.use ~ imputation_method,
+      rma_yield_source == "realized" ~ "rma_yield",
+      TRUE ~ "rma_expected"
+    )
   ) %>%
   select(-.use)
 
