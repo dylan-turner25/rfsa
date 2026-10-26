@@ -79,6 +79,36 @@ enrolled_county_base_acres <- enrolled_county_base_acres %>%
     values_fill = 0
   )
 
+# collapse county-name variants that share a fips. When FSA renames a county
+# office it can list the county under both names for a few years with the same
+# acres (Henrico-Richmond City / Henrico VA and Snohomish-North King /
+# Snohomish WA in 2023 and 2024). Those rows are true duplicates, so keep one,
+# labelled with the name the fips uses in its latest program year. Variants
+# whose acres differ are not duplicates we know how to resolve, so stop.
+key_cols <- c("fips", "program_year", "crop", "crop_type")
+enrolled_cols <- grep("^enrolled_base_", names(enrolled_county_base_acres), value = TRUE)
+
+latest_names <- enrolled_county_base_acres %>%
+  dplyr::filter(program_year == max(program_year), .by = fips) %>%
+  dplyr::distinct(fips, latest_county = county) %>%
+  dplyr::slice(1, .by = fips)
+
+enrolled_county_base_acres <- enrolled_county_base_acres %>%
+  dplyr::left_join(latest_names, by = "fips", relationship = "many-to-one") %>%
+  dplyr::arrange(county != latest_county) %>%
+  dplyr::distinct(dplyr::across(dplyr::all_of(c(key_cols, enrolled_cols))),
+                  .keep_all = TRUE) %>%
+  dplyr::select(-latest_county)
+
+dup_keys <- enrolled_county_base_acres %>%
+  dplyr::count(dplyr::across(dplyr::all_of(key_cols))) %>%
+  dplyr::filter(n > 1)
+if (nrow(dup_keys) > 0) {
+  print(dup_keys)
+  stop("fsaEnrolledCountyBaseAcres: ", nrow(dup_keys), " fips-year-crop keys ",
+       "have more than one row with different enrolled acres")
+}
+
 # convert to a tibble before exporting
 fsaEnrolledCountyBaseAcres <- dplyr::as_tibble(enrolled_county_base_acres)
 
