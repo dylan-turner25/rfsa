@@ -716,11 +716,11 @@ calc_effective_reference_price <- function(mya_prices, srp, oa_pct = 0.85, cap =
 #'
 #' Builds the five-column price matrix that sets the effective reference price
 #' and the ARC-CO benchmark price. The statute uses MYA prices lagged two to
-#' six years (2020-2024 for program year 2026), so rows with all of
-#' \code{final_mya_price_lag2..lag6} use those. FSA's
+#' six years (2019-2023 for program year 2025), taken from
+#' \code{final_mya_price_lag2..lag6}. FSA's
 #' \code{annual_benchmark_price_lag1..lag5} hold the same years but are already
-#' floored at the ERP of the policy FSA applied, so they are used only where the
-#' MYA lags are incomplete (program years before 2019).
+#' floored at the ERP of the policy FSA applied. They are used as a fallback
+#' for incomplete MYA lags in program years before 2019.
 #'
 #' @param data Data frame with the MYA lag and benchmark price columns.
 #' @return Numeric matrix with five columns, one row per row of \code{data}.
@@ -732,7 +732,7 @@ arc_plc_price_matrix <- function(data) {
   mya <- cbind(data$final_mya_price_lag2, data$final_mya_price_lag3,
                data$final_mya_price_lag4, data$final_mya_price_lag5,
                data$final_mya_price_lag6)
-  use_mya <- stats::complete.cases(mya)
+  use_mya <- which(data$program_year >= 2019 | stats::complete.cases(mya))
   bm[use_mya, ] <- mya[use_mya, ]
   bm
 }

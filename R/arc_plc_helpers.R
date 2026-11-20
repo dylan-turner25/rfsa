@@ -1,7 +1,9 @@
 #' Setup OBBB Policy Parameters
 #'
-#' This internal helper function adds OBBB (proposed policy) parameters to the dataset,
+#' This internal helper function adds OBBBA policy parameters to the dataset,
 #' including updated statutory reference prices and national marketing loan rates.
+#' The 2025 crop year uses the published 2025 loan rates because the OBBBA
+#' loan-rate schedule takes effect in 2026.
 #'
 #' @param data Input data frame
 #' @return Data frame with OBBB parameters added (obbb_srps, obbb_nmlr columns)
@@ -92,7 +94,7 @@ setup_obbb_parameters <- function(data) {
   data$obbb_srps[which(
     data$crop == "chickpeas" & data$crop_type == "large"
   )] <- new_srps$chickpeas_large
-  # FSA-published 2026 statutory reference price for temperate japonica
+  # FSA-published statutory reference price for temperate japonica from 2025
   # under the OBBBA (the pre-OBBBA value was 0.1730)
   data$obbb_srps[which(
     data$crop == "rice" & data$crop_type == "temperate japonica"
@@ -110,6 +112,9 @@ setup_obbb_parameters <- function(data) {
     data$crop == "rice" & data$crop_type == "temperate japonica"
   )]
 
+  idx_2025 <- which(data$program_year == 2025)
+  data$obbb_nmlr[idx_2025] <- data$current_national_loan_rate[idx_2025]
+
   return(data)
 }
 
@@ -118,12 +123,10 @@ setup_obbb_parameters <- function(data) {
 #' This internal helper function adds an \code{fb18_srps} column holding the
 #' 2018 Farm Bill statutory reference prices. The published
 #' \code{statutory_reference_price} column in \code{fsaArcPlcData} reflects
-#' whatever FSA published for each year, and beginning with program year 2026
-#' FSA publishes the OBBBA-raised statutory prices. Using the published column
-#' directly would therefore contaminate the fb18 counterfactual for 2026 and
-#' later. For program years through 2025 the published values are the 2018
-#' Farm Bill schedule and are used as is. For 2026 and later, each crop and
-#' crop type carries forward its published 2025 statutory price (the last
+#' whatever FSA published for each year. For program years through 2024 FSA
+#' publishes the 2018 Farm Bill statutory prices, which are used as is.
+#' For 2025 and later FSA publishes the OBBBA statutory prices, so each crop and
+#' crop type carries forward its published 2024 statutory price (the last
 #' pre-OBBBA schedule). Loan rates are not modified: the fb18 environment
 #' continues to use \code{current_national_loan_rate}.
 #'
@@ -133,24 +136,24 @@ setup_obbb_parameters <- function(data) {
 setup_fb18_parameters <- function(data) {
   data$fb18_srps <- data$statutory_reference_price
 
-  future_idx <- which(!is.na(data$program_year) & data$program_year >= 2026)
+  future_idx <- which(!is.na(data$program_year) & data$program_year >= 2025)
   if (length(future_idx) == 0) {
     return(data)
   }
 
   data("fsaEffectiveRefPrices", envir = environment())
   fb18_schedule <- fsaEffectiveRefPrices %>%
-    dplyr::filter(.data$program_year == 2025) %>%
+    dplyr::filter(.data$program_year == 2024) %>%
     dplyr::distinct(.data$crop, .data$crop_type,
                     fb18_srp = .data$statutory_reference_price)
 
-  # Guard against the published 2025 schedule ever being revised to OBBBA
+  # Guard against the published 2024 schedule ever being revised to OBBBA
   # values: these are the 2018 Farm Bill statutory prices
   chk <- c(corn = 3.70, soybeans = 8.40, wheat = 5.50, peanuts = 0.2675)
   for (cr in names(chk)) {
     v <- fb18_schedule$fb18_srp[fb18_schedule$crop == cr][1]
     stopifnot(
-      "published 2025 SRP no longer matches the 2018 Farm Bill schedule" =
+      "published 2024 SRP no longer matches the 2018 Farm Bill schedule" =
         isTRUE(abs(v - chk[[cr]]) < 1e-6)
     )
   }
@@ -161,7 +164,7 @@ setup_fb18_parameters <- function(data) {
     by = c("crop", "crop_type")
   )
 
-  # Crops absent from the published 2025 schedule keep the published value
+  # Crops absent from the published 2024 schedule keep the published value
   data$fb18_srps[future_idx] <- dplyr::coalesce(
     future$fb18_srp, data$fb18_srps[future_idx]
   )

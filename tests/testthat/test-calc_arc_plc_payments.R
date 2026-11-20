@@ -702,15 +702,60 @@ test_that("ERP from MYA lags 2-6 equals the published ERP under the published po
     setup_obbb_parameters()
   prices <- arc_plc_price_matrix(d)
 
-  # FSA published 2019-2025 under the 2018 Farm Bill and 2026 under the OBBBA
-  fb <- d$program_year <= 2025
+  # FSA published 2019-2024 under the 2018 Farm Bill and 2025 onward under OBBBA.
+  fb <- d$program_year <= 2024
   erp_fb18 <- calc_policy_erp(prices[fb, ], d$fb18_srps[fb], 0.85, 1.15,
                               d$crop[fb], d$crop_type[fb], d$program_year[fb])
   erp_obbb <- calc_policy_erp(prices[!fb, ], d$obbb_srps[!fb], 0.88, 1.15,
                               d$crop[!fb], d$crop_type[!fb], d$program_year[!fb])
 
   expect_equal(erp_fb18, d$effective_reference_price[fb], tolerance = 1e-9)
+  expect_equal(d$obbb_srps[!fb], d$statutory_reference_price[!fb], tolerance = 1e-9)
   expect_equal(erp_obbb, d$effective_reference_price[!fb], tolerance = 1e-9)
+})
+
+test_that("the 2025 fb18 ERP and ARC-CO payment use the fb18 benchmark-price floor", {
+  data("fsaArcPlcData", envir = environment())
+  wheat <- fsaArcPlcData %>%
+    dplyr::filter(crop == "wheat", program_year == 2025,
+                  fips == 1001, yield_type == "All") %>%
+    setup_fb18_parameters()
+  mya_cols <- paste0("final_mya_price_lag", 2:6)
+  mya <- unlist(wheat[mya_cols], use.names = FALSE)
+
+  expected_erp <- round(calc_effective_reference_price(mya, 5.50, 0.85, 1.15), 2)
+  erp <- calc_policy_erp(arc_plc_price_matrix(wheat), wheat$fb18_srps, 0.85, 1.15,
+                         wheat$crop, wheat$crop_type, wheat$program_year)
+  expect_equal(erp, expected_erp)
+  expect_lt(erp, wheat$effective_reference_price)
+
+  bench_price <- mean(sort(pmax(mya, expected_erp))[2:4])
+  expect_lt(bench_price, wheat$oa_bench_mark_price)
+  bench_revenue <- bench_price * wheat$oa_bench_mark_yield
+  rate <- pmax(0, pmin(0.10 * bench_revenue,
+                       0.86 * bench_revenue - wheat$actual_revenue))
+  expect_gt(rate, 0)
+  result <- calc_arc_plc_payments(data = wheat, program_year = 2025,
+                                  policy_environment = "fb18", payment_type = "arc",
+                                  aggregate_level = "none", quiet = TRUE)
+  expect_equal(result$final_payment, 0.85 * rate)
+
+  # A missing MYA must not replace the row with OBBBA-floored inputs.
+  wheat[[mya_cols[1]]] <- NA_real_
+  mya[1] <- NA_real_
+  expect_equal(as.numeric(arc_plc_price_matrix(wheat)), mya)
+})
+
+test_that("OBBBA PLC for 2025 uses the 2025 loan rate", {
+  data("fsaArcPlcData", envir = environment())
+  wheat <- fsaArcPlcData %>%
+    dplyr::filter(crop == "wheat", program_year == 2025, plc_yield > 0) %>%
+    dplyr::slice(1)
+  # Below the 2025 wheat loan rate ($3.38) and the 2026 rate ($3.72).
+  result <- calc_arc_plc_payments(data = wheat, program_year = 2025, price = 3,
+                                  policy_environment = "obbb", payment_type = "plc",
+                                  aggregate_level = "none", quiet = TRUE)
+  expect_equal(result$final_payment, 0.85 * (6.35 - 3.38) * wheat$plc_yield)
 })
 
 test_that("the fb18 ERP for 2026 does not inherit the OBBBA benchmark-price floor", {

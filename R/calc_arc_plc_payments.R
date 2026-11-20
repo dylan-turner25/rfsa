@@ -12,8 +12,8 @@
 #' @param program_year Numeric vector. The program year(s) for the calculation (e.g., 2024).
 #' @param policy_environment Character vector. Policy environment(s) to use:
 #'   \itemize{
-#'     \item "fb18": Farm Bill 2018 (current policy)
-#'     \item "obbb": Proposed policy with updated parameters
+#'     \item "fb18": 2018 Farm Bill parameters
+#'     \item "obbb": One Big Beautiful Bill Act (OBBBA) parameters
 #'   }
 #' @param payment_type Character vector. Type(s) of payment calculation:
 #'   \itemize{
@@ -79,7 +79,10 @@
 #' **Policy Environments:**
 #' \itemize{
 #'   \item FB18: oa_pct=0.85, cap=1.15, payment_trigger=0.86
-#'   \item OBBB: oa_pct=0.88, cap=1.15, payment_trigger=0.9, updated reference prices
+#'   \item OBBBA: oa_pct=0.88, cap=1.15, payment_trigger=0.90, updated reference
+#'   prices. These apply beginning in crop year 2025. The 2025 calculation uses
+#'   the published loan rates for that year. The updated loan-rate schedule
+#'   takes effect in 2026.
 #' }
 #'
 #' **Payment Types:**
@@ -104,7 +107,7 @@
 #'   payment_type = "higher"
 #' )
 #'
-#' # Basic calculation for corn in 2024 under current policy
+#' # Basic calculation for corn in 2024 under the 2018 Farm Bill
 #' corn_payments <- calc_arc_plc_payments(
 #'   crop = "corn",
 #'   program_year = 2024,
@@ -278,7 +281,7 @@ calc_arc_plc_payments <- function(data = NULL,
 
   # Setup FB18 parameters if needed (fb18_srps: the 2018 Farm Bill statutory
   # schedule; the published statutory_reference_price column reflects OBBBA
-  # values from program year 2026 on)
+  # values from program year 2025 on)
   if (any(policy_environment == "fb18")) {
     data <- setup_fb18_parameters(data)
   }
@@ -549,7 +552,7 @@ calc_arc_plc_payments <- function(data = NULL,
         payment_trigger_level <- 0.9
       } else {
         # fb18_srps holds the 2018 Farm Bill statutory schedule (the
-        # published column reflects OBBBA values from 2026 on)
+        # published column reflects OBBBA values from 2025 on)
         srp_col <- "fb18_srps"
         nmlr_col <- "current_national_loan_rate"
         oa_pct <- 0.85
@@ -661,7 +664,7 @@ calc_arc_plc_payments <- function(data = NULL,
     payment_trigger_level <- 0.9
   } else {
     # fb18_srps holds the 2018 Farm Bill statutory schedule (the published
-    # column reflects OBBBA values from 2026 on)
+    # column reflects OBBBA values from 2025 on)
     srp_col <- "fb18_srps"
     nmlr_col <- "current_national_loan_rate"
     oa_pct <- 0.85

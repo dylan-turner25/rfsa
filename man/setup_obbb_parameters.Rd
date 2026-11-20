@@ -13,7 +13,9 @@ setup_obbb_parameters(data)
 Data frame with OBBB parameters added (obbb_srps, obbb_nmlr columns)
 }
 \description{
-This internal helper function adds OBBB (proposed policy) parameters to the dataset,
+This internal helper function adds OBBBA policy parameters to the dataset,
 including updated statutory reference prices and national marketing loan rates.
+The 2025 crop year uses the published 2025 loan rates because the OBBBA
+loan-rate schedule takes effect in 2026.
 }
 \keyword{internal}

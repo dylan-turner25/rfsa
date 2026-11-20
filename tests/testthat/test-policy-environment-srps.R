@@ -1,11 +1,11 @@
 # Tests for policy-environment statutory reference price sourcing.
 # The published statutory_reference_price column in fsaArcPlcData reflects
 # FSA-published values, which are the OBBBA-raised prices from program year
-# 2026 on. The fb18 environment must use the 2018 Farm Bill schedule
+# 2025 on. The fb18 environment must use the 2018 Farm Bill schedule
 # (fb18_srps) instead, or the counterfactual is contaminated and floor-bound
 # crops (rice, peanuts) show identical payments under both environments.
 
-test_that("fb18_srps carries the 2018 Farm Bill schedule into 2026", {
+test_that("fb18_srps carries the 2018 Farm Bill schedule into 2025 and 2026", {
   data(fsaArcPlcData, package = "rfsa")
   d <- setup_fb18_parameters(fsaArcPlcData)
 
@@ -15,15 +15,18 @@ test_that("fb18_srps carries the 2018 Farm Bill schedule into 2026", {
     unique(stats::na.omit(d$fb18_srps[idx]))
   }
 
-  # 2026 rows must show 2018 Farm Bill prices, not the published OBBBA values
-  expect_equal(pick(2026, "corn"), 3.70)
-  expect_equal(pick(2026, "soybeans"), 8.40)
-  expect_equal(pick(2026, "peanuts"), 0.2675)
-  expect_equal(pick(2026, "rice", "long grain"), 0.14)
+  for (year in 2025:2026) {
+    expect_equal(pick(year, "corn"), 3.70)
+    expect_equal(pick(year, "wheat"), 5.50)
+    expect_equal(pick(year, "soybeans"), 8.40)
+    expect_equal(pick(year, "peanuts"), 0.2675)
+    expect_equal(pick(year, "rice", "long grain"), 0.14)
+    expect_equal(pick(year, "rice", "short/medium grain"), 0.14)
+    expect_equal(pick(year, "rice", "temperate japonica"), 0.1730)
+  }
 
-  # Through 2025 the published column IS the 2018 Farm Bill schedule
-  idx25 <- !is.na(d$program_year) & d$program_year == 2025
-  expect_identical(d$fb18_srps[idx25], d$statutory_reference_price[idx25])
+  pre_obbb <- which(d$program_year <= 2024)
+  expect_identical(d$fb18_srps[pre_obbb], d$statutory_reference_price[pre_obbb])
 })
 
 test_that("floor-bound crops show a real fb18-vs-obbb gap in 2026", {
@@ -43,7 +46,7 @@ test_that("floor-bound crops show a real fb18-vs-obbb gap in 2026", {
   expect_gt(totals[["obbb"]], totals[["fb18"]] * 1.5)
 })
 
-test_that("temperate japonica obbb uses the published 2026 SRP", {
+test_that("temperate japonica obbb uses the SRP published from 2025", {
   data(fsaArcPlcData, package = "rfsa")
   d <- setup_obbb_parameters(fsaArcPlcData)
   jap <- unique(stats::na.omit(

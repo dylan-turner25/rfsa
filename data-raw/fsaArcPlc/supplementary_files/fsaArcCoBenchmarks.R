@@ -271,6 +271,26 @@ arc_co_benchmarks <- arc_co_benchmarks %>%
 # convert  data to a tibble before exporting
 fsaArcCoBenchmarks <- dplyr::as_tibble(arc_co_benchmarks)
 
+# Final actual yields should be available by November of the following year.
+# Flag crops with at most 5% observed coverage when last year had actuals.
+yield_coverage <- fsaArcCoBenchmarks %>%
+  filter(!is.na(program_year)) %>%
+  group_by(crop, program_year) %>%
+  summarise(actuals = sum(!is.na(actual_yield)), coverage = actuals / n(),
+            .groups = "drop")
+stale_yields <- yield_coverage %>%
+  inner_join(
+    yield_coverage %>%
+      filter(actuals > 0) %>%
+      transmute(crop, program_year = program_year + 1),
+    by = c("crop", "program_year")
+  ) %>%
+  filter(coverage <= 0.05, Sys.Date() > as.Date(paste0(program_year + 1, "-11-01")))
+if (nrow(stale_yields) > 0L) {
+  warning("Possible stale ARC-CO actual yields (at most 5% coverage): ",
+          paste(paste(stale_yields$program_year, stale_yields$crop), collapse = ", "),
+          call. = FALSE)
+}
 
 # use the county level file in the package data folder
 usethis::use_data(fsaArcCoBenchmarks, overwrite = TRUE)

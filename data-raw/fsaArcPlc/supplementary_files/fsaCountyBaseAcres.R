@@ -4,7 +4,6 @@ library(readxl)
 library(janitor)
 library(stringr)
 library(purrr)
-library(fipio)
 library(usethis)
 
 # Source helper functions
@@ -12,7 +11,8 @@ source("R/helpers.R")
 
 # list all files in the raw data files folder
 files <- list.files("./data-raw/fsaArcPlc/input_data/fsaCountyBaseAcres",
-                    full.names = T)
+                    pattern = "^[0-9]{4}_base_acres\\.xlsx$",
+                    full.names = TRUE, recursive = FALSE)
 
 # initialize a data frame to store arc-ic prices
 county_base_acres <- NULL
@@ -20,6 +20,7 @@ county_base_acres <- NULL
 # load data files
 data_2014 <- readxl::read_excel(files[grepl("2014", files)], sheet = 2)
 data_2015 <- readxl::read_excel(files[grepl("2014", files)], sheet = 3)
+data_2019 <- readxl::read_excel(files[grepl("2019", files)], sheet = 1)
 data_2021 <- readxl::read_excel(files[grepl("2021", files)], sheet = 2)
 data_2022 <- readxl::read_excel(files[grepl("2022", files)], sheet = 2)
 data_2023 <- readxl::read_excel(files[grepl("2023", files)], sheet = 2)
@@ -40,8 +41,8 @@ for(y in 2014:2015){
 
 }
 
-# clean 2021, 2022, and 2023
-for(y in 2021:2023){
+# clean the newer county workbooks
+for(y in c(2019, 2021:2023)){
   # assign df to temporary object
   temp <- eval(parse(text = paste0("data_", y)))
 
@@ -58,6 +59,7 @@ for(y in 2021:2023){
       crop = crop_base_name,
       base_acres = crop_base_acres
     ) %>%
+    select(-any_of("admin_state_county_code")) %>%
     # Standardize case to match 2014-2015 data (ALL CAPS)
     mutate(
       state = str_to_upper(state),
@@ -69,7 +71,8 @@ for(y in 2021:2023){
 }
 
 # combine all data frames
-county_base_acres <- dplyr::bind_rows(data_2014, data_2015, data_2021, data_2022, data_2023)
+county_base_acres <- dplyr::bind_rows(data_2014, data_2015, data_2019,
+                                    data_2021, data_2022, data_2023)
 
 # extract crops codes
 county_base_acres$extracted_crop_type <- unlist(lapply(county_base_acres$crop, extract_crop_type))
@@ -87,7 +90,10 @@ county_base_acres$rma_type_code <- unlist(lapply(paste0(county_base_acres$crop,"
 
 # clean crop names
 county_base_acres$crop <- unlist(lapply(county_base_acres$crop, clean_crop_names2))
-unique(county_base_acres$crop)
+# FSA's large and small bean labels refer to chickpeas in this series.
+chickpeas <- which(county_base_acres$crop == "beans" &
+                    county_base_acres$crop_type %in% c("large", "small"))
+county_base_acres$crop[chickpeas] <- "chickpeas"
 
 # add rma crop codes
 county_base_acres$rma_crop_code <- unlist(lapply(county_base_acres$crop, assign_rma_cc))
@@ -100,7 +106,6 @@ county_base_acres <- county_base_acres %>%
 library(dplyr)
 library(stringr)
 library(purrr)
-library(fipio)
 
 # Use usmap package for more reliable FIPS lookup
 library(usmap)
@@ -169,9 +174,6 @@ merge_success <- county_base_acres %>%
 
 cat("Merge success for 2021-2023:\n")
 print(merge_success)
-
-
-View(distinct(county_base_acres %>% select(crop, crop_type, program_year)))
 
 
 # convert to a tibble before exporting

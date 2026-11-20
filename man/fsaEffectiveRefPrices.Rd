@@ -5,7 +5,7 @@
 \alias{fsaEffectiveRefPrices}
 \title{Effective Reference Prices for ARC/PLC Commodities}
 \format{
-A data frame with 17 variables:
+A data frame with 18 variables:
 \describe{
 \item{crop}{Name of the commodity (e.g., Corn, Wheat, Peanuts)}
 \item{marketing_year_dates}{The official marketing year for the commodity (e.g., "Sep. 1–Aug. 31")}
@@ -19,7 +19,8 @@ A data frame with 17 variables:
 \item{mya_price_lag3}{MYA price from three years prior}
 \item{mya_price_lag2}{MYA price from two years prior}
 \item{mya_price_lag1}{MYA price from one year prior}
-\item{85_olympic_average_mya}{85\% of the Olympic average of the five MYA prices, dropping the high and low}
+\item{85_olympic_average_mya}{The published multiplier times the Olympic average of the five MYA prices, dropping the high and low}
+\item{olympic_average_multiplier}{Multiplier stated in the FSA workbook header (0.85 or 0.88)}
 \item{effective_reference_price}{Final effective reference price used for the program year}
 \item{crop_type}{Subtype of the crop, if applicable (e.g., "long grain", "large")}
 \item{rma_type_code}{RMA classification code for crop type, if available}

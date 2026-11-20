@@ -1,15 +1,17 @@
 # list all files in the raw data files folder
 files <- list.files("./data-raw/fsaArcPlc/input_data/fsaArcIcPrice",
-                    full.names = T)
+                    pattern = "^ARC_IC_[0-9]{4}\\.xlsx?$",
+                    full.names = TRUE, recursive = FALSE)
+file_years <- as.integer(sub("^ARC_IC_([0-9]{4})\\.xlsx?$", "\\1", basename(files)))
 
 # initialize a data frame to store arc-ic prices
 arc_ic_prices <- NULL
 
 
 # load the files and bind them into one data frame
-for(year in 2015:(current_year - 1)){
+for(year in file_years[file_years <= current_year]){
   # get file path corresponding to year
-  file <- files[grepl(year,files)]
+  file <- files[file_years == year]
 
   # load the file to a temporary object
   #try(temp <- readxl::read_xls(file))
@@ -38,7 +40,7 @@ for(year in 2015:(current_year - 1)){
   #colnames(temp)[3] <- "Publishing Dates for the  Final T-0 PLC Effective Price"
   temp <- temp[,which(colnames(temp) != "NA")] %>% na.omit() # omit NA
 
-  if(year == 2015){
+  if(is.null(arc_ic_prices)){
     for(year_temp in 2010:2030){
       colnames(temp) <- gsub(paste0(year_temp,"/",substr(year_temp + 1, 3,4),
                                     "|",year_temp),paste0("T-",year - year_temp)

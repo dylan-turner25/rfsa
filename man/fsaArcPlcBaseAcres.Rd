@@ -5,7 +5,7 @@
 \alias{fsaArcPlcBaseAcres}
 \title{ARC/PLC enrolled base acres by commodity}
 \format{
-A data frame with 225 rows and 18 variables:
+A data frame with 248 rows and 18 variables:
 \describe{
 \item{covered_commodity}{character. FSA’s covered commodity identifier (e.g. "rice-temp japonica").}
 \item{plc_covered_commodity_contract_base}{numeric. Acres enrolled in PLC with covered-commodity base.}

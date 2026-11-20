@@ -33,8 +33,8 @@ available crops and aggregates them.}
 
 \item{policy_environment}{Character vector. Policy environment(s) to use:
 \itemize{
-\item "fb18": Farm Bill 2018 (current policy)
-\item "obbb": Proposed policy with updated parameters
+\item "fb18": 2018 Farm Bill parameters
+\item "obbb": One Big Beautiful Bill Act (OBBBA) parameters
 }}
 
 \item{payment_type}{Character vector. Type(s) of payment calculation:
@@ -116,7 +116,10 @@ This function integrates ARC and PLC payment calculations with support for:
 \strong{Policy Environments:}
 \itemize{
 \item FB18: oa_pct=0.85, cap=1.15, payment_trigger=0.86
-\item OBBB: oa_pct=0.88, cap=1.15, payment_trigger=0.9, updated reference prices
+\item OBBBA: oa_pct=0.88, cap=1.15, payment_trigger=0.90, updated reference
+prices. These apply beginning in crop year 2025. The 2025 calculation uses
+the published loan rates for that year. The updated loan-rate schedule
+takes effect in 2026.
 }
 
 \strong{Payment Types:}
@@ -141,7 +144,7 @@ all_crop_payments <- calc_arc_plc_payments(
   payment_type = "higher"
 )
 
-# Basic calculation for corn in 2024 under current policy
+# Basic calculation for corn in 2024 under the 2018 Farm Bill
 corn_payments <- calc_arc_plc_payments(
   crop = "corn",
   program_year = 2024,

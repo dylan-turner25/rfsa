@@ -9,6 +9,10 @@ A data frame with the following variables:
 \describe{
 \item{actual_revenue}{Actual county-level revenue for the program year}
 \item{actual_yield}{County yield for the program year}
+\item{arc_co_payment_rate}{Published rate in the FSA county workbook's
+ARC-CO Payment Rate column, in dollars per acre before the payment-acre
+factor. Stored as character, with missing rates represented by
+\code{NA} or the text \code{"NaN"}.}
 \item{benchmark_revenue}{Benchmark revenue calculated using Olympic average yields and prices}
 \item{county_name}{Name of the county}
 \item{county_yield_type}{Type of county yield used (e.g., "county yield or 70\% of T-yield", "trend adjusted county yield or 80\% of T-yield")}
@@ -16,8 +20,8 @@ A data frame with the following variables:
 \item{crop_type}{Crop subtype if applicable (e.g., "long grain")}
 \item{fips}{5-digit FIPS code for county identification}
 \item{formula_payment_rate}{The formula-derived payment rate prior to maximum cap}
-\item{guarantee_revenue}{88\% of the benchmark revenue}
-\item{maximum_payment_rate}{Maximum allowable payment rate (10\% of benchmark revenue)}
+\item{guarantee_revenue}{Published guarantee revenue (86\% of benchmark revenue through 2024, 90\% beginning in 2025)}
+\item{maximum_payment_rate}{Published rate cap (10\% of benchmark revenue through 2024, 12\% beginning in 2025)}
 \item{national_price}{Final national price used in revenue calculations}
 \item{oa_bench_mark_price}{Olympic average benchmark price}
 \item{oa_bench_mark_years}{Marketing years used for the Olympic average}

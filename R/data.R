@@ -4,7 +4,7 @@
 #' A dataset containing county‐level base acreage and average PLC yield for each covered
 #' commodity, along with associated RMA and FIPS codes, by program year.
 #'
-#' @format data frame with 99,308 rows and 12 variables:
+#' @format Data frame with 119,976 rows and 12 variables:
 #' \describe{
 #'   \item{state}{character. Full name of the state.}
 #'   \item{county}{character. Name of the county.}
@@ -31,7 +31,7 @@
 #' marketing year average (MYA) prices, loan rates, and computed PLC payment rates by commodity
 #' and program year.
 #'
-#' @format A data frame with 249 rows and 17 variables:
+#' @format A data frame with 295 rows and 17 variables:
 #' \describe{
 #'   \item{crop}{Name of the commodity (e.g., wheat, corn, soybeans)}
 #'   \item{marketing_year_dates}{Date range defining the marketing year (e.g., "Sep. 1–Aug. 31")}
@@ -129,6 +129,10 @@
 #' \describe{
 #'   \item{actual_revenue}{Actual county-level revenue for the program year}
 #'   \item{actual_yield}{County yield for the program year}
+#'   \item{arc_co_payment_rate}{Published rate in the FSA county workbook's
+#'     ARC-CO Payment Rate column, in dollars per acre before the payment-acre
+#'     factor. Stored as character, with missing rates represented by
+#'     \code{NA} or the text \code{"NaN"}.}
 #'   \item{benchmark_revenue}{Benchmark revenue calculated using Olympic average yields and prices}
 #'   \item{county_name}{Name of the county}
 #'   \item{county_yield_type}{Type of county yield used (e.g., "county yield or 70% of T-yield", "trend adjusted county yield or 80% of T-yield")}
@@ -136,8 +140,8 @@
 #'   \item{crop_type}{Crop subtype if applicable (e.g., "long grain")}
 #'   \item{fips}{5-digit FIPS code for county identification}
 #'   \item{formula_payment_rate}{The formula-derived payment rate prior to maximum cap}
-#'   \item{guarantee_revenue}{88% of the benchmark revenue}
-#'   \item{maximum_payment_rate}{Maximum allowable payment rate (10% of benchmark revenue)}
+#'   \item{guarantee_revenue}{Published guarantee revenue (86% of benchmark revenue through 2024, 90% beginning in 2025)}
+#'   \item{maximum_payment_rate}{Published rate cap (10% of benchmark revenue through 2024, 12% beginning in 2025)}
 #'   \item{national_price}{Final national price used in revenue calculations}
 #'   \item{oa_bench_mark_price}{Olympic average benchmark price}
 #'   \item{oa_bench_mark_years}{Marketing years used for the Olympic average}
@@ -174,11 +178,15 @@
 #'   \item{marketing_year}{Marketing year range (e.g., "2019-2020")}
 #'   \item{yield_type}{Type of yield data ("All", "Irrigated", "Nonirrigated")}
 #'   \item{actual_yield}{County yield for the program year (bushels/acre or pounds/acre)}
+#'   \item{arc_co_payment_rate}{Published rate from \code{fsaArcCoBenchmarks},
+#'     in dollars per acre before the payment-acre factor. Stored as
+#'     character, with missing rates represented by \code{NA} or the text
+#'     \code{"NaN"}.}
 #'   \item{benchmark_revenue}{Benchmark revenue calculated using Olympic average yields and prices}
 #'   \item{county_yield_type}{Type of county yield used in calculations}
 #'   \item{formula_payment_rate}{The formula-derived payment rate prior to maximum cap}
-#'   \item{guarantee_revenue}{86% of the benchmark revenue (ARC-CO guarantee)}
-#'   \item{maximum_payment_rate}{Maximum allowable payment rate (10% of benchmark revenue)}
+#'   \item{guarantee_revenue}{Published guarantee revenue (86% of benchmark revenue through 2024, 90% beginning in 2025)}
+#'   \item{maximum_payment_rate}{Published rate cap (10% of benchmark revenue through 2024, 12% beginning in 2025)}
 #'   \item{national_price}{Final national price used in revenue calculations}
 #'   \item{oa_bench_mark_price}{Olympic average benchmark price}
 #'   \item{oa_bench_mark_years}{Marketing years used for the Olympic average}
@@ -371,7 +379,7 @@
 #' and the final effective reference price used to determine program payments. The dataset also includes
 #' metadata on crop classification and program year alignment.
 #'
-#' @format A data frame with 17 variables:
+#' @format A data frame with 18 variables:
 #' \describe{
 #'   \item{crop}{Name of the commodity (e.g., Corn, Wheat, Peanuts)}
 #'   \item{marketing_year_dates}{The official marketing year for the commodity (e.g., "Sep. 1–Aug. 31")}
@@ -385,7 +393,8 @@
 #'   \item{mya_price_lag3}{MYA price from three years prior}
 #'   \item{mya_price_lag2}{MYA price from two years prior}
 #'   \item{mya_price_lag1}{MYA price from one year prior}
-#'   \item{85_olympic_average_mya}{85% of the Olympic average of the five MYA prices, dropping the high and low}
+#'   \item{85_olympic_average_mya}{The published multiplier times the Olympic average of the five MYA prices, dropping the high and low}
+#'   \item{olympic_average_multiplier}{Multiplier stated in the FSA workbook header (0.85 or 0.88)}
 #'   \item{effective_reference_price}{Final effective reference price used for the program year}
 #'   \item{crop_type}{Subtype of the crop, if applicable (e.g., "long grain", "large")}
 #'   \item{rma_type_code}{RMA classification code for crop type, if available}
@@ -403,7 +412,7 @@
 #' acreage originally attributed to generic base, as well as total enrolled acreage by commodity
 #' and year. From 2018 onward, base assignments under the Seed Cotton program are also reflected.
 #'
-#' @format A data frame with 225 rows and 18 variables:
+#' @format A data frame with 248 rows and 18 variables:
 #' \describe{
 #'   \item{covered_commodity}{character. FSA’s covered commodity identifier (e.g. "rice-temp japonica").}
 #'   \item{plc_covered_commodity_contract_base}{numeric. Acres enrolled in PLC with covered-commodity base.}

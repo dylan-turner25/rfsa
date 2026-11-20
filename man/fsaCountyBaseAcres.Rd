@@ -5,7 +5,7 @@
 \alias{fsaCountyBaseAcres}
 \title{County‐level base acres and average PLC yields by crop}
 \format{
-data frame with 99,308 rows and 12 variables:
+Data frame with 119,976 rows and 12 variables:
 \describe{
 \item{state}{character. Full name of the state.}
 \item{county}{character. Name of the county.}

@@ -1,19 +1,11 @@
 # list all files in the raw data files folder
 files <- list.files("./data-raw/fsaArcPlc/input_data/fsaEffectiveRefPrices",
-                    full.names = T)
+                    pattern = "^ERP_[0-9]{4}\\.xlsx?$",
+                    full.names = TRUE, recursive = FALSE)
 
-# initialize a data frame to store mya prices
-erp_prices <- NULL
-
-
-# load the files and bind them into one data frame
-for(year in 2019:(current_year )){
-  # get file path corresponding to year
-  file <- files[grepl(year,files)]
-
-  # load the file to a temporary object
-  #try(temp <- readxl::read_xls(file))
-  #try(temp <- readxl::read_xlsx(file))
+# The ERP release can include a later year than the rest of the build.
+erp_prices <- dplyr::bind_rows(lapply(files, function(file) {
+  year <- as.integer(sub("^ERP_([0-9]{4})\\.xlsx?$", "\\1", basename(file)))
   temp <- readxl::read_excel(file)
 
   # locate row containing "Commodity" which contains column names
@@ -30,54 +22,23 @@ for(year in 2019:(current_year )){
     temp <- temp[-c(1:commodity_row),]
   }
 
-  # clean the raw data
-  #colnames(temp) <- temp[3,]
-  #temp <- temp[-c(1:4),]
-  #temp <- temp[-c(which(is.na(temp$Commodity)):nrow(temp)),]
-  temp$year <- year
-  temp$year <- paste0(year,"-",year + 1)
-  #colnames(temp)[3] <- "Publishing Dates for the  Final T-0 PLC Effective Price"
-  temp <- temp[,which(colnames(temp) != "NA")] %>% na.omit() # omit NA
-  if(year == 2019){
-    colnames(temp) <- gsub(paste0(year,"/",substr(year + 1, 3,4),"|",year),"T-0",colnames(temp))
-    colnames(temp) <- trimws(gsub("  "," ",colnames(temp)))
-    for(y in c(13:22)){
-      for(c in 1:ncol(temp)){
-        if(grepl(paste0("20",y),colnames(temp)[c])){
-          colnames(temp)[c] <- gsub(paste0("20",y,"/",y+1),
-                                    paste0("T-",(year-1 - as.numeric(paste0("20",y))  )),
-                                    colnames(temp)[c])
-        }
-      }
-    }
-  } else if (year >= 2023){
-   colnames(temp) <- colnames(erp_prices)[-which(colnames(erp_prices) %in% c("MAX","MIN"))]
-  } else {
-    colnames(temp) <- colnames(erp_prices)
+  temp <- na.omit(temp[, which(names(temp) != "NA")])
+  # Older workbooks show the high and low prices in separate columns.
+  temp <- temp[, !names(temp) %in% c("MAX", "MIN")]
+  multiplier_header <- grep("^[0-9]+% of 5-year avg", trimws(names(temp)), value = TRUE)
+  if (ncol(temp) != 12L || length(multiplier_header) != 1L) {
+    stop("Unexpected ERP columns in ", basename(file))
   }
-
-  # if plc_payment_rates is null, define it
-  if(is.null(erp_prices)){
-   erp_prices <- temp
-  } else {
-    erp_prices <- dplyr::bind_rows(erp_prices, temp)
-  }
-
-}
-
-# drop max and min columns
-erp_prices <- erp_prices %>% dplyr::select(-MAX,-MIN)
-
-# rename the columns
-colnames(erp_prices) <- c("crop","marketing_year_dates",
-                          "unit","statutory_reference_price","115_statutory_reference_price",
-                          "mya_price_lag5", "mya_price_lag4",
-                          "mya_price_lag3", "mya_price_lag2",
-                          "mya_price_lag1","85_olympic_average_mya",
-                          "effective_reference_price","marketing_year")
-
-# add a program year column
-erp_prices$program_year <- substr(erp_prices$marketing_year,1,4)
+  names(temp) <- c("crop", "marketing_year_dates", "unit",
+                   "statutory_reference_price", "115_statutory_reference_price",
+                   "mya_price_lag5", "mya_price_lag4", "mya_price_lag3",
+                   "mya_price_lag2", "mya_price_lag1", "85_olympic_average_mya",
+                   "effective_reference_price")
+  temp$marketing_year <- paste0(year, "-", year + 1L)
+  temp$program_year <- as.character(year)
+  temp$olympic_average_multiplier <- readr::parse_number(multiplier_header) / 100
+  temp
+}))
 
 # reorder columns
 erp_prices <- erp_prices[,c("crop","marketing_year_dates",
@@ -87,7 +48,8 @@ erp_prices <- erp_prices[,c("crop","marketing_year_dates",
                               "mya_price_lag5", "mya_price_lag4",
                               "mya_price_lag3", "mya_price_lag2",
                               "mya_price_lag1","85_olympic_average_mya",
-                              "effective_reference_price")]
+                              "effective_reference_price",
+                              "olympic_average_multiplier")]
 
 # extract crop type
 erp_prices$crop_type <- unlist(lapply(erp_prices$crop, extract_crop_type))

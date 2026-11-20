@@ -15,10 +15,10 @@ Numeric matrix with five columns, one row per row of \code{data}.
 \description{
 Builds the five-column price matrix that sets the effective reference price
 and the ARC-CO benchmark price. The statute uses MYA prices lagged two to
-six years (2020-2024 for program year 2026), so rows with all of
-\code{final_mya_price_lag2..lag6} use those. FSA's
+six years (2019-2023 for program year 2025), taken from
+\code{final_mya_price_lag2..lag6}. FSA's
 \code{annual_benchmark_price_lag1..lag5} hold the same years but are already
-floored at the ERP of the policy FSA applied, so they are used only where the
-MYA lags are incomplete (program years before 2019).
+floored at the ERP of the policy FSA applied. They are used as a fallback
+for incomplete MYA lags in program years before 2019.
 }
 \keyword{internal}

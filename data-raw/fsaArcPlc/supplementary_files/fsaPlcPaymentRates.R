@@ -1,14 +1,16 @@
 # list all files in the raw data files folder
 files <- list.files("./data-raw/fsaArcPlc/input_data/fsaPlcPaymentRate",
-                    full.names = T)
+                    pattern = "^PLC_[0-9]{4}\\.xlsx?$",
+                    full.names = TRUE, recursive = FALSE)
+file_years <- as.integer(sub("^PLC_([0-9]{4})\\.xlsx?$", "\\1", basename(files)))
 
 # initialize a data frame to store mya prices
 plc_payment_rates <- NULL
 
 # load the files and bind them into one data frame
-for(year in 2014:(current_year - 1)){
+for(year in file_years[file_years <= current_year]){
   # get file path corresponding to year
-  file <- files[grepl(year,files)]
+  file <- files[file_years == year]
 
   # load the file to a temporary object
   #try(temp <- readxl::read_xls(file))
@@ -31,7 +33,7 @@ for(year in 2014:(current_year - 1)){
   temp$year <- paste0(year,"-",year+1)
   #colnames(temp)[3] <- "Publishing Dates for the  Final T-0 PLC Effective Price"
   temp <- temp[,which(colnames(temp) != "NA")] %>% na.omit() # omit NA
-  if(year == 2014){
+  if(is.null(plc_payment_rates)){
     colnames(temp) <- gsub(paste0(year,"/",substr(year + 1, 3,4),"|",year),"T-0",colnames(temp))
     colnames(temp) <- trimws(gsub("Projected|\\(P\\)|\\(F\\)| or ","",colnames(temp)))
     colnames(temp) <- trimws(gsub("  "," ",colnames(temp)))

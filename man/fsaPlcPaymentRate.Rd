@@ -5,7 +5,7 @@
 \alias{fsaPlcPaymentRate}
 \title{Price Loss Coverage (PLC) Payment Rates by Crop and Program Year}
 \format{
-A data frame with 249 rows and 17 variables:
+A data frame with 295 rows and 17 variables:
 \describe{
 \item{crop}{Name of the commodity (e.g., wheat, corn, soybeans)}
 \item{marketing_year_dates}{Date range defining the marketing year (e.g., "Sep. 1–Aug. 31")}

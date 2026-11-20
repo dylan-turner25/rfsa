@@ -16,11 +16,15 @@ A data frame with comprehensive variables for ARC/PLC analysis:
 \item{marketing_year}{Marketing year range (e.g., "2019-2020")}
 \item{yield_type}{Type of yield data ("All", "Irrigated", "Nonirrigated")}
 \item{actual_yield}{County yield for the program year (bushels/acre or pounds/acre)}
+\item{arc_co_payment_rate}{Published rate from \code{fsaArcCoBenchmarks},
+in dollars per acre before the payment-acre factor. Stored as
+character, with missing rates represented by \code{NA} or the text
+\code{"NaN"}.}
 \item{benchmark_revenue}{Benchmark revenue calculated using Olympic average yields and prices}
 \item{county_yield_type}{Type of county yield used in calculations}
 \item{formula_payment_rate}{The formula-derived payment rate prior to maximum cap}
-\item{guarantee_revenue}{86\% of the benchmark revenue (ARC-CO guarantee)}
-\item{maximum_payment_rate}{Maximum allowable payment rate (10\% of benchmark revenue)}
+\item{guarantee_revenue}{Published guarantee revenue (86\% of benchmark revenue through 2024, 90\% beginning in 2025)}
+\item{maximum_payment_rate}{Published rate cap (10\% of benchmark revenue through 2024, 12\% beginning in 2025)}
 \item{national_price}{Final national price used in revenue calculations}
 \item{oa_bench_mark_price}{Olympic average benchmark price}
 \item{oa_bench_mark_years}{Marketing years used for the Olympic average}

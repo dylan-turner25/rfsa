@@ -56,6 +56,6 @@ test_that("payments compute for the most recent program year in both policy envi
   expect_gt(totals[["obbb"]], 0)
   # OBBB raises reference prices and benchmark floors, so it should never pay
   # less than the 2018 Farm Bill environment in aggregate. With fb18_srps
-  # restoring the 2018 schedule for 2026+, the gap is substantial.
+  # restoring the 2018 schedule from 2025 onward, the gap is substantial.
   expect_gte(totals[["obbb"]], totals[["fb18"]])
 })

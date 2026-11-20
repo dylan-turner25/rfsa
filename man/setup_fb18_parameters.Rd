@@ -16,12 +16,10 @@ Data frame with an fb18_srps column added
 This internal helper function adds an \code{fb18_srps} column holding the
 2018 Farm Bill statutory reference prices. The published
 \code{statutory_reference_price} column in \code{fsaArcPlcData} reflects
-whatever FSA published for each year, and beginning with program year 2026
-FSA publishes the OBBBA-raised statutory prices. Using the published column
-directly would therefore contaminate the fb18 counterfactual for 2026 and
-later. For program years through 2025 the published values are the 2018
-Farm Bill schedule and are used as is. For 2026 and later, each crop and
-crop type carries forward its published 2025 statutory price (the last
+whatever FSA published for each year. For program years through 2024 FSA
+publishes the 2018 Farm Bill statutory prices, which are used as is.
+For 2025 and later FSA publishes the OBBBA statutory prices, so each crop and
+crop type carries forward its published 2024 statutory price (the last
 pre-OBBBA schedule). Loan rates are not modified: the fb18 environment
 continues to use \code{current_national_loan_rate}.
 }

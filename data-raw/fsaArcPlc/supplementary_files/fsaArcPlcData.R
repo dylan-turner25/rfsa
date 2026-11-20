@@ -114,6 +114,7 @@ erp <- distinct(
   fsaEffectiveRefPrices %>%
     select(
       effective_reference_price,
+      olympic_average_multiplier,
       crop,
       crop_type,
       marketing_year,
@@ -136,12 +137,12 @@ data$erp_calc <- unlist(lapply(1:nrow(data), function(i) {
       )
 
       # Calculate ERP
-      # OBBBA changes the olympic average multiplier from 85% to 88%
-      # beginning with the 2026 crop year (ERP cap remains 115% of SRP)
+      # Use the multiplier from the matching FSA workbook where available.
       rfsa:::calc_effective_reference_price(
         mya_prices = mya_prices,
         srp = data$statutory_reference_price[i],
-        oa_pct = ifelse(data$program_year[i] >= 2026, 0.88, 0.85)
+        oa_pct = ifelse(is.na(data$olympic_average_multiplier[i]), 0.85,
+                        data$olympic_average_multiplier[i])
       )
     },
     error = function(e) {
@@ -150,6 +151,7 @@ data$erp_calc <- unlist(lapply(1:nrow(data), function(i) {
     }
   )
 }))
+data$olympic_average_multiplier <- NULL
 
 # published ERPs are rounded, so compare with a 0.5% relative tolerance
 # rather than exact equality
@@ -224,7 +226,10 @@ base2015 <- base %>% filter(program_year == 2015)
 base2016 <- base %>% filter(program_year == 2015) %>% mutate(program_year = 2016)
 base2017 <- base %>% filter(program_year == 2015) %>% mutate(program_year = 2017)
 base2018 <- base %>% filter(program_year == 2015) %>% mutate(program_year = 2018)
-base2019 <- base %>% filter(program_year == 2021) %>% mutate(program_year = 2019)
+base2019 <- base %>% filter(program_year == 2019)
+if (nrow(base2019) == 0L) {
+  base2019 <- base %>% filter(program_year == 2021) %>% mutate(program_year = 2019)
+}
 base2020 <- base %>% filter(program_year == 2021) %>% mutate(program_year = 2020)
 base2021 <- base %>% filter(program_year == 2021)
 base2022 <- base %>% filter(program_year == 2022)
